@@ -170,17 +170,34 @@ public final class MainActivity extends Activity implements LocationListener {
     }
     private void homeScreen() {
         baseScreen();
+        // Priorizar o mapa como no HomeScreen do Namma Yatri: área geográfica principal
+        // e ações em painel inferior, em vez de dividir a tela igualmente.
         if (!BuildConfig.MAPS_KEY.isEmpty()) {
-            FrameLayout host = new FrameLayout(this); host.setId(View.generateViewId()); root.addView(host, new LinearLayout.LayoutParams(-1, 0, 1));
+            FrameLayout host = new FrameLayout(this); host.setId(View.generateViewId()); root.addView(host, new LinearLayout.LayoutParams(-1, 0, 3));
             MapFragment fragment = MapFragment.newInstance(); getFragmentManager().beginTransaction().add(host.getId(), fragment, "map").commit();
             fragment.getMapAsync(g -> { map = g; g.getUiSettings().setMapToolbarEnabled(false); startLocations(); drawMap(); });
         } else root.addView(label("Mapa indisponível: configure GOOGLE_MAPS_API_KEY no build Android.", 14));
-        ScrollView scroll = new ScrollView(this); LinearLayout body = column(); scroll.addView(body); root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
+        ScrollView scroll = new ScrollView(this); scroll.setFillViewport(false);
+        scroll.setBackgroundColor(Color.WHITE);
+        LinearLayout body = column(); body.setPadding(dp(16), dp(12), dp(16), dp(16));
+        scroll.addView(body);
+        root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 2));
         tripForm = column(); body.addView(tripForm);
         if (!driver) {
             originButton = button(origin == null ? "Escolher origem" : origin.optString("address"), tripForm, () -> addressDialog(true));
             button("Usar minha localização como origem", tripForm, this::useGps);
             destinationButton = button(destination == null ? "Para onde você vai?" : destination.optString("address"), tripForm, () -> addressDialog(false));
+            // Recupera as medidas do whereToButtonConfig histórico (altura 60dp, raio 8dp).
+            android.graphics.drawable.GradientDrawable destinationSurface = new android.graphics.drawable.GradientDrawable();
+            destinationSurface.setColor(Color.rgb(250, 250, 250));
+            destinationSurface.setCornerRadius(dp(8));
+            destinationSurface.setStroke(dp(1), Color.rgb(226, 226, 226));
+            destinationButton.setBackground(destinationSurface);
+            destinationButton.setGravity(android.view.Gravity.CENTER_VERTICAL | android.view.Gravity.START);
+            destinationButton.setPadding(dp(16), 0, dp(12), 0);
+            destinationButton.setTextSize(17);
+            destinationButton.setTextColor(Color.rgb(44, 47, 58));
+            destinationButton.setMinHeight(dp(60));
             button("Calcular rota e estimativa", tripForm, this::calculate);
             summary = label("Defina origem e destino para calcular a rota", 16); tripForm.addView(summary);
             requestButton = button("Solicitar corrida", tripForm, () -> { if (quote != null) { JSONObject selected = quote; run(() -> api.request("/v1/rides", json("quoteId", selected.getString("id"))), r -> { quote = null; refresh(); }); } });
