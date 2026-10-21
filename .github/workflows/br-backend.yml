@@ -1,0 +1,23 @@
+name: BR - Backend
+on:
+  push:
+    branches: [passageiro-pt-br]
+    paths: ['brasil/backend/**', '.github/workflows/br-backend.yml']
+  pull_request:
+    paths: ['brasil/backend/**', '.github/workflows/br-backend.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: brasil/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm test
+      - run: find src -name '*.mjs' -exec node --check {} \;

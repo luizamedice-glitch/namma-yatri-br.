@@ -1,13 +1,16 @@
 {
   "name": "namma-yatri-br-mobility-api",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "engines": { "node": ">=22" },
   "scripts": {
-    "start": "node server.mjs",
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "migrate": "node --env-file-if-exists=.env src/migrate.mjs",
+    "test": "node --test test/unit.test.mjs",
+    "test:integration": "node --test test/integration.test.mjs",
     "check": "node --check server.mjs"
   },
-  "engines": {
-    "node": ">=20"
-  }
+  "dependencies": { "pg": "8.16.3" }
 }

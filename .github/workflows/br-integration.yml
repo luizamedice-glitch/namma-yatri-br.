@@ -1,0 +1,42 @@
+name: BR - Integration PostgreSQL
+on:
+  push:
+    branches: [passageiro-pt-br]
+    paths: ['brasil/backend/**', '.github/workflows/br-integration.yml']
+  pull_request:
+    paths: ['brasil/backend/**', '.github/workflows/br-integration.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  flow:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: integration-only
+          POSTGRES_DB: mobility_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U test -d mobility_test'
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: brasil/backend
+    env:
+      DATABASE_URL: postgresql://test:integration-only@localhost:5432/mobility_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npm run test:integration 2>&1 | tee integration.log
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-evidence
+          path: brasil/backend/integration.log
