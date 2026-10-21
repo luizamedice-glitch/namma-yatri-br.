@@ -107,6 +107,35 @@ public final class MainActivity extends Activity implements LocationListener {
         root.addView(label(driver ? "Giselo" : "Fagner", 16));
         message = label("", 14); message.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE); root.addView(message);
     }
+    // Elementos visuais recuperados da versão Partner; a camada de eventos permanece intacta.
+    private ImageView originalStatusIcon(boolean online) {
+        ImageView image = new ImageView(this);
+        String name = online ? "ic_driver_status_online.png" : "ic_driver_status_offline.png";
+        try (java.io.InputStream stream = getAssets().open("original-ui/" + name)) {
+            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(stream);
+            if (bitmap != null) image.setImageBitmap(bitmap);
+        } catch (java.io.IOException e) {
+            android.util.Log.w("YatriBrasil", "Recurso original do status indisponível", e);
+        }
+        image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        image.setContentDescription(online ? "Motorista disponível" : "Motorista indisponível");
+        image.setLayoutParams(new LinearLayout.LayoutParams(dp(42), dp(42)));
+        return image;
+    }
+    private LinearLayout originalRideCard(LinearLayout parent) {
+        LinearLayout card = column();
+        card.setPadding(dp(16), dp(12), dp(16), dp(16));
+        android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
+        shape.setColor(Color.WHITE);
+        shape.setCornerRadius(dp(12));
+        shape.setStroke(dp(1), Color.rgb(231, 232, 232));
+        card.setBackground(shape);
+        card.setElevation(dp(3));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
+        params.setMargins(dp(0), dp(8), dp(0), dp(10));
+        parent.addView(card, params);
+        return card;
+    }
     private void showMessage(String value) { if (message != null) message.setText(value); }
     interface Work { JSONObject run() throws Exception; }
     interface Done { void run(JSONObject result) throws Exception; }
@@ -256,7 +285,16 @@ public final class MainActivity extends Activity implements LocationListener {
             }
             if (!status.equals("in_progress")) button("Cancelar corrida", panel, () -> new AlertDialog.Builder(this).setMessage("Cancelar esta solicitação?").setNegativeButton("Voltar", null).setPositiveButton("Cancelar corrida", (d,w) -> action(id, "cancel")).show());
         } else if (driver) {
-            panel.addView(label(available ? "Disponível para receber corridas" : "Indisponível", 20));
+            LinearLayout statusRow = new LinearLayout(this);
+            statusRow.setOrientation(LinearLayout.HORIZONTAL);
+            statusRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            statusRow.addView(originalStatusIcon(available));
+            TextView availabilityLabel = label(available ? "Disponível para receber corridas" : "Indisponível", 20);
+            availabilityLabel.setTypeface(originalSemiBold);
+            LinearLayout.LayoutParams statusTextParams = new LinearLayout.LayoutParams(-1, -2);
+            statusTextParams.leftMargin = dp(12);
+            statusRow.addView(availabilityLabel, statusTextParams);
+            panel.addView(statusRow);
             button(available ? "Ficar indisponível" : "Ficar disponível", panel, () -> {
                 if (!available && (gps == null || !fresh(gps))) { showMessage("Aguarde um sinal GPS recente para ficar disponível"); startLocations(); return; }
                 boolean target = !available;
@@ -273,9 +311,16 @@ public final class MainActivity extends Activity implements LocationListener {
             if (offers.length() == 0) panel.addView(label("Nenhuma oferta próxima neste momento", 16));
             for (int i=0;i<offers.length();i++) {
                 JSONObject offer = offers.getJSONObject(i); String id = offer.getString("id");
-                panel.addView(label(offer.getJSONObject("origin").getString("address") + " → " + offer.getJSONObject("destination").getString("address"), 18));
-                panel.addView(label("Passageiro: " + offer.getString("passenger_name") + "\n" + routeSummary(offer.getJSONObject("route"), offer.getInt("fare_cents")), 16));
-                button("Aceitar corrida", panel, () -> action(id, "accept")); button("Recusar oferta", panel, () -> action(id, "reject"));
+                LinearLayout offerCard = originalRideCard(panel);
+                TextView offerTitle = label("Nova solicitação", 14);
+                offerTitle.setTypeface(originalSemiBold);
+                offerCard.addView(offerTitle);
+                TextView offerRoute = label(offer.getJSONObject("origin").getString("address") + " → " + offer.getJSONObject("destination").getString("address"), 18);
+                offerRoute.setTypeface(originalSemiBold);
+                offerCard.addView(offerRoute);
+                offerCard.addView(label("Passageiro: " + offer.getString("passenger_name") + "\n" + routeSummary(offer.getJSONObject("route"), offer.getInt("fare_cents")), 16));
+                button("Aceitar corrida", offerCard, () -> action(id, "accept"));
+                button("Recusar oferta", offerCard, () -> action(id, "reject"));
             }
         }
         if (previous != null && active == null) run(() -> api.request("/v1/rides/" + previous, null), r -> showMessage(statusLabel(r.getString("status"))));
