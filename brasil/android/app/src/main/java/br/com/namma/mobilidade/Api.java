@@ -41,6 +41,10 @@ final class Api {
             if (status == 401) throw new SessionExpired(data.optString("error", "Entre novamente"));
             if (status >= 400) throw new Exception(data.optString("error", "Erro HTTP " + status));
             return data;
+        } catch (java.io.IOException e) {
+            throw new Exception("Conexão indisponível. Verifique o servidor e sua rede e tente novamente.");
+        } catch (org.json.JSONException e) {
+            throw new Exception("O servidor retornou uma resposta inválida.");
         } finally { c.disconnect(); }
     }
     static final class SessionExpired extends Exception { SessionExpired(String message) { super(message); } }

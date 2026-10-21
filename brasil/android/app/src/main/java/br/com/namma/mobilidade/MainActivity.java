@@ -46,7 +46,6 @@ public final class MainActivity extends Activity implements LocationListener {
     private GoogleMap map;
     private LocationManager locations;
     private Location gps;
-    private long locationSent;
     private JSONObject origin, destination, quote, active;
     private LinearLayout root, panel, tripForm;
     private TextView message, summary;
@@ -228,7 +227,11 @@ public final class MainActivity extends Activity implements LocationListener {
                 if (!available && (gps == null || !fresh(gps))) { showMessage("Aguarde um sinal GPS recente para ficar disponível"); startLocations(); return; }
                 boolean target = !available;
                 run(() -> {
-                    if (target) api.request("/v1/driver/location", json("lat", gps.getLatitude(), "lng", gps.getLongitude()));
+                    if (target) {
+                        Location current = gps;
+                        if (current == null || !fresh(current)) throw new Exception("GPS desatualizado. Aguarde uma posição recente e tente novamente.");
+                        api.request("/v1/driver/location", json("lat", current.getLatitude(), "lng", current.getLongitude()));
+                    }
                     return api.request("/v1/driver/availability", json("available", target));
                 }, result -> refresh());
             });
@@ -335,10 +338,8 @@ public final class MainActivity extends Activity implements LocationListener {
     }
     @Override public void onLocationChanged(Location location) {
         if (!fresh(location)) return; gps = location;
-        if (driver && !api.token.isEmpty() && SystemClock.elapsedRealtime() - locationSent >= 5000) {
-            locationSent = SystemClock.elapsedRealtime();
-            run(() -> api.request("/v1/driver/location", json("lat", location.getLatitude(), "lng", location.getLongitude())), r -> {});
-        }
+        // Periodic uploads belong to DriverLocationService: fixed-delay scheduling
+        // prevents stale fixes accumulating in the UI request queue while offline.
     }
     @Override public void onProviderDisabled(String provider) { showMessage("GPS desativado. Ative a localização para atualizar sua posição."); }
     @Override public void onProviderEnabled(String provider) { startLocations(); }
