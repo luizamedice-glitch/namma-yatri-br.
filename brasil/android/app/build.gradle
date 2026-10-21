@@ -59,7 +59,7 @@ tasks.register('recoverOriginalTypography', Sync) {
 // Recuperar o recurso gráfico usado no whereToButtonConfig original, sem redesenhá-lo.
 def originalPassengerDrawables = rootProject.file('../../Frontend/android-native/app/src/user/nammaYatri/res/drawable')
 tasks.register('recoverOriginalPassengerUi', Copy) {
-    from(originalPassengerDrawables) { include 'ny_ic_bent_right_arrow.png' }
+    from(originalPassengerDrawables) { include 'ny_ic_bent_right_arrow.png', 'ny_ic_pickup.png', 'ny_ic_drop.png', 'ny_ic_current_location.png' }
     into layout.buildDirectory.dir('generated/originalAssets/original-ui')
     doFirst {
         if (!new File(originalPassengerDrawables, 'ny_ic_bent_right_arrow.png').isFile()) {
@@ -71,7 +71,7 @@ tasks.register('recoverOriginalPassengerUi', Copy) {
 def originalDriverDrawables = rootProject.file('../../Frontend/android-native/app/src/driver/nammaYatriPartner/res/drawable')
 tasks.register('recoverOriginalDriverUi', Copy) {
     from(originalDriverDrawables) {
-        include 'ic_driver_status_online.png', 'ic_driver_status_offline.png'
+        include 'ic_driver_status_online.png', 'ic_driver_status_offline.png', 'ny_ic_car_blue.png', 'ny_ic_rides_tab_active.png'
     }
     into layout.buildDirectory.dir('generated/originalAssets/original-ui')
     doFirst {
