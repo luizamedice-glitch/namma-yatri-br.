@@ -1,22 +1,32 @@
 package br.com.namma.mobilidade;
 
-import android.test.ActivityInstrumentationTestCase2;
+import android.content.Intent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import static org.junit.Assert.*;
 
 /** Startup smoke test only; does not claim to validate the operational ride flow. */
-@SuppressWarnings("deprecation")
-public final class LaunchTest extends ActivityInstrumentationTestCase2<MainActivity> {
-    public LaunchTest() { super(MainActivity.class); }
-    public void testLaunchShowsAuthenticationWithoutHyperSDK() {
-        MainActivity activity = getActivity();
-        getInstrumentation().waitForIdleSync();
-        assertTrue("Login must render without network, Firebase or maps key", contains(activity.getWindow().getDecorView(), "Entre com sua conta de testes"));
-        assertTrue(contains(activity.getWindow().getDecorView(), "Entrar"));
-        assertFalse(activity.isFinishing());
+@RunWith(AndroidJUnit4.class)
+public final class LaunchTest {
+    @Test public void launchShowsAuthenticationWithoutHyperSDK() {
+        var instrumentation = InstrumentationRegistry.getInstrumentation();
+        Intent intent = new Intent(instrumentation.getTargetContext(), MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        MainActivity activity = (MainActivity)instrumentation.startActivitySync(intent);
+        try {
+            instrumentation.waitForIdleSync();
+            instrumentation.runOnMainSync(() -> {
+                assertTrue("Login must render without network, Firebase or maps key", contains(activity.getWindow().getDecorView(), "Entre com sua conta de testes"));
+                assertTrue(contains(activity.getWindow().getDecorView(), "Entrar"));
+                assertFalse(activity.isFinishing());
+            });
+        } finally { instrumentation.runOnMainSync(activity::finish); }
     }
-    public void testPolylineDecoding() {
+    @Test public void polylineDecoding() {
         var points = MainActivity.decode("_p~iF~ps|U_ulLnnqC_mqNvxq`@");
         assertEquals(3, points.size());
         assertEquals(38.5, points.get(0).latitude, 0.00001);

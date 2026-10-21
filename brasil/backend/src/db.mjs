@@ -2,6 +2,7 @@ export async function connectDatabase(connectionString) {
   if (!connectionString) throw new Error('DATABASE_URL é obrigatória');
   const { default: pg } = await import('pg');
   const pool = new pg.Pool({ connectionString, max: 10, connectionTimeoutMillis: 5000, statement_timeout: 10000 });
+  pool.on('error', error => console.error('Conexão PostgreSQL interrompida:', error.code || error.name));
   await pool.query('SELECT 1');
   return pool;
 }

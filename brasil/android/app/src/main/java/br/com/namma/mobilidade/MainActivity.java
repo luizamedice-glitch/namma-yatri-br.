@@ -390,7 +390,13 @@ public final class MainActivity extends Activity implements LocationListener {
                     try {
                         HttpURLConnection connection = api.connection("/v1/events"); stream = connection;
                         connection.setRequestProperty("Last-Event-ID", cursor); connection.setReadTimeout(15000);
-                        if (connection.getResponseCode()!=200) throw new Exception("Eventos indisponíveis");
+                        int status = connection.getResponseCode();
+                        if (status == 401) {
+                            String rejectedToken = api.token;
+                            ui.post(() -> { if (api.token.equals(rejectedToken)) { clearSession(); showMessage("Sessão expirada. Entre novamente."); } });
+                            break;
+                        }
+                        if (status!=200) throw new Exception("Eventos indisponíveis");
                         ui.post(() -> { showMessage("Conectado ao servidor"); refresh(); });
                         try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), java.nio.charset.StandardCharsets.UTF_8))) {
                             String line;
