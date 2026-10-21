@@ -18,4 +18,8 @@ adb shell dumpsys activity activities > activities.txt
 grep -n -A 28 -B 8 -E 'FATAL EXCEPTION|AndroidRuntime|Unable to start activity|ClassNotFoundException|FirebaseApp|FATAL SIGNAL' android-logcat.txt > falhas-resumo.txt || true
 cat launch.txt
 head -150 falhas-resumo.txt || true
-echo "==> Diagnóstico concluído. Verifique o artefato com logs."
+if grep -q 'FATAL EXCEPTION' android-logcat.txt; then
+  echo "::error::O aplicativo apresentou uma exceção fatal; veja falhas-resumo.txt."
+  exit 1
+fi
+echo "==> Sem exceção fatal no período de observação. Confira launch.txt e activities.txt."
