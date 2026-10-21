@@ -1,0 +1,74 @@
+name: Diagnosticar abertura do APK passageiro
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  abertura:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: passageiro-pt-br
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Preparar SDK e APK de teste
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          MGR="$(find "$SDK/cmdline-tools" -type f -name sdkmanager | sort -V | tail -1)"
+          "$MGR" "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+          cd Frontend/android-native
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path("local.properties")
+          keys=("CONFIG_URL_DRIVER","CONFIG_URL_USER","MERCHANT_ID_DRIVER","MERCHANT_ID_USER","RS_ALGO","RS_ALGO_PADDING","RS_ENC_KEY","RS_INSTANCE_TYPE")
+          with path.open("a") as f:
+              for key in keys:
+                  f.write(f'{key}=""\n')
+          PY
+          chmod +x gradlew
+          ./gradlew :app:assembleNyUserDevDebug -PbrTestMode=true --no-daemon --console=plain > "$GITHUB_WORKSPACE/gradle-build.log" 2>&1 || {
+            tail -100 "$GITHUB_WORKSPACE/gradle-build.log"
+            exit 1
+          }
+      - name: Instalar no emulador e registrar travamento
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_4
+          emulator-boot-timeout: 600
+          script: |
+            set -e
+            APK=$(find Frontend/android-native/app/build/outputs/apk -name '*.apk' | head -1)
+            adb install -r "$APK"
+            adb logcat -c
+            adb shell am start -W -n in.juspay.nammayatri.debug/in.juspay.mobility.MainActivity > launch.txt 2>&1 || true
+            sleep 20
+            adb logcat -d -v time > android-logcat.txt
+            adb shell dumpsys activity activities > activities.txt
+            grep -n -A 28 -B 8 -E 'FATAL EXCEPTION|AndroidRuntime|Unable to start activity|ClassNotFoundException|FirebaseApp|FATAL SIGNAL' android-logcat.txt > falhas-resumo.txt || true
+            cat launch.txt
+            head -150 falhas-resumo.txt || true
+      - name: Publicar relatório e logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostico-abertura-passageiro
+          path: |
+            android-logcat.txt
+            falhas-resumo.txt
+            launch.txt
+            activities.txt
+            gradle-build.log
+          if-no-files-found: warn
