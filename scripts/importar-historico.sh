@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
+trap 'echo "ERRO na linha $LINENO: $BASH_COMMAND" >&2' ERR
+echo '==> Iniciando importação do Namma Yatri (histórico completo)'
+echo "==> Diretório atual: $PWD"
+cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+echo "==> Raiz do projeto: $PWD"
 
 # Rodar em um Codespace do repositório Namma Yatri Brasil.
 DEST="https://github.com/luizamedice-glitch/namma-yatri-br..git"
@@ -11,17 +16,22 @@ if [[ -e nammayatri-upstream ]]; then
   exit 1
 fi
 
-git clone "$UPSTREAM" nammayatri-upstream
+echo "==> Clonando upstream (repositório grande, operação pode demorar)..."
+git -c progress.delay=0 clone --progress "$UPSTREAM" nammayatri-upstream
+echo "==> Clone concluído"
 cd nammayatri-upstream
 git remote add brasil "$DEST"
-git fetch brasil main
+echo "==> Obtendo o commit inicial do repositório brasileiro"
+git fetch --progress brasil main
+echo "==> Criando branch de trabalho"
 git switch -c passageiro-pt-br
 
 # O ^ referencia o estado imediatamente anterior à remoção do frontend.
-git cat-file -e "${REMOVAL}^:{tree}" 2>/dev/null || true
+echo "==> Verificando disponibilidade do frontend histórico"
 git ls-tree "${REMOVAL}^" Frontend | grep -q Frontend || {
   echo "Frontend ausente no commit histórico. Abortando." >&2; exit 1;
 }
+echo "==> Restaurando Frontend/ do histórico"
 git restore --source="${REMOVAL}^" --staged --worktree Frontend
 git -c user.name="Namma Yatri BR" -c user.email="actions@users.noreply.github.com" commit -m "restore: recuperar frontend original do histórico"
 
@@ -40,6 +50,7 @@ git -c user.name="Namma Yatri BR" -c user.email="actions@users.noreply.github.co
 
 echo "Arquivos do frontend recuperados:"
 git ls-files Frontend | wc -l
+echo "==> Preparação concluída; código pronto para revisão e envio"
 echo "Revise as alterações. Para publicar:"
 echo "  git push brasil HEAD:refs/heads/passageiro-pt-br"
 echo "Depois de validar, abra um PR para main (não sobrescreva main diretamente)."
