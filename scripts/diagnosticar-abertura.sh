@@ -15,6 +15,8 @@ adb shell am start -W -n in.juspay.nammayatri.debug/in.juspay.mobility.MainActiv
 sleep 20
 adb logcat -d -v time > android-logcat.txt
 adb shell dumpsys activity activities > activities.txt
+adb exec-out screencap -p > tela-inicial.png || true
+adb shell dumpsys window windows > janela-ativa.txt || true
 grep -n -A 28 -B 8 -E 'FATAL EXCEPTION|AndroidRuntime|Unable to start activity|ClassNotFoundException|FirebaseApp|FATAL SIGNAL' android-logcat.txt > falhas-resumo.txt || true
 cat launch.txt
 head -150 falhas-resumo.txt || true
@@ -22,4 +24,4 @@ if grep -q 'FATAL EXCEPTION' android-logcat.txt; then
   echo "::error::O aplicativo apresentou uma exceção fatal; veja falhas-resumo.txt."
   exit 1
 fi
-echo "==> Sem exceção fatal no período de observação. Confira launch.txt e activities.txt."
+echo "==> Sem exceção fatal no período de observação. Captura tela-inicial.png disponível."
