@@ -17,6 +17,10 @@ adb logcat -d -v time > android-logcat.txt
 adb shell dumpsys activity activities > activities.txt
 adb exec-out screencap -p > tela-inicial.png || true
 adb shell dumpsys window windows > janela-ativa.txt || true
+if ! adb shell pidof in.juspay.nammayatri.debug >/dev/null; then
+  echo "::error::O processo do passageiro não permanece ativo após 20 segundos."
+  exit 1
+fi
 grep -n -A 28 -B 8 -E 'FATAL EXCEPTION|AndroidRuntime|Unable to start activity|ClassNotFoundException|FirebaseApp|FATAL SIGNAL' android-logcat.txt > falhas-resumo.txt || true
 cat launch.txt
 head -150 falhas-resumo.txt || true
