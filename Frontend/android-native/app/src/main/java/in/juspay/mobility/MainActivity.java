@@ -520,7 +520,7 @@ public class MainActivity extends AppCompatActivity {
         }catch(Exception e){
             Log.i("PERF", "unable to fetch PERF remote config");
             Exception exception = new Exception("Error in parsing perf config " + e);
-            FirebaseCrashlytics.getInstance().recordException(exception);
+            if (!BuildConfig.DEBUG) FirebaseCrashlytics.getInstance().recordException(exception);
         }
 
         if (isAlwaysOnDisplay != null && MERCHANT_TYPE.equals("DRIVER")) {
@@ -610,9 +610,12 @@ public class MainActivity extends AppCompatActivity {
         CleverTapAPI.setDebugLevel(CleverTapAPI.LogLevel.VERBOSE);
         cleverTap.enableDeviceNetworkInfoReporting(true);
         CleverTapAPI.setNotificationHandler((NotificationHandler)new PushTemplateNotificationHandler());
-        FirebaseCrashlytics crashlytics = FirebaseCrashlytics.getInstance();
-        crashlytics.setCustomKey("driver_id",sharedPref != null ? sharedPref.getString("DRIVER_ID","not_set") : "not_set");
-        crashlytics.setCustomKey("customer_id",sharedPref != null ? sharedPref.getString("CUSTOMER_ID","not_set") : "not_set");
+        // Crashlytics is disabled in offline debug builds; keep production behavior.
+        if (!BuildConfig.DEBUG) {
+            FirebaseCrashlytics crashlytics = FirebaseCrashlytics.getInstance();
+            crashlytics.setCustomKey("driver_id",sharedPref != null ? sharedPref.getString("DRIVER_ID","not_set") : "not_set");
+            crashlytics.setCustomKey("customer_id",sharedPref != null ? sharedPref.getString("CUSTOMER_ID","not_set") : "not_set");
+        }
 
         sharedPref.edit().putString("DEVICE_DETAILS", getDeviceDetails()).apply();
         sharedPref.edit().putString("UNIQUE_DD", NotificationUtils.uniqueDeviceDetails()).apply();
