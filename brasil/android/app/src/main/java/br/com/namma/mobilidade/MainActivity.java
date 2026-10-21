@@ -345,9 +345,24 @@ public final class MainActivity extends Activity implements LocationListener {
             for (int i=0;i<offers.length();i++) {
                 JSONObject offer = offers.getJSONObject(i); String id = offer.getString("id");
                 LinearLayout offerCard = originalRideCard(panel);
-                TextView offerTitle = label("Nova solicitação", 14);
+                LinearLayout offerHeader = new LinearLayout(this);
+                offerHeader.setOrientation(LinearLayout.HORIZONTAL);
+                offerHeader.setGravity(android.view.Gravity.CENTER_VERTICAL);
+                ImageView carIcon = new ImageView(this);
+                try (java.io.InputStream stream = getAssets().open("original-ui/ny_ic_car_blue.png")) {
+                    android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(stream);
+                    if (bitmap != null) carIcon.setImageBitmap(bitmap);
+                } catch (java.io.IOException e) {
+                    android.util.Log.w("YatriBrasil", "Ícone original de veículo indisponível", e);
+                }
+                carIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                offerHeader.addView(carIcon, new LinearLayout.LayoutParams(dp(36), dp(36)));
+                TextView offerTitle = label("Nova solicitação", 17);
                 offerTitle.setTypeface(originalSemiBold);
-                offerCard.addView(offerTitle);
+                LinearLayout.LayoutParams headerText = new LinearLayout.LayoutParams(-1, -2);
+                headerText.leftMargin = dp(12);
+                offerHeader.addView(offerTitle, headerText);
+                offerCard.addView(offerHeader);
                 TextView offerRoute = label(offer.getJSONObject("origin").getString("address") + " → " + offer.getJSONObject("destination").getString("address"), 18);
                 offerRoute.setTypeface(originalSemiBold);
                 offerCard.addView(offerRoute);
