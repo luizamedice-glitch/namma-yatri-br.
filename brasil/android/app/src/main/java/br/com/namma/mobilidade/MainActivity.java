@@ -122,6 +122,19 @@ public final class MainActivity extends Activity implements LocationListener {
         image.setLayoutParams(new LinearLayout.LayoutParams(dp(42), dp(42)));
         return image;
     }
+    private void attachOriginalIcon(Button target, String asset, int width, int height) {
+        try (java.io.InputStream in = getAssets().open("original-ui/" + asset)) {
+            android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeStream(in);
+            if (bmp == null) return;
+            android.graphics.drawable.BitmapDrawable icon = new android.graphics.drawable.BitmapDrawable(getResources(), bmp);
+            icon.setBounds(0, 0, dp(width), dp(height));
+            target.setCompoundDrawables(icon, null, null, null);
+            target.setCompoundDrawablePadding(dp(12));
+            target.setGravity(android.view.Gravity.CENTER_VERTICAL | android.view.Gravity.START);
+        } catch (java.io.IOException e) {
+            android.util.Log.w("YatriBrasil", "Ícone original indisponível: " + asset, e);
+        }
+    }
     private TextView sectionHeading(String value) {
         TextView heading = label(value, 19);
         heading.setTypeface(originalSemiBold);
@@ -229,7 +242,9 @@ public final class MainActivity extends Activity implements LocationListener {
         tripForm = column(); body.addView(tripForm);
         if (!driver) {
             originButton = button(origin == null ? "Escolher origem" : origin.optString("address"), tripForm, () -> addressDialog(true));
-            button("Usar minha localização como origem", tripForm, this::useGps);
+            attachOriginalIcon(originButton, "ny_ic_pickup.png", 20, 20);
+            Button gpsButton = button("Usar minha localização como origem", tripForm, this::useGps);
+            attachOriginalIcon(gpsButton, "ny_ic_current_location.png", 20, 20);
             destinationButton = button(destination == null ? "Para onde você vai?" : destination.optString("address"), tripForm, () -> addressDialog(false));
             // Recupera as medidas do whereToButtonConfig histórico (altura 60dp, raio 8dp).
             android.graphics.drawable.GradientDrawable destinationSurface = new android.graphics.drawable.GradientDrawable();
