@@ -145,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
     long onCreateTimeStamp = 0;
     private ActivityResultLauncher<Intent> startForResult;
     private Runnable checkAndStartApp;
-    private static final MobilityRemoteConfigs remoteConfigs = new MobilityRemoteConfigs(false, true);
+    private static final MobilityRemoteConfigs remoteConfigs = new MobilityRemoteConfigs(false, !BuildConfig.DEBUG);
     ActivityResultLauncher<HyperKycConfig> launcher;
     private String registeredCallBackForHV;
     private ExecutorService currentLocExecuter;
