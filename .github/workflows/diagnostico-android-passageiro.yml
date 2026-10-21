@@ -1,0 +1,50 @@
+name: Diagnóstico Android passageiro BR
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostico:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Recuperar branch do passageiro
+        uses: actions/checkout@v4
+        with:
+          ref: passageiro-pt-br
+      - name: Preparar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Preparar SDK Android
+        uses: android-actions/setup-android@v3
+      - name: Conferir recursos originais
+        run: |
+          set -euo pipefail
+          test -d Frontend/ui-customer
+          test -d Frontend/android-native
+          test -f Frontend/android-native/gradlew
+          chmod +x Frontend/android-native/gradlew
+          echo "Arquivos do passageiro recuperados."
+          if [[ -z "${GOOGLE_MAPS_API_KEY:-}" ]]; then
+            echo "::warning::Secret GOOGLE_MAPS_API_KEY ainda não configurado. O mapa ficará sem chave."
+          fi
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+      - name: Compilar APK debug do passageiro (diagnóstico)
+        working-directory: Frontend/android-native
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+        run: |
+          ./gradlew :app:assembleNyUserDevDebug -PbrTestMode=true --stacktrace --no-daemon --console=plain
+      - name: Disponibilizar APK se a compilação concluir
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: namma-yatri-br-passageiro-debug
+          path: Frontend/android-native/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
