@@ -13,6 +13,7 @@ jobs:
     timeout-minutes: 55
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - nome: passageiro
@@ -47,8 +48,14 @@ jobs:
           spago --version
       - name: Compilar frontend original
         working-directory: Frontend/${{ matrix.diretorio }}
+        env:
+          GHCRTS: '-N1 -M2500m'
         run: |
           set -o pipefail
+          echo 'Memoria disponivel antes da compilacao:'
+          free -h
+          echo 'Limite de memoria do runner:'
+          cat /sys/fs/cgroup/memory.max 2>/dev/null || true
           spago build 2>&1 | tee "$GITHUB_WORKSPACE/purescript-build.log"
       - name: Publicar diagnostico
         if: always()
