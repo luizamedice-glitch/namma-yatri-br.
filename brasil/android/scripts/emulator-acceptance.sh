@@ -36,7 +36,8 @@ for profile in passageiro motorista; do
     sleep 1
   done
   [ "$found" = true ]
-  adb shell dumpsys activity activities | grep -E "mResumedActivity.*br.com.namma.mobilidade.$profile"
+  adb shell dumpsys activity activities > "brasil/android/evidence/$profile-activities.txt"
+  grep -Fq "package=\"br.com.namma.mobilidade.$profile\"" "brasil/android/evidence/$profile-ui.xml"
   adb shell screencap -p /sdcard/operacional.png
   adb pull /sdcard/operacional.png "brasil/android/evidence/$profile-operacional.png"
 done

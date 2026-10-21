@@ -53,6 +53,15 @@ public final class BackendConnectionTest {
                     + ", coarse=" + context.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
                     + ", UI=" + visible[0], failure);
             }
+            var camera = new java.util.concurrent.atomic.AtomicReference<com.google.android.gms.maps.model.LatLng>();
+            waitUntil(() -> {
+                i.runOnMainSync(() -> {
+                    var fragment = (com.google.android.gms.maps.MapFragment)activity.getFragmentManager().findFragmentByTag("map");
+                    if (fragment != null) fragment.getMapAsync(map -> camera.set(map.getCameraPosition().target));
+                });
+                var target = camera.get();
+                return target != null && Math.abs(target.latitude + 23.5505) < 0.001 && Math.abs(target.longitude + 46.6333) < 0.001;
+            });
             if (BuildConfig.ROLE.equals("driver")) {
                 waitUntil(() -> {
                     if (api.request("/v1/snapshot", null).optBoolean("available")) return true;
