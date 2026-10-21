@@ -122,6 +122,21 @@ public final class MainActivity extends Activity implements LocationListener {
         image.setLayoutParams(new LinearLayout.LayoutParams(dp(42), dp(42)));
         return image;
     }
+    private TextView sectionHeading(String value) {
+        TextView heading = label(value, 19);
+        heading.setTypeface(originalSemiBold);
+        heading.setTextColor(Color.rgb(44, 47, 58));
+        return heading;
+    }
+    private void originalPrimaryAction(Button action) {
+        android.graphics.drawable.GradientDrawable background = new android.graphics.drawable.GradientDrawable();
+        background.setColor(Color.rgb(252, 195, 44));
+        background.setCornerRadius(dp(8));
+        action.setBackground(background);
+        action.setTextColor(Color.rgb(44, 47, 58));
+        action.setTypeface(originalSemiBold);
+        action.setMinHeight(dp(54));
+    }
     private LinearLayout originalRideCard(LinearLayout parent) {
         LinearLayout card = column();
         card.setPadding(dp(16), dp(12), dp(16), dp(16));
@@ -239,9 +254,11 @@ public final class MainActivity extends Activity implements LocationListener {
             } catch (java.io.IOException ex) {
                 android.util.Log.w("YatriBrasil", "Ícone original de destino indisponível", ex);
             }
-            button("Calcular rota e estimativa", tripForm, this::calculate);
-            summary = label("Defina origem e destino para calcular a rota", 16); tripForm.addView(summary);
+            Button calculateButton = button("Ver rota e estimativa", tripForm, this::calculate);
+            originalPrimaryAction(calculateButton);
+            summary = label("Escolha um destino para consultar a viagem", 15); tripForm.addView(summary);
             requestButton = button("Solicitar corrida", tripForm, () -> { if (quote != null) { JSONObject selected = quote; run(() -> api.request("/v1/rides", json("quoteId", selected.getString("id"))), r -> { quote = null; refresh(); }); } });
+            originalPrimaryAction(requestButton);
             requestButton.setEnabled(false);
         }
         panel = column(); body.addView(panel);
@@ -271,9 +288,10 @@ public final class MainActivity extends Activity implements LocationListener {
         tripForm.setVisibility(active != null ? View.GONE : View.VISIBLE);
         if (active != null) {
             String id = active.getString("id"), status = active.getString("status");
-            panel.addView(label(statusLabel(status), 21));
-            panel.addView(label(active.getJSONObject("origin").getString("address") + " → " + active.getJSONObject("destination").getString("address"), 16));
-            panel.addView(label(routeSummary(active.getJSONObject("route"), active.getInt("fare_cents")), 16));
+            LinearLayout activeCard = originalRideCard(panel);
+            activeCard.addView(sectionHeading(statusLabel(status)));
+            activeCard.addView(label(active.getJSONObject("origin").getString("address") + " → " + active.getJSONObject("destination").getString("address"), 16));
+            activeCard.addView(label(routeSummary(active.getJSONObject("route"), active.getInt("fare_cents")), 16));
             if (driver) {
                 panel.addView(label("Passageiro: " + active.getString("passenger_name"), 18));
                 button(status.equals("in_progress") ? "Navegar até o destino" : "Navegar até a origem", panel, () -> navigate(status.equals("in_progress") ? "destination" : "origin"));
