@@ -225,6 +225,71 @@ public final class MainActivity extends Activity implements LocationListener {
             }
         });
     }
+    // Etapa visual: seções e nomenclatura traduzidas das Views PureScript originais.
+    // Dados ainda não disponíveis no backend não são inventados.
+    private void showOriginalProfile() {
+        ScrollView scroll = new ScrollView(this);
+        LinearLayout content = column();
+        content.setPadding(dp(20), dp(16), dp(20), dp(24));
+        content.setBackgroundColor(Color.WHITE);
+        scroll.addView(content);
+        String name = driver ? "Giselo" : "Fagner";
+        TextView nameTitle = sectionHeading(name);
+        nameTitle.setTextSize(25);
+        content.addView(nameTitle);
+        content.addView(label(driver ? "Perfil do motorista" : "Meu perfil", 15));
+        View separator = new View(this);
+        separator.setBackgroundColor(Color.rgb(231, 232, 232));
+        LinearLayout.LayoutParams line = new LinearLayout.LayoutParams(-1, dp(1));
+        line.setMargins(0, dp(14), 0, dp(14));
+        content.addView(separator, line);
+        if (driver) {
+            // DriverProfileScreen/View.purs: informações pessoais, veículo,
+            // idiomas, detalhes de documentação e banco são abas do perfil original.
+            profileField(content, "Nome", name);
+            profileField(content, "Gênero", "—");
+            profileField(content, "Número de telefone", "—");
+            profileSection(content, "Detalhes do veículo");
+            profileField(content, "Veículo", "—");
+            profileField(content, "Número de registro", "—");
+            profileField(content, "Documentos do veículo", "—");
+            profileSection(content, "Preferências");
+            profileField(content, "Idiomas falados", "—");
+            profileSection(content, "Dados bancários");
+            profileField(content, "Conta bancária", "—");
+        } else {
+            // MyProfileScreen/View.purs: campos de nome, e-mail e gênero.
+            profileField(content, "Nome", name);
+            profileField(content, "E-mail", "Adicionar");
+            profileField(content, "Gênero", "Definir");
+            profileSection(content, "Preferências");
+            profileField(content, "Idioma", "Português (Brasil)");
+        }
+        new AlertDialog.Builder(this)
+            .setTitle(driver ? "Meu perfil · Motorista" : "Meu perfil")
+            .setView(scroll)
+            .setPositiveButton("Voltar", null)
+            .show();
+    }
+    private void profileSection(LinearLayout content, String title) {
+        TextView header = sectionHeading(title);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
+        params.setMargins(0, dp(16), 0, dp(8));
+        content.addView(header, params);
+    }
+    private void profileField(LinearLayout content, String title, String value) {
+        TextView key = label(title, 13);
+        key.setTextColor(Color.rgb(105, 108, 112));
+        content.addView(key);
+        TextView text = label(value, 16);
+        text.setTypeface(originalSemiBold);
+        content.addView(text);
+        View line = new View(this);
+        line.setBackgroundColor(Color.rgb(235, 235, 235));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, dp(1));
+        params.setMargins(0, dp(9), 0, dp(9));
+        content.addView(line, params);
+    }
     private void homeScreen() {
         baseScreen();
         // Priorizar o mapa como no HomeScreen do Namma Yatri: área geográfica principal
@@ -277,6 +342,7 @@ public final class MainActivity extends Activity implements LocationListener {
             requestButton.setEnabled(false);
         }
         panel = column(); body.addView(panel);
+        button("Meu perfil", body, this::showOriginalProfile);
         button("Histórico de corridas", body, this::history);
         button("Atualizar conexão", body, () -> { refresh(); startStream(); startLocations(); });
 
