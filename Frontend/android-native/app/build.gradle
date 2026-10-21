@@ -1,7 +1,11 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.google.gms.google-services'
-apply plugin: 'com.google.firebase.crashlytics'
-apply plugin: 'com.google.firebase.firebase-perf'
+// A execução brasileira de teste preserva Firebase, mas não ativa seus plugins.
+def brTestMode = (project.findProperty('brTestMode') ?: 'false').toString().toBoolean()
+if (!brTestMode) {
+    apply plugin: 'com.google.gms.google-services'
+    apply plugin: 'com.google.firebase.crashlytics'
+    apply plugin: 'com.google.firebase.firebase-perf'
+}
 
 static InetAddress getLocalAddress() throws SocketException {
     List<NetworkInterface> ifaces = Collections.list(NetworkInterface.getNetworkInterfaces())
@@ -127,7 +131,7 @@ android {
             buildConfigField "String", "RS_INSTANCE_TYPE", properties.getProperty("RS_INSTANCE_TYPE", "")
             buildConfigField "String", "RS_ALGO_PADDING", properties.getProperty("RS_ALGO_PADDING", "")
 
-            manifestPlaceholders = [isUsesCleartextTraffic: "false", mapsApiKey : properties.getProperty("MAPS_API_KEY", "")]
+            manifestPlaceholders = [isUsesCleartextTraffic: "false", mapsApiKey : (System.getenv("GOOGLE_MAPS_API_KEY") ?: properties.getProperty("MAPS_API_KEY", ""))]
             resValue "string", "facebook_app_id", properties.getProperty("FACEBOOK_APP_ID","")
             resValue "string", "facebook_client_token", properties.getProperty("FACEBOOK_CLIENT_TOKEN","")
             resValue "string", "fb_login_protocol_scheme", properties.getProperty("FB_LOGIN_PROTOCOL_SCHEMA","")
