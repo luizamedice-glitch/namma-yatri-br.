@@ -40,6 +40,14 @@ jobs:
             tail -100 "$GITHUB_WORKSPACE/gradle-build.log"
             exit 1
           }
+      - name: Habilitar aceleração KVM no runner
+        run: |
+          if [[ -e /dev/kvm ]]; then
+            sudo chmod 666 /dev/kvm
+            ls -l /dev/kvm
+          else
+            echo "::warning::KVM não disponível neste runner."
+          fi
       - name: Instalar no emulador e registrar travamento
         uses: reactivecircus/android-emulator-runner@v2
         with:
