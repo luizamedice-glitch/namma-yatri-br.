@@ -31,16 +31,17 @@ jobs:
           target: google_apis
           disable-animations: true
           script: |
-            cd brasil/android
-            gradle :app:connectedPassageiroDebugAndroidTest :app:connectedMotoristaDebugAndroidTest --stacktrace
-            mkdir -p evidence
+            gradle -p brasil/android :app:connectedPassageiroDebugAndroidTest :app:connectedMotoristaDebugAndroidTest --stacktrace
+            mkdir -p brasil/android/evidence
             adb shell am start -W -n br.com.namma.mobilidade.passageiro/br.com.namma.mobilidade.MainActivity
+            adb shell sleep 2
             adb shell screencap -p /sdcard/passageiro.png
-            adb pull /sdcard/passageiro.png evidence/passageiro-login.png
+            adb pull /sdcard/passageiro.png brasil/android/evidence/passageiro-login.png
             adb shell am start -W -n br.com.namma.mobilidade.motorista/br.com.namma.mobilidade.MainActivity
+            adb shell sleep 2
             adb shell screencap -p /sdcard/motorista.png
-            adb pull /sdcard/motorista.png evidence/motorista-login.png
-            adb logcat -d > evidence/logcat.txt
+            adb pull /sdcard/motorista.png brasil/android/evidence/motorista-login.png
+            adb logcat -d > brasil/android/evidence/logcat.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:

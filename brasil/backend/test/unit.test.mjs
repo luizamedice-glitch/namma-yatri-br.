@@ -39,6 +39,7 @@ test('senhas possuem sal e verificação; token é armazenado por hash', async (
 test('JSON malformado e corpo excessivo retornam erros de cliente', async () => {
   await assert.rejects(readBody(Readable.from([Buffer.from('{bad') ])), { status: 400 });
   await assert.rejects(readBody(Readable.from([Buffer.alloc(20001)])), { status: 413 });
+  for (const invalid of ['null','[]','"texto"','123']) await assert.rejects(readBody(Readable.from([Buffer.from(invalid)])), { status: 400 });
 });
 test('ausência de chave impede chamadas Google e nunca inventa rota', async () => {
   const maps = mapsService({ fetchImpl: () => { throw Error('não deveria chamar'); } });

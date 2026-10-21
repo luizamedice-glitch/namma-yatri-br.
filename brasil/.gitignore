@@ -1,0 +1,11 @@
+.env
+backend/.env
+backend/node_modules/
+backend/*.log
+android/.gradle/
+android/**/build/
+android/local.properties
+android/evidence/
+*.jks
+*.keystore
+evidence/*.log

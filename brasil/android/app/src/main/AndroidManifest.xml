@@ -2,10 +2,13 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <application android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:label="@string/app_name" android:allowBackup="false" android:supportsRtl="true"
         android:usesCleartextTraffic="false">
         <meta-data android:name="com.google.android.geo.API_KEY" android:value="${mapsApiKey}" />
+        <service android:name=".DriverLocationService" android:exported="false" android:foregroundServiceType="location" />
         <activity android:name=".MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -57,7 +57,7 @@ public final class MainActivity extends Activity implements LocationListener {
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
         sessions = new SessionStore(this);
-        api = new Api(getPreferences(0).getString("api", BuildConfig.API_URL)); api.token = sessions.load();
+        api = new Api(getSharedPreferences("settings", 0).getString("api", BuildConfig.API_URL)); api.token = sessions.load();
         locations = (LocationManager) getSystemService(LOCATION_SERVICE);
         if (saved != null) {
             try {
@@ -91,8 +91,11 @@ public final class MainActivity extends Activity implements LocationListener {
         if (old != null) { getFragmentManager().beginTransaction().remove(old).commitAllowingStateLoss(); getFragmentManager().executePendingTransactions(); }
         root = column(); root.setPadding(dp(18), dp(8), dp(18), dp(8)); root.setBackgroundColor(Color.rgb(246, 249, 246));
         root.setOnApplyWindowInsetsListener((view, insets) -> {
-            android.graphics.Insets bars = android.os.Build.VERSION.SDK_INT >= 30 ? insets.getInsets(WindowInsets.Type.systemBars()) : null;
-            view.setPadding(dp(18), dp(8) + (bars != null ? bars.top : insets.getSystemWindowInsetTop()), dp(18), dp(8) + (bars != null ? bars.bottom : insets.getSystemWindowInsetBottom()));
+            int top, bottom;
+            if (android.os.Build.VERSION.SDK_INT >= 30) {
+                android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars()); top = bars.top; bottom = bars.bottom;
+            } else { top = insets.getSystemWindowInsetTop(); bottom = insets.getSystemWindowInsetBottom(); }
+            view.setPadding(dp(18), dp(8) + top, dp(18), dp(8) + bottom);
             return insets;
         });
         setContentView(root);
@@ -103,13 +106,17 @@ public final class MainActivity extends Activity implements LocationListener {
     interface Work { JSONObject run() throws Exception; }
     interface Done { void run(JSONObject result) throws Exception; }
     private void run(Work job, Done done) {
+        run(job, done, null);
+    }
+    private void run(Work job, Done done, java.util.function.Consumer<String> error) {
         String session = api.token;
         worker.execute(() -> {
             try { JSONObject result = job.run(); ui.post(() -> { if (isDestroyed() || !session.equals(api.token)) return; try { done.run(result); } catch (Exception e) { showMessage("Não foi possível apresentar a resposta do servidor"); } }); }
             catch (Exception e) { ui.post(() -> {
                 if (isDestroyed() || !session.equals(api.token)) return;
                 if (e instanceof Api.SessionExpired && !api.token.isEmpty()) clearSession();
-                showMessage(e.getMessage() == null ? "Falha de conexão. Verifique a rede e tente novamente." : e.getMessage());
+                String detail = e.getMessage() == null ? "Falha de conexão. Verifique a rede e tente novamente." : e.getMessage();
+                if (error != null) error.accept(detail); else showMessage(detail);
             }); }
         });
     }
@@ -138,7 +145,7 @@ public final class MainActivity extends Activity implements LocationListener {
             try {
                 java.net.URI uri = java.net.URI.create(value);
                 if (uri.getHost() == null || uri.getUserInfo() != null || uri.getQuery() != null || uri.getFragment() != null || !(uri.getPath().isEmpty()) || !(uri.getScheme().equals("https") || (BuildConfig.DEBUG && uri.getScheme().equals("http")))) throw new Exception();
-                api.base = value; getPreferences(0).edit().putString("api", value).apply(); showMessage("Servidor configurado");
+                api.base = value; getSharedPreferences("settings", 0).edit().putString("api", value).apply(); showMessage("Servidor configurado");
             } catch (Exception ex) { showMessage("Informe uma URL HTTPS válida. HTTP é permitido apenas no APK de depuração."); }
         }).show();
     }
@@ -181,7 +188,7 @@ public final class MainActivity extends Activity implements LocationListener {
         startLocations(); refresh();
     }
     private void clearSession() {
-        stopStream(); locations.removeUpdates(this); sessions.clear(); api.token = ""; cursor = "0"; active = null; quote = null; origin = null; destination = null; available = false; panel = null; loginScreen();
+        stopStream(); stopService(new Intent(this, DriverLocationService.class)); locations.removeUpdates(this); sessions.clear(); api.token = ""; cursor = "0"; active = null; quote = null; origin = null; destination = null; available = false; panel = null; loginScreen();
     }
     private void refresh() {
         if (api.token.isEmpty() || !syncing.compareAndSet(false, true)) return;
@@ -192,6 +199,10 @@ public final class MainActivity extends Activity implements LocationListener {
         String previous = active == null ? null : active.optString("id");
         JSONArray rides = state.getJSONArray("rides"); active = rides.length() == 0 ? null : rides.getJSONObject(0);
         available = state.optBoolean("available");
+        if (driver) {
+            if ((available || active != null) && foreground && (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)) startForegroundService(new Intent(this, DriverLocationService.class));
+            else if (!available && active == null) stopService(new Intent(this, DriverLocationService.class));
+        }
         panel.removeAllViews();
         tripForm.setVisibility(active != null ? View.GONE : View.VISIBLE);
         if (active != null) {
@@ -268,7 +279,7 @@ public final class MainActivity extends Activity implements LocationListener {
                         JSONArray values = response.getJSONArray("suggestions");
                         for (int i=0;i<values.length();i++) { JSONObject place = values.getJSONObject(i); results.add(place); titles.add(place.getString("address")); }
                         adapter.notifyDataSetChanged(); status.setText(values.length() == 0 ? "Nenhum endereço encontrado. Tente outra busca." : "Selecione o endereço correto");
-                    });
+                    }, failure -> { if (dialog.isShowing() && generation[0] == request) status.setText(failure); });
                 }; ui.postDelayed(pending[0], 450);
             }
         });
@@ -277,7 +288,7 @@ public final class MainActivity extends Activity implements LocationListener {
             run(() -> api.request("/v1/places/details", json("placeId", selected.getString("placeId"))), response -> {
                 JSONObject p = response.getJSONObject("location"); p.put("address", response.getString("address"));
                 setPoint(from, p); dialog.dismiss();
-            });
+            }, failure -> status.setText(failure));
         });
         dialog.setOnDismissListener(d -> { generation[0]++; if (pending[0] != null) ui.removeCallbacks(pending[0]); }); dialog.show();
     }
@@ -310,14 +321,14 @@ public final class MainActivity extends Activity implements LocationListener {
             return;
         }
         try {
-            for (String provider : List.of(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)) {
+            for (String provider : Arrays.asList(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)) {
                 if (locations.isProviderEnabled(provider)) locations.requestLocationUpdates(provider, 5000, 0, this);
             }
         } catch (SecurityException e) { showMessage("Permissão de localização necessária"); }
     }
     @Override public void onRequestPermissionsResult(int request, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(request, permissions, results);
-        if (request == 10 && results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) startLocations();
+        if (request == 10 && (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)) startLocations();
         else showMessage("Localização não autorizada. O passageiro pode pesquisar a origem; o motorista precisa de GPS.");
     }
     @Override public void onLocationChanged(Location location) {
