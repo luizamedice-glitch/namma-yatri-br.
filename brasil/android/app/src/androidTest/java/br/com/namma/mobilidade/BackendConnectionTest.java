@@ -62,6 +62,12 @@ public final class BackendConnectionTest {
                 var target = camera.get();
                 return target != null && Math.abs(target.latitude + 23.5505) < 0.001 && Math.abs(target.longitude + 46.6333) < 0.001;
             });
+            var mapLoaded = new java.util.concurrent.atomic.AtomicBoolean();
+            i.runOnMainSync(() -> {
+                var fragment = (com.google.android.gms.maps.MapFragment)activity.getFragmentManager().findFragmentByTag("map");
+                fragment.getMapAsync(map -> map.setOnMapLoadedCallback(() -> mapLoaded.set(true)));
+            });
+            waitUntil(mapLoaded::get);
             if (BuildConfig.ROLE.equals("driver")) {
                 waitUntil(() -> {
                     if (api.request("/v1/snapshot", null).optBoolean("available")) return true;
