@@ -15,6 +15,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
+      - name: Verificar permissão de importação
+        env:
+          IMPORT_TOKEN: ${{ secrets.IMPORT_GH_PAT }}
+        run: |
+          if [[ -z "$IMPORT_TOKEN" ]]; then
+            echo "::error::Configure o secret IMPORT_GH_PAT com um personal access token (classic) com scopes repo e workflow antes de executar."
+            exit 1
+          fi
+
       - name: Checkout da preparação brasileira
         uses: actions/checkout@v4
         with:
@@ -61,7 +70,7 @@ jobs:
 
       - name: Publicar branch no repositório brasileiro
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.IMPORT_GH_PAT }}
           REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
