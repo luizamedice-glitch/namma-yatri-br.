@@ -31,18 +31,25 @@ jobs:
           npm config set ignore-scripts false
           node --version
           free -h
+      - name: Instalar compilador e Spago historicos
+        run: |
+          npm install --global --ignore-scripts=false purescript@0.15.4 spago@0.21.0
+          command -v purs
+          purs --version
+          command -v spago
+          spago --version
       - name: Instalar dependencias e compilador
         working-directory: Frontend/${{ matrix.diretorio }}
         run: |
           set -o pipefail
           npm install --legacy-peer-deps --ignore-scripts=false 2>&1 | tee "$GITHUB_WORKSPACE/npm-install.log"
-          npx purs --version
-          npx spago --version
+          purs --version
+          spago --version
       - name: Compilar frontend original
         working-directory: Frontend/${{ matrix.diretorio }}
         run: |
           set -o pipefail
-          npx spago build --purs-args '--censor-warnings' 2>&1 | tee "$GITHUB_WORKSPACE/purescript-build.log"
+          spago build --purs-args '--censor-warnings' 2>&1 | tee "$GITHUB_WORKSPACE/purescript-build.log"
       - name: Publicar diagnostico
         if: always()
         uses: actions/upload-artifact@v4
