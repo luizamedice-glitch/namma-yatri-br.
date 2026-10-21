@@ -8,8 +8,11 @@ export async function readBody(req) {
     if (bytes > 20000) throw new ApiError(413, 'Requisição excede 20 KB');
     chunks.push(chunk);
   }
-  try { return JSON.parse(Buffer.concat(chunks).toString() || '{}'); }
+  let parsed;
+  try { parsed = JSON.parse(Buffer.concat(chunks).toString() || '{}'); }
   catch { throw new ApiError(400, 'JSON inválido'); }
+  requireThat(parsed && typeof parsed === 'object' && !Array.isArray(parsed), 400, 'Corpo JSON precisa ser um objeto');
+  return parsed;
 }
 
 export function createApi({ service, maps, pool, allowedOrigin = '', rateLimit = 120 }) {

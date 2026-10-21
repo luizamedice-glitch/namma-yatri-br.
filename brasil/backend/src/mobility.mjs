@@ -5,7 +5,9 @@ import { requireThat, text, point, position, uuid, passwordHash, verifyPassword,
 const rideSelect = `SELECT r.id, r.passenger_id, r.driver_id, r.status, r.version,
  r.created_at, r.updated_at, q.origin, q.destination, q.route, q.fare_cents,
  p.name AS passenger_name, d.name AS driver_name, v.plate, v.model, v.color,
- dl.lat AS driver_lat, dl.lng AS driver_lng, dl.location_at AS driver_location_at
+ CASE WHEN r.status IN ('accepted','arrived','in_progress') THEN dl.lat END AS driver_lat,
+ CASE WHEN r.status IN ('accepted','arrived','in_progress') THEN dl.lng END AS driver_lng,
+ CASE WHEN r.status IN ('accepted','arrived','in_progress') THEN dl.location_at END AS driver_location_at
  FROM rides r JOIN quotes q ON q.id=r.quote_id JOIN users p ON p.id=r.passenger_id
  LEFT JOIN users d ON d.id=r.driver_id LEFT JOIN vehicles v ON v.driver_id=r.driver_id
  LEFT JOIN drivers dl ON dl.user_id=r.driver_id`;
