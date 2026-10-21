@@ -40,11 +40,19 @@ public final class BackendConnectionTest {
             Api api = connected(); JSONObject user = api.request("/v1/snapshot", null).getJSONObject("user");
             assertEquals(BuildConfig.ROLE, user.getString("role"));
             assertEquals(BuildConfig.ROLE.equals("driver") ? "Giselo" : "Fagner", user.getString("name"));
-            waitUntil(() -> {
+            try { waitUntil(() -> {
                 boolean[] ready = {false};
                 i.runOnMainSync(() -> ready[0] = contains(activity.getWindow().getDecorView(), BuildConfig.ROLE.equals("driver") ? "Ficar disponível" : "Localização GPS atual"));
                 return ready[0];
-            });
+            }); } catch (AssertionError failure) {
+                var manager = (android.location.LocationManager)context.getSystemService(android.content.Context.LOCATION_SERVICE);
+                String[] visible = {""};
+                i.runOnMainSync(() -> visible[0] = visibleText(activity.getWindow().getDecorView()));
+                throw new AssertionError("GPS enabled=" + manager.isProviderEnabled("gps") + ", providers=" + manager.getProviders(true)
+                    + ", fine=" + context.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    + ", coarse=" + context.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                    + ", UI=" + visible[0], failure);
+            }
             if (BuildConfig.ROLE.equals("driver")) {
                 waitUntil(() -> {
                     if (api.request("/v1/snapshot", null).optBoolean("available")) return true;
@@ -92,6 +100,12 @@ public final class BackendConnectionTest {
             Thread.sleep(500);
         }
         throw new AssertionError("Estado operacional esperado não chegou pelo GPS/backend reais do ambiente de testes");
+    }
+    private String visibleText(View view) {
+        if (view instanceof TextView) return ((TextView)view).getText().toString() + " | ";
+        StringBuilder result = new StringBuilder();
+        if (view instanceof ViewGroup) { ViewGroup group=(ViewGroup)view; for(int n=0;n<group.getChildCount();n++) result.append(visibleText(group.getChildAt(n))); }
+        return result.toString();
     }
     private boolean click(View view, String text) {
         if (view instanceof TextView && ((TextView)view).getText().toString().equals(text) && view.isClickable()) return view.performClick();

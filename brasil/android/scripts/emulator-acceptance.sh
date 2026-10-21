@@ -4,6 +4,7 @@ set -euo pipefail
 mkdir -p brasil/android/evidence
 cleanup() {
   if [ -n "${gps_feed_pid:-}" ]; then kill "$gps_feed_pid" 2>/dev/null || true; fi
+  adb shell dumpsys location > brasil/android/evidence/location-system.txt 2>/dev/null || true
   adb logcat -d 2>/dev/null | sed -E 's/(API Key:).*/\1 [redacted]/I' > brasil/android/evidence/logcat.txt || true
 }
 trap cleanup EXIT
@@ -11,7 +12,7 @@ gradle -p brasil/android :app:lintPassageiroDebug :app:lintMotoristaDebug :app:a
 # Repeat the explicit test sensor fix after listeners register, with global location enabled.
 # This is not evidence of physical-device GPS operation.
 adb shell cmd location set-location-enabled true
-(while true; do adb emu geo fix -46.6333 -23.5505 > /dev/null; sleep 2; done) &
+(while true; do adb emu geo fix -46.6333 -23.5505 >> brasil/android/evidence/emulator-gps.txt; sleep 2; done) &
 gps_feed_pid=$!
 gradle -p brasil/android :app:connectedPassageiroDebugAndroidTest --stacktrace
 adb emu geo fix -46.6333 -23.5505
