@@ -1,0 +1,66 @@
+name: BR - PureScript teste isolado
+
+on:
+  workflow_dispatch:
+    inputs:
+      aplicativo:
+        description: 'Escolha qual frontend original compilar'
+        required: true
+        default: 'passageiro'
+        type: choice
+        options:
+          - passageiro
+          - motorista
+
+permissions:
+  contents: read
+
+jobs:
+  compilar:
+    name: Original - ${{ inputs.aplicativo }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      GHCRTS: '-N1 -M10g'
+    steps:
+      - name: Checkout frontend original
+        uses: actions/checkout@v4
+        with:
+          ref: passageiro-pt-br
+      - name: Node 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Configurar ferramentas
+        run: |
+          set -e
+          npm config set ignore-scripts false
+          npm install -g --ignore-scripts=false purescript@0.15.4 spago@0.21.0
+          purs --version
+          spago --version
+          free -h
+      - name: Instalar dependencias do app selecionado
+        shell: bash
+        run: |
+          set -o pipefail
+          if [[ "${{ inputs.aplicativo }}" == "motorista" ]]; then DIR="ui-driver"; else DIR="ui-customer"; fi
+          echo "APP_DIR=Frontend/$DIR" >> "$GITHUB_ENV"
+          cd "Frontend/$DIR"
+          npm install --legacy-peer-deps --ignore-scripts=false 2>&1 | tee "$GITHUB_WORKSPACE/npm-install.log"
+      - name: Compilar PureScript original
+        shell: bash
+        run: |
+          set -o pipefail
+          cd "$APP_DIR"
+          echo "Compilando $APP_DIR"
+          free -h
+          spago build 2>&1 | tee "$GITHUB_WORKSPACE/purescript-build.log"
+      - name: Salvar logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: purescript-teste-${{ inputs.aplicativo }}
+          path: |
+            npm-install.log
+            purescript-build.log
+          if-no-files-found: warn
