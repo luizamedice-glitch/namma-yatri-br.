@@ -91,3 +91,23 @@ Consultar os runs mais recentes e baixar os artefatos dos dois APKs; verificar
 configurar as chaves Google com restrições e criar os dois usuários pelos apps.
 Executar e registrar a viagem completa antes de declarar a primeira operação
 validada. Não pular falhas de lint, testes ou indisponibilidade de mapas.
+
+
+## Correção de acesso — 0.2.1
+
+Foi confirmado que o uso reportado era em celular físico, sem backend iniciado.
+O APK anterior usava `10.0.2.2:8080` como padrão, endereço exclusivo do emulador.
+A versão nova exige configuração explícita, mostra o servidor selecionado e
+verifica a identidade e a prontidão da API antes de enviar credenciais.
+
+Builds e lint passaram: [passageiro 39664690126](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39664690126)
+e [motorista 39664690356](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39664690356).
+O [emulador 39664690129](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39664690129)
+passou oito testes, zero falhas e zero ignorados, no commit
+`345d6d15cdb19009e4f090c24bd7e78df0175dc4`. O teste nativo agora verifica
+cadastro, logout, rejeição de senha incorreta e login correto recuperando o mesmo
+usuário persistido. Também verifica que servidor não configurado impede acesso.
+
+Artefato de evidências: [android-startup-evidence](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39664690129/artifacts/12377786595).
+A instalação em um telefone físico continua exigindo um backend local ou privado
+ligado; nenhum servidor público foi criado. Google não é exigido para autenticação.
