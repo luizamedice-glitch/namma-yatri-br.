@@ -1,0 +1,82 @@
+name: Importar Namma Yatri completo
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: importacao-namma-yatri
+  cancel-in-progress: false
+
+jobs:
+  importar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout da preparação brasileira
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          path: brasil
+
+      - name: Clonar repositório original com histórico
+        run: |
+          set -euo pipefail
+          echo "::group::Clonagem upstream"
+          git clone --progress https://github.com/nammayatri/nammayatri.git upstream
+          echo "::endgroup::"
+          git -C upstream rev-parse HEAD
+          git -C upstream rev-list --count HEAD
+
+      - name: Restaurar frontend histórico e integrar preparação
+        env:
+          REMOVAL: 872a9d0a8b3a22006a89cff6e6319db9e22b58c2
+        run: |
+          set -euo pipefail
+          cd upstream
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c passageiro-pt-br
+          git cat-file -e "${REMOVAL}^:Frontend"
+          echo "Restaurando Frontend/ do commit pai de ${REMOVAL}"
+          git restore --source="${REMOVAL}^" --staged --worktree Frontend
+          git diff --cached --stat | tail -25
+          if ! git diff --cached --quiet; then
+            git commit -m "restore: recuperar frontend original do histórico"
+          fi
+          git remote add brasil "../brasil"
+          git fetch brasil main
+          git merge --allow-unrelated-histories -s ours brasil/main -m "chore: vincular histórico de preparação brasileiro"
+          cat > README-BR.md <<'EOF'
+          # Namma Yatri Brasil — Passageiro
+          Base original: https://github.com/nammayatri/nammayatri
+          Frontend restaurado do pai de 872a9d0a8b3a22006a89cff6e6319db9e22b58c2.
+          Código não compilado ou traduzido ainda. Respeitar licenças, atribuição e termos de serviços externos.
+          EOF
+          git add README-BR.md
+          git commit -m "docs: registrar origem do aplicativo brasileiro"
+          echo "Total de arquivos Frontend: $(git ls-files Frontend | wc -l)"
+
+      - name: Publicar branch no repositório brasileiro
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cd upstream
+          git remote add destino "https://github.com/${REPOSITORY}.git"
+          AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" push destino HEAD:refs/heads/passageiro-pt-br
+
+      - name: Relatório da importação
+        if: success()
+        run: |
+          {
+            echo "## Importação concluída"
+            echo "Branch: \`passageiro-pt-br\`"
+            echo "Backend atual e histórico upstream preservados."
+            echo "Frontend histórico restaurado."
+            echo "Próxima etapa: auditoria das dependências e compilação Android."
+          } >> "$GITHUB_STEP_SUMMARY"
