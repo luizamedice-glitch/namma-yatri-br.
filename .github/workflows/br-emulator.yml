@@ -10,8 +10,37 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: android_test
+          POSTGRES_PASSWORD: android-integration-only
+          POSTGRES_DB: android_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U android_test -d android_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://android_test:android-integration-only@localhost:5432/android_test
+      TEST_INVITE_CODE: android-workflow-invite-123456
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Start real local backend
+        working-directory: brasil/backend
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run migrate
+          node server.mjs > /tmp/br-backend.log 2>&1 &
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            if curl -fsS http://127.0.0.1:8080/health > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/br-backend.log
+          exit 1
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -31,7 +60,7 @@ jobs:
           target: google_apis
           disable-animations: true
           script: |
-            gradle -p brasil/android :app:connectedPassageiroDebugAndroidTest :app:connectedMotoristaDebugAndroidTest --stacktrace
+            gradle -p brasil/android :app:connectedPassageiroDebugAndroidTest :app:connectedMotoristaDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.BR_TEST_INVITE=android-workflow-invite-123456 --stacktrace
             mkdir -p brasil/android/evidence
             adb install -r brasil/android/app/build/outputs/apk/passageiro/debug/app-passageiro-debug.apk
             adb install -r brasil/android/app/build/outputs/apk/motorista/debug/app-motorista-debug.apk
