@@ -67,5 +67,8 @@ jobs:
             falhas-resumo.txt
             launch.txt
             activities.txt
+            janela-ativa.txt
+            tela-inicial.png
+            Frontend/android-native/app/build/outputs/apk/**/*.apk
             gradle-build.log
           if-no-files-found: warn
