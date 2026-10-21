@@ -19,7 +19,7 @@ test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo po
     vehicle: { plate: 'TST1A23', model: 'Veículo cadastrado de testes', color: 'Prata' } };
   const development = await developmentAccounts(pool, config);
   const maps = { route: async () => ({ distanceMeters: 1200, durationSeconds: 240, encodedPolyline: 'fixture-only', fareCents: 740 }) };
-  const service = mobilityService(pool, maps);
+  const service = mobilityService(pool, maps, { allowDevelopmentAccounts: true });
   const server = createApi({ pool, maps, service, development });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(async () => {
@@ -67,6 +67,9 @@ test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo po
     }
   }
   await call('/rides/' + ride.id + '/start', passenger.token, {}, 403);
+  const nonDevelopment = mobilityService(pool, maps);
+  await assert.rejects(nonDevelopment.authenticate(passenger.token), e => e.status === 401);
+  await assert.rejects(nonDevelopment.authenticate(driver.token), e => e.status === 401);
   const disabled = await developmentAccounts(pool);
   assert.equal(disabled, null);
   await assert.rejects(developmentAccounts(pool, { ...config, driverKey: config.passengerKey }), /diferentes/);

@@ -13,7 +13,7 @@ const developmentMode = process.env.YATRI_DEVELOPMENT_MODE === 'true';
 if (process.env.NODE_ENV === 'production' && developmentMode) throw new Error('Contas automáticas são proibidas em produção');
 if (!developmentMode && (!process.env.TEST_INVITE_CODE || process.env.TEST_INVITE_CODE.length < 16)) throw new Error('TEST_INVITE_CODE precisa ter ao menos 16 caracteres');
 const maps = mapsService({ key: process.env.GOOGLE_MAPS_SERVER_KEY, baseFareCents: configNumber('BASE_FARE_CENTS', 500), perKmCents: configNumber('PER_KM_CENTS', 200) });
-const service = mobilityService(pool, maps, { inviteCode: process.env.TEST_INVITE_CODE, radiusMeters: configNumber('DRIVER_RADIUS_METERS', 5000) });
+const service = mobilityService(pool, maps, { allowDevelopmentAccounts: developmentMode, inviteCode: process.env.TEST_INVITE_CODE, radiusMeters: configNumber('DRIVER_RADIUS_METERS', 5000) });
 const development = await developmentAccounts(pool, { enabled: developmentMode,
   passengerKey: process.env.YATRI_PASSENGER_DEV_KEY, driverKey: process.env.YATRI_DRIVER_DEV_KEY,
   vehicle: { plate: process.env.YATRI_DRIVER_PLATE, model: process.env.YATRI_DRIVER_MODEL, color: process.env.YATRI_DRIVER_COLOR } });

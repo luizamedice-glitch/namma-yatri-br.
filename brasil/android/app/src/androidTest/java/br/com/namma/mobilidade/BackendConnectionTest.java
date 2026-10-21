@@ -18,12 +18,13 @@ public final class BackendConnectionTest {
         var i = InstrumentationRegistry.getInstrumentation();
         return (MainActivity)i.startActivitySync(new Intent(i.getTargetContext(), MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
     }
-    private Api connected() throws Exception {
+    private Api connected() throws Exception { return connected(null); }
+    private Api connected(String excluded) throws Exception {
         var context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         long deadline = System.currentTimeMillis() + 25000;
         while (System.currentTimeMillis() < deadline) {
             String token = new SessionStore(context).load();
-            if (!token.isEmpty()) { Api api = new Api(BuildConfig.API_URL); api.token = token; return api; }
+            if (!token.isEmpty() && !token.equals(excluded)) { Api api = new Api(BuildConfig.API_URL); api.token = token; return api; }
             Thread.sleep(100);
         }
         throw new AssertionError("A conta automática não foi provisionada no backend real");
@@ -56,10 +57,9 @@ public final class BackendConnectionTest {
                 assertEquals(user.getString("id"), connected().request("/v1/snapshot", null).getJSONObject("user").getString("id"));
             } finally { i.runOnMainSync(reopened::finish); }
             api.request("/v1/auth/logout", new JSONObject());
-            new SessionStore(context).clear();
             MainActivity recovered = launch();
             try {
-                Api replacement = connected();
+                Api replacement = connected(oldToken);
                 assertNotEquals(oldToken, replacement.token);
                 assertEquals(user.getString("id"), replacement.request("/v1/snapshot", null).getJSONObject("user").getString("id"));
             } finally { i.runOnMainSync(recovered::finish); }

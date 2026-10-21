@@ -7,7 +7,7 @@ Esta revisão é parcial. Não atende ainda ao aceite de reconstrução fiel das
 - Banco PostgreSQL provisiona Fagner e Giselo com UUIDs diferentes e preserva suas contas entre reinicializações.
 - `/v1/development/session` emite sessões reais de 30 dias. Cada perfil tem uma credencial independente; a credencial do passageiro não provisiona o motorista e vice-versa.
 - Os aplicativos abrem a conexão automática e entram na operação sem email, senha, convite, OTP ou cadastro. Tokens persistem criptografados no Android Keystore e são reutilizados. Sessões expiradas são reprovisionadas automaticamente.
-- Login e cadastro ficam bloqueados no modo de desenvolvimento. O servidor recusa esse modo com `NODE_ENV=production`. O endpoint de provisionamento não existe fora desse modo.
+- Login e cadastro ficam bloqueados no modo de desenvolvimento. O servidor recusa esse modo com `NODE_ENV=production`. O endpoint de provisionamento não existe fora desse modo, e as sessões já emitidas para essas duas contas também são recusadas quando ele é desativado.
 - Nome e papel recebidos são validados; o cliente também verifica o UUID esperado. Sessões continuam sujeitas às mesmas autorizações das corridas.
 - A URL e apenas a credencial do respectivo perfil entram no build. Não há configuração de servidor na interface. Credenciais extraíveis de APKs limitam o uso a testes privados: não distribuir esses builds publicamente.
 - Workflows destinados a celulares exigem URL HTTPS e credencial de perfil configuradas, evitando publicar mais APKs sem backend.

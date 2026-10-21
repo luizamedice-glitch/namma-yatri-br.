@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { isDevelopmentAccount } from './development.mjs';
 import { transaction } from './db.mjs';
 import { requireThat, text, point, position, uuid, passwordHash, verifyPassword, newToken, tokenHash, transition } from './domain.mjs';
 
@@ -12,7 +13,7 @@ const rideSelect = `SELECT r.id, r.passenger_id, r.driver_id, r.status, r.versio
  LEFT JOIN users d ON d.id=r.driver_id LEFT JOIN vehicles v ON v.driver_id=r.driver_id
  LEFT JOIN drivers dl ON dl.user_id=r.driver_id`;
 
-export function mobilityService(pool, maps, { inviteCode, radiusMeters = 5000 } = {}) {
+export function mobilityService(pool, maps, { inviteCode, radiusMeters = 5000, allowDevelopmentAccounts = false } = {}) {
   const role = (u, value) => requireThat(u.role === value, 403, 'Perfil sem permissão');
   async function event(db, userId, kind, payload = {}) {
     await db.query('INSERT INTO events(user_id,kind,payload) VALUES($1,$2,$3)', [userId, kind, payload]);
@@ -82,6 +83,7 @@ export function mobilityService(pool, maps, { inviteCode, radiusMeters = 5000 } 
       requireThat(typeof token === 'string' && /^[a-f0-9]{64}$/.test(token), 401, 'Autenticação necessária');
       const r = await pool.query('SELECT u.id,u.name,u.role,s.expires_at FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>now()', [tokenHash(token)]);
       requireThat(r.rowCount, 401, 'Sessão expirada');
+      requireThat(allowDevelopmentAccounts || !isDevelopmentAccount(r.rows[0].id), 401, 'Sessão de desenvolvimento desabilitada');
       return r.rows[0];
     },
     async logout(token) { await pool.query('DELETE FROM sessions WHERE token_hash=$1', [tokenHash(token)]); return {}; },

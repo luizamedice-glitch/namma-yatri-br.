@@ -8,6 +8,8 @@ const accounts = Object.freeze({
   driver: { id: 'b1a51100-0000-4000-8000-000000000002', name: 'Giselo' }
 });
 
+export const isDevelopmentAccount = id => Object.values(accounts).some(account => account.id === id);
+
 export async function developmentAccounts(pool, { enabled = false, passengerKey, driverKey, vehicle } = {}) {
   if (!enabled) return null;
   for (const key of [passengerKey, driverKey]) {
