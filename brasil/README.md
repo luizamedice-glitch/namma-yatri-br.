@@ -35,7 +35,7 @@ Alternativa com PostgreSQL 16 instalado e Node 22:
 cd brasil/backend
 cp .env.example .env
 # Crie banco/usuário locais, ajuste DATABASE_URL, convite e chave Google.
-npm install --ignore-scripts
+npm ci --ignore-scripts
 npm run migrate
 npm start
 ```

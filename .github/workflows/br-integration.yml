@@ -32,13 +32,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install --ignore-scripts --no-audit --no-fund
-      - name: Record resolved dependency lock
-        run: node -e "console.log('DEPENDENCY_LOCK=' + JSON.stringify(require('./package-lock.json')))"
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm run test:integration 2>&1 | tee integration.log
         shell: bash
+      - name: Verify real Google APIs when configured
+        env:
+          GOOGLE_MAPS_SERVER_KEY: ${{ secrets.GOOGLE_MAPS_SERVER_KEY }}
+        run: node test/maps-live.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: integration-evidence
-          path: brasil/backend/integration.log
+          path: |
+            brasil/backend/integration.log
+            brasil/backend/google-evidence.json

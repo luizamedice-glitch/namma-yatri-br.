@@ -75,6 +75,7 @@ test('HTTP + PostgreSQL: oferta, concorrência, SSE, autorização, persistênci
   await call('/rides/' + id + '/arrive', loser.token, {}, 403);
   for (const action of ['arrive', 'start', 'complete']) await call('/rides/' + id + '/' + action, winner.token, {});
   assert.equal((await call('/rides/' + id, p.token)).status, 'completed');
+  assert.equal((await call('/rides/' + id, p.token)).driver_lat, null, 'histórico não expõe GPS atual do motorista');
   assert.equal((await call('/rides', winner.token)).rides[0].status, 'completed');
   assert.equal((await call('/snapshot', p.token)).rides.length, 0);
   await call('/rides/' + id + '/cancel', p.token, {}, 409);
@@ -90,6 +91,34 @@ test('HTTP + PostgreSQL: oferta, concorrência, SSE, autorização, persistênci
   await call('/rides/' + second.id + '/accept', winner.token, {}, 409);
   await call('/rides/' + second.id + '/cancel', p.token, {});
   assert.equal((await call('/rides/' + second.id, p.token)).status, 'cancelled');
+  // A single driver cannot accept two different rides concurrently either.
+  await call('/driver/availability', d2.token, { available: false });
+  await call('/driver/location', d1.token, { lat: -23.55, lng: -46.63 });
+  await call('/driver/availability', d1.token, { available: true });
+  const q3 = await call('/quotes', p.token, { origin: quote.origin, destination: quote.destination });
+  const q4 = await call('/quotes', p2.token, { origin: quote.origin, destination: quote.destination });
+  const r3 = await call('/rides', p.token, { quoteId: q3.id });
+  const r4 = await call('/rides', p2.token, { quoteId: q4.id });
+  const driverRace = await Promise.all([r3,r4].map(r => fetch(base + '/v1/rides/' + r.id + '/accept', { method: 'POST', headers: { Authorization: 'Bearer ' + d1.token, 'Content-Type': 'application/json' }, body: '{}' })));
+  assert.deepEqual(driverRace.map(r=>r.status).sort(), [200,409]);
+  const busy = await db.query(`SELECT count(*)::integer AS total FROM rides WHERE driver_id=$1 AND status IN ('accepted','arrived','in_progress')`, [d1.user.id]);
+  assert.equal(busy.rows[0].total, 1);
+  const q5 = await call('/quotes', p.token, { origin: quote.origin, destination: quote.destination });
+  await call('/rides', p.token, { quoteId: q5.id }, 409);
+  await call('/rides/' + r3.id + '/cancel', p.token, {});
+  await call('/rides/' + r4.id + '/cancel', p2.token, {});
+  // Expiration is enforced from database time, not client flags.
+  await db.query(`UPDATE quotes SET expires_at=now()-interval '1 second' WHERE id=$1`, [q5.id]);
+  await call('/rides', p.token, { quoteId: q5.id }, 409);
+  const q6 = await call('/quotes', p.token, { origin: quote.origin, destination: quote.destination });
+  const r6 = await call('/rides', p.token, { quoteId: q6.id });
+  await db.query(`UPDATE rides SET created_at=now()-interval '11 minutes' WHERE id=$1`, [r6.id]);
+  await restarted.dispatch();
+  assert.equal((await call('/rides/' + r6.id, p.token)).status, 'cancelled');
+  const unrelated = await restarted.events(p2.user, '0');
+  assert.equal(unrelated.some(e => e.payload.rideId === id), false, 'eventos de outros passageiros permanecem privados');
+  const storage = await db.query('SELECT token_hash FROM sessions WHERE user_id=$1', [p.user.id]);
+  assert.equal(storage.rows.some(row=>row.token_hash === p.token), false);
   await call('/auth/logout', p.token, {});
   await call('/snapshot', p.token, undefined, 401);
 });

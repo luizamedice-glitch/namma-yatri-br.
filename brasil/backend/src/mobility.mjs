@@ -180,7 +180,13 @@ export function mobilityService(pool, maps, { inviteCode, radiusMeters = 5000 } 
         available = Boolean(d.rows[0]?.available);
         if (available && !rides.rowCount) {
           const o = await pool.query(rideSelect + ` JOIN offers o ON o.ride_id=r.id
-            WHERE o.driver_id=$1 AND NOT o.rejected AND r.status='searching' AND r.created_at>now()-interval '10 minutes' ORDER BY r.created_at LIMIT 20`, [user.id]);
+            WHERE o.driver_id=$1 AND NOT o.rejected AND r.status='searching' AND r.created_at>now()-interval '10 minutes'
+            AND EXISTS (SELECT 1 FROM drivers current_driver WHERE current_driver.user_id=$1
+              AND 6371000 * 2 * asin(sqrt(least(1.0,
+                power(sin(radians(current_driver.lat-(q.origin->>'lat')::float8)/2),2) +
+                cos(radians(current_driver.lat))*cos(radians((q.origin->>'lat')::float8))*
+                power(sin(radians(current_driver.lng-(q.origin->>'lng')::float8)/2),2)))) <= $2)
+            ORDER BY r.created_at LIMIT 20`, [user.id, radiusMeters]);
           offers = o.rows;
         }
       }

@@ -2,6 +2,7 @@
 backend/.env
 backend/node_modules/
 backend/*.log
+backend/google-evidence.json
 android/.gradle/
 android/**/build/
 android/local.properties
