@@ -49,7 +49,7 @@ jobs:
         working-directory: Frontend/${{ matrix.diretorio }}
         run: |
           set -o pipefail
-          spago build --purs-args '--censor-warnings' 2>&1 | tee "$GITHUB_WORKSPACE/purescript-build.log"
+          spago build 2>&1 | tee "$GITHUB_WORKSPACE/purescript-build.log"
       - name: Publicar diagnostico
         if: always()
         uses: actions/upload-artifact@v4
