@@ -16,12 +16,14 @@ import static org.junit.Assume.assumeTrue;
 /** Real Android UI -> Node HTTP -> PostgreSQL. No substitute API or fake users. */
 @RunWith(AndroidJUnit4.class)
 public final class BackendConnectionTest {
-    @Test public void registerSnapshotAndLogoutThroughNativeApp() throws Exception {
+    @Test public void registerLoginAndLogoutThroughNativeApp() throws Exception {
         String invite = InstrumentationRegistry.getArguments().getString("BR_TEST_INVITE", "");
         assumeTrue("Integração Android requer backend local de testes e BR_TEST_INVITE", !invite.isEmpty());
         var instrumentation = InstrumentationRegistry.getInstrumentation();
         var context = instrumentation.getTargetContext();
         new SessionStore(context).clear();
+        context.getSharedPreferences("settings",0).edit().clear().commit();
+        String accountEmail = UUID.randomUUID()+"@android.teste.local";
         for (String permission : new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION}) {
             try (var descriptor = instrumentation.getUiAutomation().executeShellCommand("pm grant " + context.getPackageName() + " " + permission)) {
                 new java.io.FileInputStream(descriptor.getFileDescriptor()).read(new byte[256]);
@@ -31,7 +33,7 @@ public final class BackendConnectionTest {
         try {
             instrumentation.runOnMainSync(() -> {
                 View root=activity.getWindow().getDecorView();
-                edit(root,"Email").setText(UUID.randomUUID()+"@android.teste.local");
+                edit(root,"Email").setText(accountEmail);
                 edit(root,"Senha (mínimo de 10 caracteres)").setText("android-test-password-123");
                 edit(root,"Nome").setText("Conta Android de teste");
                 edit(root,"Código de convite").setText(invite);
@@ -60,6 +62,24 @@ public final class BackendConnectionTest {
             await(activity,"Entre com sua conta de testes");
             try { api.request("/v1/snapshot",null); fail("Logout precisa revogar a sessão no servidor"); }
             catch(Api.SessionExpired expected) { /* Real server rejected the revoked token. */ }
+            instrumentation.runOnMainSync(() -> {
+                View root=activity.getWindow().getDecorView();
+                edit(root,"Email").setText(accountEmail);
+                edit(root,"Senha (mínimo de 10 caracteres)").setText("senha-incorreta-123");
+                findText(root,"Entrar").performClick();
+            });
+            await(activity,"Email ou senha incorretos");
+            assertTrue(new SessionStore(context).load().isEmpty());
+            instrumentation.runOnMainSync(() -> {
+                View root=activity.getWindow().getDecorView();
+                edit(root,"Senha (mínimo de 10 caracteres)").setText("android-test-password-123");
+                findText(root,"Entrar").performClick();
+            });
+            await(activity,"Histórico de corridas");
+            api.token=new SessionStore(context).load();
+            assertEquals(snapshot.getJSONObject("user").getString("id"),api.request("/v1/snapshot",null).getJSONObject("user").getString("id"));
+            instrumentation.runOnMainSync(() -> findText(activity.getWindow().getDecorView(),"Sair").performClick());
+            await(activity,"Entre com sua conta de testes");
         } finally {
             new SessionStore(context).clear(); instrumentation.runOnMainSync(activity::finish);
         }

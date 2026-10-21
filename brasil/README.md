@@ -6,6 +6,10 @@ O ponto final faz parte do nome do repositório.
 
 Downloads e certificados dos APKs desta versão estão em [ENTREGA.md](ENTREGA.md).
 
+**Login no celular físico requer o backend iniciado.** Instalar o APK sozinho
+não disponibiliza contas nem servidor. Consulte [ACESSO-CELULAR.md](ACESSO-CELULAR.md)
+para ligar o backend e conectar o telefone por USB, sem expor a plataforma publicamente.
+
 Dois clientes Android independentes do HyperSDK compartilham uma API Node e
 PostgreSQL. Nenhuma corrida é criada ou aceita automaticamente por usuários
 fictícios. Para conhecer o que foi efetivamente testado, consulte
@@ -63,7 +67,8 @@ adb reverse tcp:8080 tcp:8080
 
 No primeiro acesso, toque em **Configurar servidor de testes**. Para dispositivos
 via `adb reverse`, use `http://127.0.0.1:8080` nos dois apps. Para emuladores no
-mesmo computador, o padrão é `http://10.0.2.2:8080`. Para rede local, mantenha o
+mesmo computador, use `http://10.0.2.2:8080`. APKs novos sem MOBILITY_API_URL
+exigem configuração explícita e verificam a conexão antes de autenticar. Para rede local, mantenha o
 acesso privado e configure o bind do backend conscientemente. Não abra portas
 públicas. HTTP é permitido apenas nos APKs debug; release exige HTTPS.
 

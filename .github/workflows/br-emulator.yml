@@ -24,6 +24,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://android_test:android-integration-only@localhost:5432/android_test
       TEST_INVITE_CODE: android-workflow-invite-123456
+      MOBILITY_API_URL: http://10.0.2.2:8080
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

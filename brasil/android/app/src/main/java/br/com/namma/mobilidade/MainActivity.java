@@ -53,6 +53,7 @@ public final class MainActivity extends Activity implements LocationListener {
     private final boolean driver = BuildConfig.ROLE.equals("driver");
     private boolean available;
     private boolean locationPermissionRequested;
+    private boolean authenticationInProgress;
 
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
@@ -126,6 +127,10 @@ public final class MainActivity extends Activity implements LocationListener {
     private void loginScreen() {
         baseScreen(); root.addView(label("Entre com sua conta de testes", 18));
         ScrollView scroll = new ScrollView(this); LinearLayout form = column(); scroll.addView(form); root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
+        form.addView(label(api.base.isEmpty() ? "Servidor não configurado. Conecte o aplicativo ao backend para acessar sua conta." : "Servidor: " + api.base, 14));
+        button("Configurar servidor de testes", form, this::serverDialog);
+        button("Verificar conexão", form, this::verifyConnection);
+        form.addView(label("Use uma conta cadastrada neste servidor. No primeiro acesso, crie sua conta com o convite do ambiente de testes.", 14));
         EditText email = field("Email", form, false); email.setInputType(33);
         EditText password = field("Senha (mínimo de 10 caracteres)", form, true);
         button("Entrar", form, () -> authenticate(false, email, password, null, null, null, null, null));
@@ -135,33 +140,42 @@ public final class MainActivity extends Activity implements LocationListener {
         EditText model = driver ? field("Modelo do veículo", form, false) : null;
         EditText color = driver ? field("Cor do veículo", form, false) : null;
         button("Criar conta de " + (driver ? "motorista" : "passageiro"), form, () -> authenticate(true, email, password, name, invite, plate, model, color));
-        button("Configurar servidor de testes", form, this::serverDialog);
         form.addView(label("Contas e viagens são registradas no servidor configurado. Use este ambiente apenas para testes autorizados.", 14));
     }
+    private void verifyConnection() {
+        showMessage("Verificando o servidor…");
+        run(api::verifyBackend, result -> showMessage("Servidor conectado. Entre com sua conta ou crie uma conta por convite."));
+    }
     private void serverDialog() {
-        EditText e = new EditText(this); e.setText(api.base); e.setInputType(17);
-        new AlertDialog.Builder(this).setTitle("Endereço do backend").setView(e).setNegativeButton("Voltar", null).setPositiveButton("Salvar", (d,w) -> {
+        LinearLayout content = column(); content.setPadding(dp(16), 0, dp(16), 0);
+        content.addView(label("O backend precisa estar ligado. No celular físico, use um endereço HTTPS ou o endereço privado do computador. Por USB configurado no computador, use http://127.0.0.1:8080. 10.0.2.2 é exclusivo do emulador.", 14));
+        EditText e = field("Endereço do servidor", content, false); e.setText(api.base); e.setInputType(17);
+        new AlertDialog.Builder(this).setTitle("Endereço do backend").setView(content).setNegativeButton("Voltar", null).setPositiveButton("Salvar e verificar", (d,w) -> {
             String value = e.getText().toString().trim().replaceAll("/+$", "");
             try {
                 java.net.URI uri = java.net.URI.create(value);
                 if (uri.getHost() == null || uri.getUserInfo() != null || uri.getQuery() != null || uri.getFragment() != null || !(uri.getPath().isEmpty()) || !(uri.getScheme().equals("https") || (BuildConfig.DEBUG && uri.getScheme().equals("http")))) throw new Exception();
-                api.base = value; getSharedPreferences("settings", 0).edit().putString("api", value).apply(); showMessage("Servidor configurado");
+                api.base = value; getSharedPreferences("settings", 0).edit().putString("api", value).apply(); loginScreen(); verifyConnection();
             } catch (Exception ex) { showMessage("Informe uma URL HTTPS válida. HTTP é permitido apenas no APK de depuração."); }
         }).show();
     }
     private void authenticate(boolean register, EditText email, EditText password, EditText name, EditText invite, EditText plate, EditText model, EditText color) {
+        if (authenticationInProgress) return;
+        if (api.base.isEmpty()) { showMessage("Configure e verifique a conexão com o servidor antes de entrar."); serverDialog(); return; }
         try {
             JSONObject body = json("email", email.getText().toString(), "password", password.getText().toString());
             if (register) {
                 body.put("name", name.getText().toString()); body.put("inviteCode", invite.getText().toString()); body.put("role", BuildConfig.ROLE);
                 if (driver) body.put("vehicle", json("plate", plate.getText().toString(), "model", model.getText().toString(), "color", color.getText().toString()));
             }
-            showMessage("Conectando…");
-            run(() -> api.request(register ? "/v1/auth/register" : "/v1/auth/login", body), result -> {
+            authenticationInProgress = true;
+            showMessage("Verificando o servidor e os dados de acesso…");
+            run(() -> { api.verifyBackend(); return api.request(register ? "/v1/auth/register" : "/v1/auth/login", body); }, result -> {
+                authenticationInProgress = false;
                 if (!result.getJSONObject("user").getString("role").equals(BuildConfig.ROLE)) { showMessage("Esta conta pertence ao outro aplicativo"); return; }
                 sessions.save(result.getString("token")); api.token = result.getString("token"); cursor = "0"; password.setText(""); homeScreen(); startStream(); refresh();
-            });
-        } catch (Exception e) { showMessage("Confira os dados de acesso"); }
+            }, error -> { authenticationInProgress = false; showMessage(error); });
+        } catch (Exception e) { authenticationInProgress = false; showMessage("Confira os dados de acesso"); }
     }
     private void homeScreen() {
         baseScreen();

@@ -9,7 +9,15 @@ final class Api {
     volatile String token = "";
     String base;
     Api(String base) { this.base = base; }
+    JSONObject verifyBackend() throws Exception {
+        JSONObject health = request("/health", null);
+        if (!"namma-yatri-br".equals(health.optString("service")) || !"ok".equals(health.optString("status"))) {
+            throw new Exception("Este endereço não corresponde ao servidor de mobilidade. Confira a configuração.");
+        }
+        return health;
+    }
     HttpURLConnection connection(String path) throws Exception {
+        if (base == null || base.trim().isEmpty()) throw new Exception("Configure o servidor de testes antes de entrar. O backend precisa estar em execução.");
         HttpURLConnection c = (HttpURLConnection) URI.create(base + path).toURL().openConnection();
         c.setConnectTimeout(10000); c.setReadTimeout(20000);
         c.setInstanceFollowRedirects(false);
@@ -42,7 +50,7 @@ final class Api {
             if (status >= 400) throw new Exception(data.optString("error", "Erro HTTP " + status));
             return data;
         } catch (java.io.IOException e) {
-            throw new Exception("Conexão indisponível. Verifique o servidor e sua rede e tente novamente.");
+            throw new Exception("Não foi possível conectar a " + base + ". Verifique se o backend está ligado e acessível pelo celular. O endereço 10.0.2.2 funciona somente no emulador.");
         } catch (org.json.JSONException e) {
             throw new Exception("O servidor retornou uma resposta inválida.");
         } finally { c.disconnect(); }
