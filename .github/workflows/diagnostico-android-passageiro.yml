@@ -58,7 +58,7 @@ jobs:
           keys = ("CONFIG_URL_DRIVER", "CONFIG_URL_USER", "MERCHANT_ID_DRIVER", "MERCHANT_ID_USER", "RS_ALGO", "RS_ALGO_PADDING", "RS_ENC_KEY", "RS_INSTANCE_TYPE")
           with path.open("a", encoding="utf-8") as file:
               for key in keys:
-                  file.write(f'{key}=""\\n')
+                  file.write(f'{key}=""\n')
           print("BuildConfig placeholders definidos sem credenciais de serviços.")
           PY
       - name: Compilar APK debug do passageiro (diagnóstico)
