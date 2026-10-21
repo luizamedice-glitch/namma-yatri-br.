@@ -56,18 +56,7 @@ jobs:
           arch: x86_64
           profile: pixel_4
           emulator-boot-timeout: 600
-          script: |
-            set -e
-            APK=$(find Frontend/android-native/app/build/outputs/apk -name '*.apk' | head -1)
-            adb install -r "$APK"
-            adb logcat -c
-            adb shell am start -W -n in.juspay.nammayatri.debug/in.juspay.mobility.MainActivity > launch.txt 2>&1 || true
-            sleep 20
-            adb logcat -d -v time > android-logcat.txt
-            adb shell dumpsys activity activities > activities.txt
-            grep -n -A 28 -B 8 -E 'FATAL EXCEPTION|AndroidRuntime|Unable to start activity|ClassNotFoundException|FirebaseApp|FATAL SIGNAL' android-logcat.txt > falhas-resumo.txt || true
-            cat launch.txt
-            head -150 falhas-resumo.txt || true
+          script: bash scripts/diagnosticar-abertura.sh
       - name: Publicar relatório e logs
         if: always()
         uses: actions/upload-artifact@v4
