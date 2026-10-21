@@ -19,3 +19,7 @@ Não se afirma reutilização dos componentes visuais de motorista acoplados ao
 HyperSDK. Foram investigados e preservados para extração posterior. Os clientes
 nativos brasileiros compartilham uma implementação Java nova, com perfis
 separados e identificadores de aplicação distintos.
+
+## Tipografia original reutilizada
+
+Os builds Yatri Brasil recuperam Plus Jakarta Sans Regular e SemiBold diretamente de `Frontend/android-native/app/src/main/assets/fonts/`. Copyright 2020 The Plus Jakarta Sans Project Authors; SIL Open Font License 1.1 em `android/attribution/PlusJakartaSans-OFL.txt`, também incluída nos assets dos APKs. As Views PureScript e os bundles históricos permanecem preservados; isso não significa que já executem no cliente brasileiro.

@@ -28,4 +28,6 @@ Testes locais desta revisão: 10 testes unitários e 2 suítes de integração H
 
 A validação Android é separada: provisionamento pelo aplicativo, sessão persistente, recuperação e capturas em emulador com backend real. Seu resultado deve ser conferido no workflow; teste de backend não comprova a interface nem Google real.
 
-Bloqueios: usuário confirmou que não existe backend de desenvolvimento acessível pelos celulares; ambiente sem chave Google server configurada. Não foi feita implantação pública nem em produção. O fluxo completo em dois APKs com mapas reais e a fidelidade visual permanecem pendentes; os APKs anteriores 0.2.1 não cumprem esta diretriz.
+Bloqueios: não existe backend exclusivo do Yatri Brasil acessível pelos celulares. A URL Supabase fornecida pelo usuário atende também ao Alce, respondeu 401 (`Missing authorization header`) na consulta sem credenciais e não foi modificada nem adotada como backend Yatri; ambiente sem chave Google server configurada. Não foi feita implantação pública nem em produção. O fluxo completo em dois APKs com mapas reais e a fidelidade visual permanecem pendentes; os APKs anteriores 0.2.1 não cumprem esta diretriz.
+
+Recuperação dos recursos, inventário e comparação limitada com a Play Store: [INTERFACE-ORIGINAL.md](INTERFACE-ORIGINAL.md). Os APKs agora reutilizam diretamente duas fontes originais; as telas originais ainda não executam no cliente independente.

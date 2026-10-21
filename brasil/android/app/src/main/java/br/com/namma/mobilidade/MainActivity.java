@@ -41,6 +41,7 @@ public final class MainActivity extends Activity implements LocationListener {
     private volatile boolean foreground;
     private volatile HttpURLConnection stream;
     private String cursor = "0";
+    private Typeface originalRegular, originalSemiBold;
     private Api api;
     private SessionStore sessions;
     private GoogleMap map;
@@ -57,6 +58,8 @@ public final class MainActivity extends Activity implements LocationListener {
 
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
+        originalRegular = Typeface.createFromAsset(getAssets(), "fonts/PlusJakartaSans-Regular.ttf");
+        originalSemiBold = Typeface.createFromAsset(getAssets(), "fonts/PlusJakartaSans-SemiBold.ttf");
         sessions = new SessionStore(this);
         api = new Api(BuildConfig.API_URL);
         locations = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -76,14 +79,14 @@ public final class MainActivity extends Activity implements LocationListener {
     private int dp(int n) { return (int) (n * getResources().getDisplayMetrics().density); }
     private LinearLayout column() { LinearLayout v = new LinearLayout(this); v.setOrientation(LinearLayout.VERTICAL); return v; }
     private TextView label(String value, int size) {
-        TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(Color.rgb(20, 43, 39)); t.setPadding(0, dp(5), 0, dp(5)); return t;
+        TextView t = new TextView(this); t.setText(value); t.setTextSize(size); t.setTypeface(originalRegular); t.setTextColor(Color.rgb(20, 43, 39)); t.setPadding(0, dp(5), 0, dp(5)); return t;
     }
     private Button button(String title, LinearLayout parent, Runnable action) {
-        Button b = new Button(this); b.setText(title); b.setAllCaps(false); b.setMinHeight(dp(48));
+        Button b = new Button(this); b.setText(title); b.setTypeface(originalSemiBold); b.setAllCaps(false); b.setMinHeight(dp(48));
         parent.addView(b, new LinearLayout.LayoutParams(-1, -2)); b.setOnClickListener(v -> action.run()); return b;
     }
     private EditText field(String hint, LinearLayout parent, boolean password) {
-        EditText e = new EditText(this); e.setHint(hint); e.setSingleLine(true); e.setTextSize(16);
+        EditText e = new EditText(this); e.setHint(hint); e.setTypeface(originalRegular); e.setSingleLine(true); e.setTextSize(16);
         e.setInputType(password ? 129 : 1); parent.addView(e, new LinearLayout.LayoutParams(-1, dp(52))); return e;
     }
     private void baseScreen() {
@@ -100,7 +103,7 @@ public final class MainActivity extends Activity implements LocationListener {
             return insets;
         });
         setContentView(root);
-        TextView title = label(driver ? "Yatri Brasil — Motorista" : "Yatri Brasil — Passageiro", 24); title.setTypeface(null, Typeface.BOLD); root.addView(title);
+        TextView title = label(driver ? "Yatri Brasil — Motorista" : "Yatri Brasil — Passageiro", 24); title.setTypeface(originalSemiBold); root.addView(title);
         root.addView(label(driver ? "Giselo" : "Fagner", 16));
         message = label("", 14); message.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE); root.addView(message);
     }

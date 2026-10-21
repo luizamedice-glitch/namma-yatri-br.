@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "purpose": "provenance-only; does not certify visual fidelity",
+  "groups": {
+    "passenger": [
+      {
+        "source": "Frontend/ui-customer/src/Screens/RideBookingFlow/HomeScreen/View.purs",
+        "bytes": 284351,
+        "sha256": "96ee1573af8b061820186dfc8a2027cf9add47836101fb3aab0a1345fea61196"
+      },
+      {
+        "source": "Frontend/ui-customer/src/Screens/RideBookingFlow/HomeScreen/ComponentConfig.purs",
+        "bytes": 124193,
+        "sha256": "a05e9e6043afcca2b69ce4a452184ff6ec68529fe83eacb71b910cddcf85980b"
+      },
+      {
+        "source": "Frontend/ui-customer/src/Screens/RideBookingFlow/HomeScreen/ScreenData.purs",
+        "bytes": 24369,
+        "sha256": "e3977a952dcfa5cfa31e270b81315db7867d8eafc1805f13b1cd0c54f81ad4ae"
+      },
+      {
+        "source": "Frontend/ui-customer/src/Screens/SearchLocationFlow/SearchLocationScreen/View.purs",
+        "bytes": 55347,
+        "sha256": "70bbdecd5a4ec654a7cbcda16547227818d2591933ee5cac4889923bf2ca2d7b"
+      },
+      {
+        "source": "Frontend/ui-customer/src/Screens/CustomerUtils/RideSelectionScreen/View.purs",
+        "bytes": 11321,
+        "sha256": "577fceb0ed60111fc7663240e40eca1f3c278e8c7ca1ad23b3d851d583af1f4d"
+      },
+      {
+        "source": "Frontend/ui-customer/src/MerchantConfigs/DefaultConfig.purs",
+        "bytes": 36340,
+        "sha256": "35d3eb7c50408fc1f76fce3d61d94eba503e671d6f019652a86dccdae13300bd"
+      },
+      {
+        "source": "Frontend/android-native/app/src/user/nammaYatri/assets/juspay/index_bundle.js",
+        "bytes": 14177108,
+        "sha256": "f6b40cae663ec51d42d71dabb4f6ce1e4556b60752cf0528abb96b4cec145fd1"
+      }
+    ],
+    "driver": [
+      {
+        "source": "Frontend/ui-driver/src/Screens/HomeScreen/View.purs",
+        "bytes": 171025,
+        "sha256": "7e5714d2209e4e6a2ada33a2273fc84255872da22a042571b344c758165e5c48"
+      },
+      {
+        "source": "Frontend/ui-driver/src/Screens/HomeScreen/ScreenData.purs",
+        "bytes": 14157,
+        "sha256": "448c5cf978449df1fd456b7aa0cf423d5628b66d1f607bb8e4385215f752c54f"
+      },
+      {
+        "source": "Frontend/ui-driver/src/Screens/HomeScreen/ComponentConfig.purs",
+        "bytes": 144095,
+        "sha256": "839525bb907a00e868b836457fcfa2a236acb04773197f5950ccd8c8aeacfa71"
+      },
+      {
+        "source": "Frontend/ui-driver/src/Components/RideActionModal/View.purs",
+        "bytes": 58898,
+        "sha256": "7d731abc6a69093639c05b937ce43c20208ca7ced95456d3450c262e02e9f243"
+      },
+      {
+        "source": "Frontend/ui-driver/src/Components/RideAllocationModal/View.purs",
+        "bytes": 11551,
+        "sha256": "44e6c2aabe4673c0ec84a1395929a35fd46ab988715f7f3f3b25b44c75fa892d"
+      },
+      {
+        "source": "Frontend/ui-driver/src/Components/RideRequestCard/View.purs",
+        "bytes": 17185,
+        "sha256": "1c75f33e39bbead493d74078937bbd5476fb874930a814c1b363500a27342500"
+      },
+      {
+        "source": "Frontend/android-native/app/src/driver/nammaYatriPartner/assets/juspay/index_bundle.js",
+        "bytes": 12099751,
+        "sha256": "72381e53338cfca34eec187be613489b6854bc29ce011f032adaae12e763c801"
+      }
+    ],
+    "shared": [
+      {
+        "source": "Frontend/ui-common/src/Components/PrimaryButton/View.purs",
+        "bytes": 7624,
+        "sha256": "bcbe4e6f5427ee816423358799381e59fae77f9003867493c68bab20b6026d77"
+      },
+      {
+        "source": "Frontend/ui-common/src/Components/PrimaryButton/Controller.purs",
+        "bytes": 4543,
+        "sha256": "bc5c59e160e651e463c90139ddebe8e49eea7391485d5f54effcb35f081632c0"
+      },
+      {
+        "source": "Frontend/ui-common/src/Font/Style.purs",
+        "bytes": 24269,
+        "sha256": "f8335385af040510e25fda6977f2171d0e9258838ba25427ecdc020ff314be60"
+      },
+      {
+        "source": "Frontend/ui-common/src/Font/Size.purs",
+        "bytes": 3285,
+        "sha256": "d53b7d31598ddcb0acfbada77aa7f3486459ba74c0643d9938be1566b63f84ed"
+      },
+      {
+        "source": "Frontend/packages.dhall",
+        "bytes": 6753,
+        "sha256": "fd52672ce12964880e4b3b0d634b1d66220b575643a184e95c271941131bbd04"
+      },
+      {
+        "source": "Frontend/android-native/app/src/main/assets/fonts/PlusJakartaSans-Regular.ttf",
+        "bytes": 125656,
+        "sha256": "9c5da9c80ed65f02dcaaa330910d90b803ddca35d04212501b9b64583af1a297"
+      },
+      {
+        "source": "Frontend/android-native/app/src/main/assets/fonts/PlusJakartaSans-SemiBold.ttf",
+        "bytes": 126184,
+        "sha256": "4093c1e428504a7e6cc43bb6e2e48e24bf5fdfc5fad9f7268f33e6448ab6c862"
+      }
+    ]
+  }
+}

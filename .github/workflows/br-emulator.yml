@@ -2,7 +2,7 @@ name: BR - Android startup emulator
 on:
   push:
     branches: [passageiro-pt-br]
-    paths: ['brasil/android/**', 'brasil/backend/**', '.github/workflows/br-emulator.yml']
+    paths: ['brasil/android/**', 'Frontend/android-native/app/src/main/assets/fonts/**', 'brasil/backend/**', '.github/workflows/br-emulator.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -38,7 +38,11 @@ jobs:
           node --input-type=module <<'NODE'
           import { randomBytes } from 'node:crypto';
           import { appendFileSync } from 'node:fs';
-          for (const role of ['PASSENGER', 'DRIVER']) appendFileSync(process.env.GITHUB_ENV, `YATRI_${role}_DEV_KEY=${randomBytes(32).toString('hex')}\n`);
+          for (const role of ['PASSENGER', 'DRIVER']) {
+            const credential = randomBytes(32).toString('hex');
+            console.log('::add-mask::' + credential);
+            appendFileSync(process.env.GITHUB_ENV, `YATRI_${role}_DEV_KEY=${credential}\n`);
+          }
           NODE
       - name: Start real local backend
         working-directory: brasil/backend
@@ -70,30 +74,7 @@ jobs:
           arch: x86_64
           target: google_apis
           disable-animations: true
-          script: |
-            gradle -p brasil/android :app:connectedPassageiroDebugAndroidTest :app:connectedMotoristaDebugAndroidTest --stacktrace
-            mkdir -p brasil/android/evidence
-            adb pull /sdcard/br-passenger-home.png brasil/android/evidence/passageiro-home.png
-            adb pull /sdcard/br-driver-home.png brasil/android/evidence/motorista-home.png
-            adb install -r brasil/android/app/build/outputs/apk/passageiro/debug/app-passageiro-debug.apk
-            adb install -r brasil/android/app/build/outputs/apk/motorista/debug/app-motorista-debug.apk
-            adb shell am start -W -n br.com.namma.mobilidade.passageiro/br.com.namma.mobilidade.MainActivity
-            adb shell sleep 2
-            adb shell dumpsys activity activities | grep -E 'mResumedActivity.*br.com.namma.mobilidade.passageiro'
-            adb shell uiautomator dump /sdcard/window.xml
-            adb pull /sdcard/window.xml brasil/android/evidence/passageiro-ui.xml
-            grep -Fq 'Yatri Brasil — Passageiro' brasil/android/evidence/passageiro-ui.xml
-            adb shell screencap -p /sdcard/passageiro.png
-            adb pull /sdcard/passageiro.png brasil/android/evidence/passageiro-operacional.png
-            adb shell am start -W -n br.com.namma.mobilidade.motorista/br.com.namma.mobilidade.MainActivity
-            adb shell sleep 2
-            adb shell dumpsys activity activities | grep -E 'mResumedActivity.*br.com.namma.mobilidade.motorista'
-            adb shell uiautomator dump /sdcard/window.xml
-            adb pull /sdcard/window.xml brasil/android/evidence/motorista-ui.xml
-            grep -Fq 'Yatri Brasil — Motorista' brasil/android/evidence/motorista-ui.xml
-            adb shell screencap -p /sdcard/motorista.png
-            adb pull /sdcard/motorista.png brasil/android/evidence/motorista-operacional.png
-            adb logcat -d > brasil/android/evidence/logcat.txt
+          script: bash brasil/android/scripts/emulator-acceptance.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:

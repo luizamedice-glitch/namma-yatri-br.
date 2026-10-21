@@ -1328,6 +1328,55 @@
           }
         ]
       }
+    },
+    "/v1/development/session": {
+      "post": {
+        "summary": "Provisiona a sessão de Fagner ou Giselo somente no ambiente de desenvolvimento",
+        "description": "Desabilitado fora de YATRI_DEVELOPMENT_MODE. Credenciais diferentes por perfil; login e cadastro ficam bloqueados neste modo.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "role",
+                  "credential"
+                ],
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "passenger",
+                      "driver"
+                    ]
+                  },
+                  "credential": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$",
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sessão real persistida e usuário provisionado"
+          },
+          "401": {
+            "description": "Credencial inválida ou pertencente ao outro perfil"
+          },
+          "404": {
+            "description": "Modo de desenvolvimento desabilitado"
+          },
+          "429": {
+            "description": "Limite de tentativas excedido"
+          }
+        }
+      }
     }
   }
 }

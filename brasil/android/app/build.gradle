@@ -31,6 +31,8 @@ android {
             buildConfigField 'String', 'ROLE', '"driver"'
         }
     }
+    sourceSets.main.assets.srcDir(layout.buildDirectory.dir('generated/originalAssets'))
+    sourceSets.main.assets.srcDir(rootProject.file('attribution'))
     buildFeatures { buildConfig true }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
     buildTypes { release { minifyEnabled false } }
@@ -40,3 +42,18 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.6.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
 }
+
+// Reuse original font binaries; do not replace the original typography with a system font.
+def originalFonts = rootProject.file('../../Frontend/android-native/app/src/main/assets/fonts')
+tasks.register('recoverOriginalTypography', Sync) {
+    from(originalFonts) {
+        include 'PlusJakartaSans-Regular.ttf', 'PlusJakartaSans-SemiBold.ttf'
+    }
+    into layout.buildDirectory.dir('generated/originalAssets/fonts')
+    doFirst {
+        ['PlusJakartaSans-Regular.ttf', 'PlusJakartaSans-SemiBold.ttf'].each { name ->
+            if (!new File(originalFonts, name).isFile()) throw new GradleException('Fonte original ausente: ' + name + '. Recupere Frontend/android-native do checkout completo.')
+        }
+    }
+}
+tasks.named('preBuild').configure { dependsOn 'recoverOriginalTypography' }

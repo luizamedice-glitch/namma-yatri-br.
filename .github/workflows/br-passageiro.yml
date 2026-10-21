@@ -2,7 +2,7 @@ name: BR - APK Passageiro
 on:
   push:
     branches: [passageiro-pt-br]
-    paths: ['brasil/android/**', '.github/workflows/br-passageiro.yml']
+    paths: ['brasil/android/**', 'Frontend/android-native/app/src/main/assets/fonts/**', '.github/workflows/br-passageiro.yml']
   workflow_dispatch:
 permissions:
   contents: read

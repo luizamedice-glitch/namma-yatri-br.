@@ -2,9 +2,22 @@
 
 Contrato em `openapi.json` (OpenAPI 3.1). API privada de testes; não implantar
 publicamente. Endpoints, exceto `/health`, `/v1/auth/register` e
-`/v1/auth/login`, exigem `Authorization: Bearer <token>`.
+`/v1/auth/login` e `/v1/development/session`, exigem `Authorization: Bearer <token>`.
 
-## Acesso
+## Acesso Yatri Brasil em desenvolvimento
+
+Com `YATRI_DEVELOPMENT_MODE=true`, o servidor provisiona Fagner e Giselo no PostgreSQL.
+`POST /v1/development/session` recebe `{role,credential}` e retorna `{token,user:{id,name,role}}`.
+`role` é `passenger` ou `driver`; `credential` corresponde somente ao secret deste perfil.
+São exigidas duas chaves aleatórias independentes de 32 bytes, em hexadecimal.
+O aplicativo faz esse processo automaticamente e guarda a sessão criptografada no aparelho.
+A sessão tem validade de 30 dias e pode ser revogada pelo endpoint de logout.
+A credencial do outro perfil é rejeitada, e login/cadastro abaixo retornam 403 neste modo.
+Fora desse modo, o endpoint de desenvolvimento retorna 404.
+O servidor impede a combinação com `NODE_ENV=production`.
+Dados do veículo vêm de `YATRI_DRIVER_PLATE`, `YATRI_DRIVER_MODEL`, `YATRI_DRIVER_COLOR`.
+
+## Acesso legado (modo de contas automáticas desabilitado)
 
 `POST /v1/auth/register` recebe name, email, password (10–128 caracteres), role
 (`passenger` ou `driver`) e inviteCode igual a TEST_INVITE_CODE do servidor.
