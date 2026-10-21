@@ -49,6 +49,13 @@ public final class BackendConnectionTest {
             var snapshot=api.request("/v1/snapshot",null);
             assertEquals(BuildConfig.ROLE,snapshot.getJSONObject("user").getString("role"));
             assertEquals("Conta Android de teste",snapshot.getJSONObject("user").getString("name"));
+            instrumentation.waitForIdleSync();
+            Thread.sleep(500);
+            // Shell-owned shared path survives the runner uninstalling the target app.
+            try (var descriptor=instrumentation.getUiAutomation().executeShellCommand("screencap -p /sdcard/br-"+BuildConfig.ROLE+"-home.png");
+                 var output=new java.io.FileInputStream(descriptor.getFileDescriptor())) {
+                byte[] buffer=new byte[256]; while(output.read(buffer)!=-1) { /* Drain command output. */ }
+            }
             instrumentation.runOnMainSync(() -> findText(activity.getWindow().getDecorView(),"Sair").performClick());
             await(activity,"Entre com sua conta de testes");
             try { api.request("/v1/snapshot",null); fail("Logout precisa revogar a sessão no servidor"); }

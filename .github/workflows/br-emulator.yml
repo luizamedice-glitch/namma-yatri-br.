@@ -62,6 +62,8 @@ jobs:
           script: |
             gradle -p brasil/android :app:connectedPassageiroDebugAndroidTest :app:connectedMotoristaDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.BR_TEST_INVITE=android-workflow-invite-123456 --stacktrace
             mkdir -p brasil/android/evidence
+            adb pull /sdcard/br-passenger-home.png brasil/android/evidence/passageiro-home.png
+            adb pull /sdcard/br-driver-home.png brasil/android/evidence/motorista-home.png
             adb install -r brasil/android/app/build/outputs/apk/passageiro/debug/app-passageiro-debug.apk
             adb install -r brasil/android/app/build/outputs/apk/motorista/debug/app-motorista-debug.apk
             adb shell am start -W -n br.com.namma.mobilidade.passageiro/br.com.namma.mobilidade.MainActivity
