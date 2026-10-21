@@ -66,18 +66,18 @@ jobs:
             adb install -r brasil/android/app/build/outputs/apk/motorista/debug/app-motorista-debug.apk
             adb shell am start -W -n br.com.namma.mobilidade.passageiro/br.com.namma.mobilidade.MainActivity
             adb shell sleep 2
-            adb shell dumpsys activity activities | rg 'mResumedActivity.*br.com.namma.mobilidade.passageiro'
+            adb shell dumpsys activity activities | grep -E 'mResumedActivity.*br.com.namma.mobilidade.passageiro'
             adb shell uiautomator dump /sdcard/window.xml
             adb pull /sdcard/window.xml brasil/android/evidence/passageiro-ui.xml
-            rg -q 'Mobilidade · Passageiro' brasil/android/evidence/passageiro-ui.xml
+            grep -Fq 'Mobilidade · Passageiro' brasil/android/evidence/passageiro-ui.xml
             adb shell screencap -p /sdcard/passageiro.png
             adb pull /sdcard/passageiro.png brasil/android/evidence/passageiro-login.png
             adb shell am start -W -n br.com.namma.mobilidade.motorista/br.com.namma.mobilidade.MainActivity
             adb shell sleep 2
-            adb shell dumpsys activity activities | rg 'mResumedActivity.*br.com.namma.mobilidade.motorista'
+            adb shell dumpsys activity activities | grep -E 'mResumedActivity.*br.com.namma.mobilidade.motorista'
             adb shell uiautomator dump /sdcard/window.xml
             adb pull /sdcard/window.xml brasil/android/evidence/motorista-ui.xml
-            rg -q 'Mobilidade · Motorista' brasil/android/evidence/motorista-ui.xml
+            grep -Fq 'Mobilidade · Motorista' brasil/android/evidence/motorista-ui.xml
             adb shell screencap -p /sdcard/motorista.png
             adb pull /sdcard/motorista.png brasil/android/evidence/motorista-login.png
             adb logcat -d > brasil/android/evidence/logcat.txt
