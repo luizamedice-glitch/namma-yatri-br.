@@ -49,7 +49,7 @@ jobs:
       - name: Compilar frontend original
         working-directory: Frontend/${{ matrix.diretorio }}
         env:
-          GHCRTS: '-N1 -M2500m'
+          GHCRTS: '-N1 -M10g'
         run: |
           set -o pipefail
           echo 'Memoria disponivel antes da compilacao:'
