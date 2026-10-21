@@ -69,6 +69,9 @@ jobs:
             activities.txt
             janela-ativa.txt
             tela-inicial.png
+            tela-20s.png
+            tela-60s.png
+            logs-inicializacao.txt
             Frontend/android-native/app/build/outputs/apk/**/*.apk
             gradle-build.log
           if-no-files-found: warn
