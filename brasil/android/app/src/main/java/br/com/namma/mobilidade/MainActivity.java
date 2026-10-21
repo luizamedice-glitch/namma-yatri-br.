@@ -37,6 +37,7 @@ public final class MainActivity extends Activity implements LocationListener {
     private final ExecutorService streamWorker = Executors.newSingleThreadExecutor();
     private final AtomicBoolean syncing = new AtomicBoolean();
     private final AtomicBoolean streamRunning = new AtomicBoolean();
+    private volatile long lastRefreshAt;
     private volatile boolean foreground;
     private volatile HttpURLConnection stream;
     private String cursor = "0";
@@ -192,6 +193,7 @@ public final class MainActivity extends Activity implements LocationListener {
     }
     private void refresh() {
         if (api.token.isEmpty() || !syncing.compareAndSet(false, true)) return;
+        lastRefreshAt = SystemClock.elapsedRealtime();
         run(() -> { try { return api.request("/v1/snapshot", null); } finally { syncing.set(false); } }, this::render);
     }
     private void render(JSONObject state) throws Exception {
@@ -403,6 +405,7 @@ public final class MainActivity extends Activity implements LocationListener {
                             while (foreground && (line=reader.readLine())!=null) {
                                 if (line.startsWith("id: ")) cursor=line.substring(4);
                                 if (line.startsWith("data: ")) ui.post(this::refresh);
+                                if (line.startsWith(": heartbeat") && SystemClock.elapsedRealtime() - lastRefreshAt > 15000) ui.post(this::refresh);
                             }
                         }
                     } catch (Exception e) { if (foreground && !api.token.isEmpty()) ui.post(() -> showMessage("Reconectando ao servidor…")); }

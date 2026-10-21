@@ -35,6 +35,8 @@ jobs:
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm run test:integration 2>&1 | tee integration.log
         shell: bash
+      - name: Verify executable backend
+        run: node test/cli-smoke.mjs
       - name: Verify real Google APIs when configured
         env:
           GOOGLE_MAPS_SERVER_KEY: ${{ secrets.GOOGLE_MAPS_SERVER_KEY }}

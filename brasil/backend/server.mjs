@@ -18,7 +18,7 @@ const timer = setInterval(async () => {
   try { await service.dispatch(); } catch (e) { console.error('Falha na distribuição:', e.code || e.name); }
   finally { dispatching = false; }
 }, 3000);
-server.listen(Number(process.env.PORT || 8080), process.env.HOST || '127.0.0.1', () => console.log('Mobilidade BR API iniciada'));
+server.listen(Number(process.env.PORT || 8080), process.env.HOST || '127.0.0.1', () => console.log('Mobilidade BR API porta ' + server.address().port));
 for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => {
   clearInterval(timer); server.closeStreams(); server.close(async () => { await pool.end(); process.exit(0); });
 });
