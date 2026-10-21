@@ -1,0 +1,54 @@
+name: BR - Compilar PureScript original
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  purescript:
+    name: PureScript - ${{ matrix.nome }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - nome: passageiro
+            diretorio: ui-customer
+          - nome: motorista
+            diretorio: ui-driver
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: passageiro-pt-br
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Preparar instalacao legada
+        run: |
+          npm config set ignore-scripts false
+          node --version
+          free -h
+      - name: Instalar dependencias e compilador
+        working-directory: Frontend/${{ matrix.diretorio }}
+        run: |
+          set -o pipefail
+          npm install --legacy-peer-deps --ignore-scripts=false 2>&1 | tee "$GITHUB_WORKSPACE/npm-install.log"
+          npx purs --version
+          npx spago --version
+      - name: Compilar frontend original
+        working-directory: Frontend/${{ matrix.diretorio }}
+        run: |
+          set -o pipefail
+          npx spago build --purs-args '--censor-warnings' 2>&1 | tee "$GITHUB_WORKSPACE/purescript-build.log"
+      - name: Publicar diagnostico
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pure-original-${{ matrix.nome }}
+          path: |
+            npm-install.log
+            purescript-build.log
+          if-no-files-found: warn
