@@ -56,4 +56,15 @@ tasks.register('recoverOriginalTypography', Sync) {
         }
     }
 }
-tasks.named('preBuild').configure { dependsOn 'recoverOriginalTypography' }
+// Recuperar o recurso gráfico usado no whereToButtonConfig original, sem redesenhá-lo.
+def originalPassengerDrawables = rootProject.file('../../Frontend/android-native/app/src/user/nammaYatri/res/drawable')
+tasks.register('recoverOriginalPassengerUi', Copy) {
+    from(originalPassengerDrawables) { include 'ny_ic_bent_right_arrow.png' }
+    into layout.buildDirectory.dir('generated/originalAssets/original-ui')
+    doFirst {
+        if (!new File(originalPassengerDrawables, 'ny_ic_bent_right_arrow.png').isFile()) {
+            throw new GradleException('Ícone original de destino ausente no frontend recuperado')
+        }
+    }
+}
+tasks.named('preBuild').configure { dependsOn 'recoverOriginalTypography', 'recoverOriginalPassengerUi' }
