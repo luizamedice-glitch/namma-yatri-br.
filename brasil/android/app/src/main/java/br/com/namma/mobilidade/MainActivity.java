@@ -58,7 +58,7 @@ public final class MainActivity extends Activity implements LocationListener {
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
         sessions = new SessionStore(this);
-        api = new Api(getSharedPreferences("settings", 0).getString("api", BuildConfig.API_URL)); api.token = sessions.load();
+        api = new Api(BuildConfig.API_URL);
         locations = (LocationManager) getSystemService(LOCATION_SERVICE);
         if (saved != null) {
             try {
@@ -66,7 +66,7 @@ public final class MainActivity extends Activity implements LocationListener {
                 if (saved.containsKey("destination")) destination = new JSONObject(saved.getString("destination"));
             } catch (JSONException ignored) { origin = null; destination = null; }
         }
-        if (api.token.isEmpty()) loginScreen(); else homeScreen();
+        provisionDevelopmentSession();
     }
     @Override protected void onSaveInstanceState(Bundle out) {
         super.onSaveInstanceState(out);
@@ -100,7 +100,8 @@ public final class MainActivity extends Activity implements LocationListener {
             return insets;
         });
         setContentView(root);
-        TextView title = label(driver ? "Mobilidade · Motorista" : "Mobilidade · Passageiro", 24); title.setTypeface(null, Typeface.BOLD); root.addView(title);
+        TextView title = label(driver ? "Yatri Brasil — Motorista" : "Yatri Brasil — Passageiro", 24); title.setTypeface(null, Typeface.BOLD); root.addView(title);
+        root.addView(label(driver ? "Giselo" : "Fagner", 16));
         message = label("", 14); message.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE); root.addView(message);
     }
     private void showMessage(String value) { if (message != null) message.setText(value); }
@@ -124,58 +125,45 @@ public final class MainActivity extends Activity implements LocationListener {
     private static JSONObject json(Object... pairs) throws JSONException {
         JSONObject o = new JSONObject(); for (int i=0;i<pairs.length;i+=2) o.put((String)pairs[i], pairs[i+1]); return o;
     }
-    private void loginScreen() {
-        baseScreen(); root.addView(label("Entre com sua conta de testes", 18));
-        ScrollView scroll = new ScrollView(this); LinearLayout form = column(); scroll.addView(form); root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
-        form.addView(label(api.base.isEmpty() ? "Servidor não configurado. Conecte o aplicativo ao backend para acessar sua conta." : "Servidor: " + api.base, 14));
-        button("Configurar servidor de testes", form, this::serverDialog);
-        button("Verificar conexão", form, this::verifyConnection);
-        form.addView(label("Use uma conta cadastrada neste servidor. No primeiro acesso, crie sua conta com o convite do ambiente de testes.", 14));
-        EditText email = field("Email", form, false); email.setInputType(33);
-        EditText password = field("Senha (mínimo de 10 caracteres)", form, true);
-        button("Entrar", form, () -> authenticate(false, email, password, null, null, null, null, null));
-        form.addView(label("Primeiro acesso · cadastro por convite", 18));
-        EditText name = field("Nome", form, false), invite = field("Código de convite", form, true);
-        EditText plate = driver ? field("Placa (ABC1D23)", form, false) : null;
-        EditText model = driver ? field("Modelo do veículo", form, false) : null;
-        EditText color = driver ? field("Cor do veículo", form, false) : null;
-        button("Criar conta de " + (driver ? "motorista" : "passageiro"), form, () -> authenticate(true, email, password, name, invite, plate, model, color));
-        form.addView(label("Contas e viagens são registradas no servidor configurado. Use este ambiente apenas para testes autorizados.", 14));
-    }
-    private void verifyConnection() {
-        showMessage("Verificando o servidor…");
-        run(api::verifyBackend, result -> showMessage("Servidor conectado. Entre com sua conta ou crie uma conta por convite."));
-    }
-    private void serverDialog() {
-        LinearLayout content = column(); content.setPadding(dp(16), 0, dp(16), 0);
-        content.addView(label("O backend precisa estar ligado. No celular físico, use um endereço HTTPS ou o endereço privado do computador. Por USB configurado no computador, use http://127.0.0.1:8080. 10.0.2.2 é exclusivo do emulador.", 14));
-        EditText e = field("Endereço do servidor", content, false); e.setText(api.base); e.setInputType(17);
-        new AlertDialog.Builder(this).setTitle("Endereço do backend").setView(content).setNegativeButton("Voltar", null).setPositiveButton("Salvar e verificar", (d,w) -> {
-            String value = e.getText().toString().trim().replaceAll("/+$", "");
-            try {
-                java.net.URI uri = java.net.URI.create(value);
-                if (uri.getHost() == null || uri.getUserInfo() != null || uri.getQuery() != null || uri.getFragment() != null || !(uri.getPath().isEmpty()) || !(uri.getScheme().equals("https") || (BuildConfig.DEBUG && uri.getScheme().equals("http")))) throw new Exception();
-                api.base = value; getSharedPreferences("settings", 0).edit().putString("api", value).apply(); loginScreen(); verifyConnection();
-            } catch (Exception ex) { showMessage("Informe uma URL HTTPS válida. HTTP é permitido apenas no APK de depuração."); }
-        }).show();
-    }
-    private void authenticate(boolean register, EditText email, EditText password, EditText name, EditText invite, EditText plate, EditText model, EditText color) {
+    private void provisionDevelopmentSession() {
         if (authenticationInProgress) return;
-        if (api.base.isEmpty()) { showMessage("Configure e verifique a conexão com o servidor antes de entrar."); serverDialog(); return; }
-        try {
-            JSONObject body = json("email", email.getText().toString(), "password", password.getText().toString());
-            if (register) {
-                body.put("name", name.getText().toString()); body.put("inviteCode", invite.getText().toString()); body.put("role", BuildConfig.ROLE);
-                if (driver) body.put("vehicle", json("plate", plate.getText().toString(), "model", model.getText().toString(), "color", color.getText().toString()));
+        baseScreen();
+        root.addView(label("Conectando a conta de " + (driver ? "Giselo" : "Fagner") + "…", 18));
+        button("Tentar novamente", root, this::provisionDevelopmentSession);
+        if (BuildConfig.DEV_CREDENTIAL.isEmpty() || api.base.isEmpty()) {
+            showMessage("Este build está sem a configuração do ambiente de desenvolvimento. É necessário gerar um APK com o endereço do backend e a credencial deste perfil.");
+            return;
+        }
+        authenticationInProgress = true;
+        worker.execute(() -> {
+            try {
+                Api connection = new Api(BuildConfig.API_URL);
+                connection.verifyBackend();
+                connection.token = sessions.load();
+                JSONObject state = null;
+                if (!connection.token.isEmpty()) {
+                    try { state = connection.request("/v1/snapshot", null); }
+                    catch (Api.SessionExpired expired) { connection.token = ""; }
+                }
+                String expected = driver ? "b1a51100-0000-4000-8000-000000000002" : "b1a51100-0000-4000-8000-000000000001";
+                if (state == null || !state.getJSONObject("user").optString("id").equals(expected) || !state.getJSONObject("user").optString("role").equals(BuildConfig.ROLE)) {
+                    connection.token = "";
+                    JSONObject provisioned = connection.request("/v1/development/session", json("role", BuildConfig.ROLE, "credential", BuildConfig.DEV_CREDENTIAL));
+                    JSONObject user = provisioned.getJSONObject("user");
+                    if (!user.optString("id").equals(expected) || !user.optString("role").equals(BuildConfig.ROLE)) throw new Exception("O servidor devolveu um perfil incompatível");
+                    connection.token = provisioned.getString("token");
+                    sessions.save(connection.token);
+                }
+                String token = connection.token;
+                ui.post(() -> {
+                    authenticationInProgress = false;
+                    if (isDestroyed()) return;
+                    api.token = token; homeScreen(); startStream(); refresh();
+                });
+            } catch (Exception e) {
+                ui.post(() -> { authenticationInProgress = false; if (!isDestroyed()) showMessage(e.getMessage() == null ? "Não foi possível conectar ao backend" : e.getMessage()); });
             }
-            authenticationInProgress = true;
-            showMessage("Verificando o servidor e os dados de acesso…");
-            run(() -> { api.verifyBackend(); return api.request(register ? "/v1/auth/register" : "/v1/auth/login", body); }, result -> {
-                authenticationInProgress = false;
-                if (!result.getJSONObject("user").getString("role").equals(BuildConfig.ROLE)) { showMessage("Esta conta pertence ao outro aplicativo"); return; }
-                sessions.save(result.getString("token")); api.token = result.getString("token"); cursor = "0"; password.setText(""); homeScreen(); startStream(); refresh();
-            }, error -> { authenticationInProgress = false; showMessage(error); });
-        } catch (Exception e) { authenticationInProgress = false; showMessage("Confira os dados de acesso"); }
+        });
     }
     private void homeScreen() {
         baseScreen();
@@ -198,11 +186,11 @@ public final class MainActivity extends Activity implements LocationListener {
         panel = column(); body.addView(panel);
         button("Histórico de corridas", body, this::history);
         button("Atualizar conexão", body, () -> { refresh(); startStream(); startLocations(); });
-        button("Sair", body, () -> run(() -> api.request("/v1/auth/logout", new JSONObject()), r -> clearSession()));
+
         startLocations(); refresh();
     }
     private void clearSession() {
-        stopStream(); stopService(new Intent(this, DriverLocationService.class)); locations.removeUpdates(this); sessions.clear(); api.token = ""; cursor = "0"; active = null; quote = null; origin = null; destination = null; available = false; panel = null; loginScreen();
+        stopStream(); stopService(new Intent(this, DriverLocationService.class)); locations.removeUpdates(this); sessions.clear(); api.token = ""; cursor = "0"; active = null; quote = null; origin = null; destination = null; available = false; panel = null; provisionDevelopmentSession();
     }
     private void refresh() {
         if (api.token.isEmpty() || !syncing.compareAndSet(false, true)) return;
@@ -410,7 +398,7 @@ public final class MainActivity extends Activity implements LocationListener {
                         int status = connection.getResponseCode();
                         if (status == 401) {
                             String rejectedToken = api.token;
-                            ui.post(() -> { if (api.token.equals(rejectedToken)) { clearSession(); showMessage("Sessão expirada. Entre novamente."); } });
+                            ui.post(() -> { if (api.token.equals(rejectedToken)) { clearSession(); showMessage("Renovando a sessão de desenvolvimento…"); } });
                             break;
                         }
                         if (status!=200) throw new Exception("Eventos indisponíveis");

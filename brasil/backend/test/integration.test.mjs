@@ -32,6 +32,7 @@ test('HTTP + PostgreSQL: oferta, concorrência, SSE, autorização, persistênci
     assert.equal(response.status, expected, JSON.stringify(value)); return value;
   }
   const account = async (name, role, plate) => call('/auth/register', null, { name, role, email: name + '@teste.local', password: 'senha-integration-123', inviteCode: config.inviteCode, ...(plate ? { vehicle: { plate, model: 'Veículo de teste', color: 'Prata' } } : {}) });
+  await call('/development/session', null, { role: 'driver', credential: 'invalid' }, 404);
   await call('/auth/register', null, { inviteCode: 'errado' }, 403);
   const p = await account('passageiro', 'passenger');
   const p2 = await account('terceiro', 'passenger');

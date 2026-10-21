@@ -15,8 +15,16 @@ jobs:
     env:
       GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
       MOBILITY_API_URL: ${{ vars.MOBILITY_API_URL }}
+      YATRI_DRIVER_DEV_KEY: ${{ secrets.YATRI_DRIVER_DEV_KEY }}
     steps:
       - uses: actions/checkout@v4
+      - name: Validate development APK configuration
+        run: |
+          node --input-type=module <<'NODE'
+          const url = process.env.MOBILITY_API_URL || '';
+          if (!/^https:\/\/[^\s]+$/.test(url)) throw new Error('Configure MOBILITY_API_URL com o backend de desenvolvimento HTTPS acessível aos celulares');
+          if (!/^[a-f0-9]{64}$/.test(process.env.YATRI_DRIVER_DEV_KEY || '')) throw new Error('Configure a credencial separada deste perfil no secret YATRI_DRIVER_DEV_KEY');
+          NODE
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

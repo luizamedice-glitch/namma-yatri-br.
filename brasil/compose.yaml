@@ -17,7 +17,12 @@ services:
     build: ./backend
     environment:
       DATABASE_URL: postgresql://mobilidade:${POSTGRES_PASSWORD}@db:5432/mobilidade
-      TEST_INVITE_CODE: ${TEST_INVITE_CODE:?Defina TEST_INVITE_CODE no arquivo .env}
+      YATRI_DEVELOPMENT_MODE: 'true'
+      YATRI_PASSENGER_DEV_KEY: ${YATRI_PASSENGER_DEV_KEY:?Configure a credencial do passageiro}
+      YATRI_DRIVER_DEV_KEY: ${YATRI_DRIVER_DEV_KEY:?Configure a credencial do motorista}
+      YATRI_DRIVER_PLATE: ${YATRI_DRIVER_PLATE:?Configure a placa do veículo de testes}
+      YATRI_DRIVER_MODEL: ${YATRI_DRIVER_MODEL:?Configure o modelo do veículo de testes}
+      YATRI_DRIVER_COLOR: ${YATRI_DRIVER_COLOR:?Configure a cor do veículo de testes}
       GOOGLE_MAPS_SERVER_KEY: ${GOOGLE_MAPS_SERVER_KEY:-}
       BASE_FARE_CENTS: ${BASE_FARE_CENTS:-500}
       PER_KM_CENTS: ${PER_KM_CENTS:-200}

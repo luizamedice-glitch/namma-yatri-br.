@@ -47,7 +47,7 @@ public final class DriverLocationService extends Service implements LocationList
         if (token.isEmpty()) { stopSelf(); return; }
         Location position = latest;
         if (position == null || SystemClock.elapsedRealtimeNanos()-position.getElapsedRealtimeNanos() > 30000000000L) return;
-        Api api = new Api(getSharedPreferences("settings",0).getString("api",BuildConfig.API_URL)); api.token=token;
+        Api api = new Api(BuildConfig.API_URL); api.token=token;
         try {
             JSONObject body = new JSONObject(); body.put("lat",position.getLatitude()); body.put("lng",position.getLongitude());
             api.request("/v1/driver/location",body);

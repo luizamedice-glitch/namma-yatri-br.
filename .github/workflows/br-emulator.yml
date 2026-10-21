@@ -2,7 +2,7 @@ name: BR - Android startup emulator
 on:
   push:
     branches: [passageiro-pt-br]
-    paths: ['brasil/android/**', '.github/workflows/br-emulator.yml']
+    paths: ['brasil/android/**', 'brasil/backend/**', '.github/workflows/br-emulator.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -23,13 +23,23 @@ jobs:
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DATABASE_URL: postgresql://android_test:android-integration-only@localhost:5432/android_test
-      TEST_INVITE_CODE: android-workflow-invite-123456
+      YATRI_DEVELOPMENT_MODE: 'true'
+      YATRI_DRIVER_PLATE: TST1A23
+      YATRI_DRIVER_MODEL: Veículo de testes automatizados
+      YATRI_DRIVER_COLOR: Prata
       MOBILITY_API_URL: http://10.0.2.2:8080
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Generate isolated development credentials
+        run: |
+          node --input-type=module <<'NODE'
+          import { randomBytes } from 'node:crypto';
+          import { appendFileSync } from 'node:fs';
+          for (const role of ['PASSENGER', 'DRIVER']) appendFileSync(process.env.GITHUB_ENV, `YATRI_${role}_DEV_KEY=${randomBytes(32).toString('hex')}\n`);
+          NODE
       - name: Start real local backend
         working-directory: brasil/backend
         run: |
@@ -61,7 +71,7 @@ jobs:
           target: google_apis
           disable-animations: true
           script: |
-            gradle -p brasil/android :app:connectedPassageiroDebugAndroidTest :app:connectedMotoristaDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.BR_TEST_INVITE=android-workflow-invite-123456 --stacktrace
+            gradle -p brasil/android :app:connectedPassageiroDebugAndroidTest :app:connectedMotoristaDebugAndroidTest --stacktrace
             mkdir -p brasil/android/evidence
             adb pull /sdcard/br-passenger-home.png brasil/android/evidence/passageiro-home.png
             adb pull /sdcard/br-driver-home.png brasil/android/evidence/motorista-home.png
@@ -72,17 +82,17 @@ jobs:
             adb shell dumpsys activity activities | grep -E 'mResumedActivity.*br.com.namma.mobilidade.passageiro'
             adb shell uiautomator dump /sdcard/window.xml
             adb pull /sdcard/window.xml brasil/android/evidence/passageiro-ui.xml
-            grep -Fq 'Mobilidade · Passageiro' brasil/android/evidence/passageiro-ui.xml
+            grep -Fq 'Yatri Brasil — Passageiro' brasil/android/evidence/passageiro-ui.xml
             adb shell screencap -p /sdcard/passageiro.png
-            adb pull /sdcard/passageiro.png brasil/android/evidence/passageiro-login.png
+            adb pull /sdcard/passageiro.png brasil/android/evidence/passageiro-operacional.png
             adb shell am start -W -n br.com.namma.mobilidade.motorista/br.com.namma.mobilidade.MainActivity
             adb shell sleep 2
             adb shell dumpsys activity activities | grep -E 'mResumedActivity.*br.com.namma.mobilidade.motorista'
             adb shell uiautomator dump /sdcard/window.xml
             adb pull /sdcard/window.xml brasil/android/evidence/motorista-ui.xml
-            grep -Fq 'Mobilidade · Motorista' brasil/android/evidence/motorista-ui.xml
+            grep -Fq 'Yatri Brasil — Motorista' brasil/android/evidence/motorista-ui.xml
             adb shell screencap -p /sdcard/motorista.png
-            adb pull /sdcard/motorista.png brasil/android/evidence/motorista-login.png
+            adb pull /sdcard/motorista.png brasil/android/evidence/motorista-operacional.png
             adb logcat -d > brasil/android/evidence/logcat.txt
       - uses: actions/upload-artifact@v4
         if: always()

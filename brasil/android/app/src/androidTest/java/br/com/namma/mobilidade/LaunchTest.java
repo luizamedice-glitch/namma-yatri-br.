@@ -13,19 +13,6 @@ import static org.junit.Assert.*;
 /** Startup smoke test only; does not claim to validate the operational ride flow. */
 @RunWith(AndroidJUnit4.class)
 public final class LaunchTest {
-    @Test public void launchShowsAuthenticationWithoutHyperSDK() {
-        var instrumentation = InstrumentationRegistry.getInstrumentation();
-        Intent intent = new Intent(instrumentation.getTargetContext(), MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        MainActivity activity = (MainActivity)instrumentation.startActivitySync(intent);
-        try {
-            instrumentation.waitForIdleSync();
-            instrumentation.runOnMainSync(() -> {
-                assertTrue("Login must render without network, Firebase or maps key", contains(activity.getWindow().getDecorView(), "Entre com sua conta de testes"));
-                assertTrue(contains(activity.getWindow().getDecorView(), "Entrar"));
-                assertFalse(activity.isFinishing());
-            });
-        } finally { instrumentation.runOnMainSync(activity::finish); }
-    }
     @Test public void polylineDecoding() {
         var points = MainActivity.decode("_p~iF~ps|U_ulLnnqC_mqNvxq`@");
         assertEquals(3, points.size());

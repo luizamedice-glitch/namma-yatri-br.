@@ -1,3 +1,7 @@
+# Yatri Brasil
+
+Estado atual e instruções da revisão 0.3.0-dev: [YATRI-BRASIL.md](YATRI-BRASIL.md). A reconstrução visual original ainda está pendente; os relatórios 0.2.x abaixo são históricos.
+
 # Mobilidade Brasil — piloto local
 
 Código na branch `passageiro-pt-br` do repositório

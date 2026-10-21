@@ -15,7 +15,7 @@ export async function readBody(req) {
   return parsed;
 }
 
-export function createApi({ service, maps, pool, allowedOrigin = '', rateLimit = 120 }) {
+export function createApi({ service, maps, pool, allowedOrigin = '', rateLimit = 120, development = null }) {
   const buckets = new Map();
   const connections = new Set();
   function reply(res, status, data) {
@@ -40,12 +40,17 @@ export function createApi({ service, maps, pool, allowedOrigin = '', rateLimit =
       const ip = req.socket.remoteAddress;
       if (!buckets.has(ip)) buckets.set(ip, { count: 0, until: now + 60000 });
       requireThat(++buckets.get(ip).count <= rateLimit, 429, 'Muitas requisições; tente novamente em um minuto');
-      if (req.method === 'POST' && ['/v1/auth/register', '/v1/auth/login'].includes(url.pathname)) {
+      if (req.method === 'POST' && ['/v1/auth/register', '/v1/auth/login', '/v1/development/session'].includes(url.pathname)) {
         // Separate low limit for expensive password hashing.
         const key = 'auth:' + ip;
         if (!buckets.has(key)) buckets.set(key, { count: 0, until: now + 60000 });
         requireThat(++buckets.get(key).count <= 15, 429, 'Limite de autenticação atingido');
         const body = await readBody(req);
+        if (url.pathname === '/v1/development/session') {
+          requireThat(development, 404, 'Rota não encontrada');
+          return reply(res, 200, await development.session(body));
+        }
+        requireThat(!development, 403, 'Login e cadastro desativados neste ambiente de desenvolvimento');
         return reply(res, 200, await (url.pathname.endsWith('register') ? service.register(body) : service.login(body)));
       }
       const token = req.headers.authorization?.replace(/^Bearer /, '');

@@ -1,106 +1,73 @@
 package br.com.namma.mobilidade;
 
-import android.Manifest;
 import android.content.Intent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.*;
+import android.widget.TextView;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
+import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import java.util.UUID;
 import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
 
-/** Real Android UI -> Node HTTP -> PostgreSQL. No substitute API or fake users. */
+/** Exercises real dev-account HTTP provisioning, encrypted persistence and session recovery. */
 @RunWith(AndroidJUnit4.class)
 public final class BackendConnectionTest {
-    @Test public void registerLoginAndLogoutThroughNativeApp() throws Exception {
-        String invite = InstrumentationRegistry.getArguments().getString("BR_TEST_INVITE", "");
-        assumeTrue("Integração Android requer backend local de testes e BR_TEST_INVITE", !invite.isEmpty());
-        var instrumentation = InstrumentationRegistry.getInstrumentation();
-        var context = instrumentation.getTargetContext();
+    private MainActivity launch() {
+        var i = InstrumentationRegistry.getInstrumentation();
+        return (MainActivity)i.startActivitySync(new Intent(i.getTargetContext(), MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+    }
+    private Api connected() throws Exception {
+        var context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        long deadline = System.currentTimeMillis() + 25000;
+        while (System.currentTimeMillis() < deadline) {
+            String token = new SessionStore(context).load();
+            if (!token.isEmpty()) { Api api = new Api(BuildConfig.API_URL); api.token = token; return api; }
+            Thread.sleep(100);
+        }
+        throw new AssertionError("A conta automática não foi provisionada no backend real");
+    }
+    @Test public void automaticAccountPersistsAndRecoversWithoutLogin() throws Exception {
+        var i = InstrumentationRegistry.getInstrumentation();
+        var context = i.getTargetContext();
+        i.getUiAutomation().grantRuntimePermission(context.getPackageName(), android.Manifest.permission.ACCESS_FINE_LOCATION);
+        i.getUiAutomation().grantRuntimePermission(context.getPackageName(), android.Manifest.permission.ACCESS_COARSE_LOCATION);
         new SessionStore(context).clear();
-        context.getSharedPreferences("settings",0).edit().clear().commit();
-        String accountEmail = UUID.randomUUID()+"@android.teste.local";
-        for (String permission : new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION}) {
-            try (var descriptor = instrumentation.getUiAutomation().executeShellCommand("pm grant " + context.getPackageName() + " " + permission)) {
-                new java.io.FileInputStream(descriptor.getFileDescriptor()).read(new byte[256]);
-            }
-        }
-        MainActivity activity = (MainActivity)instrumentation.startActivitySync(new Intent(context,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        MainActivity activity = launch();
         try {
-            instrumentation.runOnMainSync(() -> {
-                View root=activity.getWindow().getDecorView();
-                edit(root,"Email").setText(accountEmail);
-                edit(root,"Senha (mínimo de 10 caracteres)").setText("android-test-password-123");
-                edit(root,"Nome").setText("Conta Android de teste");
-                edit(root,"Código de convite").setText(invite);
-                if(BuildConfig.ROLE.equals("driver")) {
-                    edit(root,"Placa (ABC1D23)").setText("TST1A23");
-                    edit(root,"Modelo do veículo").setText("Veículo de teste Android");
-                    edit(root,"Cor do veículo").setText("Prata");
-                }
-                TextView create=findText(root,"Criar conta de "+(BuildConfig.ROLE.equals("driver")?"motorista":"passageiro"));
-                assertNotNull(create); create.performClick();
+            Api api = connected(); JSONObject user = api.request("/v1/snapshot", null).getJSONObject("user");
+            assertEquals(BuildConfig.ROLE, user.getString("role"));
+            assertEquals(BuildConfig.ROLE.equals("driver") ? "Giselo" : "Fagner", user.getString("name"));
+            Thread.sleep(500); i.waitForIdleSync();
+            i.runOnMainSync(() -> {
+                assertTrue(contains(activity.getWindow().getDecorView(), user.optString("name")));
+                assertFalse(contains(activity.getWindow().getDecorView(), "Entrar"));
+                assertFalse(contains(activity.getWindow().getDecorView(), "Email"));
             });
-            await(activity,"Histórico de corridas");
-            Api api=new Api(BuildConfig.API_URL); api.token=new SessionStore(context).load();
-            assertFalse("Sessão real deve existir no Keystore",api.token.isEmpty());
-            var snapshot=api.request("/v1/snapshot",null);
-            assertEquals(BuildConfig.ROLE,snapshot.getJSONObject("user").getString("role"));
-            assertEquals("Conta Android de teste",snapshot.getJSONObject("user").getString("name"));
-            instrumentation.waitForIdleSync();
-            Thread.sleep(500);
-            // Shell-owned shared path survives the runner uninstalling the target app.
-            try (var descriptor=instrumentation.getUiAutomation().executeShellCommand("screencap -p /sdcard/br-"+BuildConfig.ROLE+"-home.png");
-                 var output=new java.io.FileInputStream(descriptor.getFileDescriptor())) {
-                byte[] buffer=new byte[256]; while(output.read(buffer)!=-1) { /* Drain command output. */ }
+            try (var screenshot = i.getUiAutomation().executeShellCommand("screencap -p /sdcard/br-" + BuildConfig.ROLE + "-home.png")) {
+                try (var input = new android.os.ParcelFileDescriptor.AutoCloseInputStream(screenshot)) { byte[] buffer = new byte[8192]; while (input.read(buffer) != -1) {} }
             }
-            instrumentation.runOnMainSync(() -> findText(activity.getWindow().getDecorView(),"Sair").performClick());
-            await(activity,"Entre com sua conta de testes");
-            try { api.request("/v1/snapshot",null); fail("Logout precisa revogar a sessão no servidor"); }
-            catch(Api.SessionExpired expected) { /* Real server rejected the revoked token. */ }
-            instrumentation.runOnMainSync(() -> {
-                View root=activity.getWindow().getDecorView();
-                edit(root,"Email").setText(accountEmail);
-                edit(root,"Senha (mínimo de 10 caracteres)").setText("senha-incorreta-123");
-                findText(root,"Entrar").performClick();
-            });
-            await(activity,"Email ou senha incorretos");
-            assertTrue(new SessionStore(context).load().isEmpty());
-            instrumentation.runOnMainSync(() -> {
-                View root=activity.getWindow().getDecorView();
-                edit(root,"Senha (mínimo de 10 caracteres)").setText("android-test-password-123");
-                findText(root,"Entrar").performClick();
-            });
-            await(activity,"Histórico de corridas");
-            api.token=new SessionStore(context).load();
-            assertEquals(snapshot.getJSONObject("user").getString("id"),api.request("/v1/snapshot",null).getJSONObject("user").getString("id"));
-            instrumentation.runOnMainSync(() -> findText(activity.getWindow().getDecorView(),"Sair").performClick());
-            await(activity,"Entre com sua conta de testes");
-        } finally {
-            new SessionStore(context).clear(); instrumentation.runOnMainSync(activity::finish);
-        }
+            String oldToken = api.token;
+            i.runOnMainSync(activity::finish);
+            MainActivity reopened = launch();
+            try {
+                assertEquals(oldToken, connected().token);
+                assertEquals(user.getString("id"), connected().request("/v1/snapshot", null).getJSONObject("user").getString("id"));
+            } finally { i.runOnMainSync(reopened::finish); }
+            api.request("/v1/auth/logout", new JSONObject());
+            new SessionStore(context).clear();
+            MainActivity recovered = launch();
+            try {
+                Api replacement = connected();
+                assertNotEquals(oldToken, replacement.token);
+                assertEquals(user.getString("id"), replacement.request("/v1/snapshot", null).getJSONObject("user").getString("id"));
+            } finally { i.runOnMainSync(recovered::finish); }
+        } finally { i.runOnMainSync(activity::finish); }
     }
-    private void await(MainActivity activity,String text) throws Exception {
-        var instrumentation=InstrumentationRegistry.getInstrumentation();
-        for(int i=0;i<100;i++) {
-            boolean[] found={false};
-            instrumentation.runOnMainSync(() -> found[0]=findText(activity.getWindow().getDecorView(),text)!=null);
-            if(found[0]) return; Thread.sleep(200);
-        }
-        fail("Tela esperada não apareceu: "+text);
-    }
-    private EditText edit(View view,String hint) {
-        if(view instanceof EditText && hint.contentEquals(((EditText)view).getHint())) return (EditText)view;
-        if(view instanceof ViewGroup) { ViewGroup group=(ViewGroup)view; for(int i=0;i<group.getChildCount();i++) { EditText found=edit(group.getChildAt(i),hint); if(found!=null)return found; } }
-        return null;
-    }
-    private TextView findText(View view,String text) {
-        if(view instanceof TextView && text.contentEquals(((TextView)view).getText())) return (TextView)view;
-        if(view instanceof ViewGroup) { ViewGroup group=(ViewGroup)view; for(int i=0;i<group.getChildCount();i++) { TextView found=findText(group.getChildAt(i),text); if(found!=null)return found; } }
-        return null;
+    private boolean contains(View view, String text) {
+        if (view instanceof TextView && ((TextView)view).getText().toString().equals(text)) return true;
+        if (view instanceof ViewGroup) { ViewGroup group=(ViewGroup)view; for(int i=0;i<group.getChildCount();i++) if(contains(group.getChildAt(i),text)) return true; }
+        return false;
     }
 }

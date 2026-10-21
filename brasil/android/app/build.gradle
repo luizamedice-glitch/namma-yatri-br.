@@ -7,8 +7,8 @@ android {
         applicationId 'br.com.namma.mobilidade'
         minSdk 26
         targetSdk 35
-        versionCode 3
-        versionName '0.2.1'
+        versionCode 4
+        versionName '0.3.0-dev'
         manifestPlaceholders = [mapsApiKey: System.getenv('GOOGLE_MAPS_API_KEY') ?: '']
         buildConfigField 'String', 'MAPS_KEY', quoted(System.getenv('GOOGLE_MAPS_API_KEY') ?: '')
         buildConfigField 'String', 'API_URL', quoted(System.getenv('MOBILITY_API_URL') ?: '')
@@ -19,13 +19,15 @@ android {
         passageiro {
             dimension 'profile'
             applicationIdSuffix '.passageiro'
-            resValue 'string', 'app_name', 'Mobilidade · Passageiro'
+            buildConfigField 'String', 'DEV_CREDENTIAL', quoted(System.getenv('YATRI_PASSENGER_DEV_KEY') ?: '')
+            resValue 'string', 'app_name', 'Yatri Brasil — Passageiro'
             buildConfigField 'String', 'ROLE', '"passenger"'
         }
         motorista {
             dimension 'profile'
             applicationIdSuffix '.motorista'
-            resValue 'string', 'app_name', 'Mobilidade · Motorista'
+            buildConfigField 'String', 'DEV_CREDENTIAL', quoted(System.getenv('YATRI_DRIVER_DEV_KEY') ?: '')
+            resValue 'string', 'app_name', 'Yatri Brasil — Motorista'
             buildConfigField 'String', 'ROLE', '"driver"'
         }
     }
