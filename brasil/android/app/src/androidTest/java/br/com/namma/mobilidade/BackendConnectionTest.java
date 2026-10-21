@@ -40,7 +40,26 @@ public final class BackendConnectionTest {
             Api api = connected(); JSONObject user = api.request("/v1/snapshot", null).getJSONObject("user");
             assertEquals(BuildConfig.ROLE, user.getString("role"));
             assertEquals(BuildConfig.ROLE.equals("driver") ? "Giselo" : "Fagner", user.getString("name"));
-            Thread.sleep(500); i.waitForIdleSync();
+            waitUntil(() -> {
+                boolean[] ready = {false};
+                i.runOnMainSync(() -> ready[0] = contains(activity.getWindow().getDecorView(), BuildConfig.ROLE.equals("driver") ? "Ficar disponível" : "Localização GPS atual"));
+                return ready[0];
+            });
+            if (BuildConfig.ROLE.equals("driver")) {
+                waitUntil(() -> {
+                    if (api.request("/v1/snapshot", null).optBoolean("available")) return true;
+                    i.runOnMainSync(() -> click(activity.getWindow().getDecorView(), "Ficar disponível"));
+                    return false;
+                });
+                waitUntil(() -> {
+                    boolean[] ready = {false};
+                    i.runOnMainSync(() -> ready[0] = contains(activity.getWindow().getDecorView(), "Ficar indisponível"));
+                    return ready[0];
+                });
+                i.runOnMainSync(() -> assertTrue(click(activity.getWindow().getDecorView(), "Ficar indisponível")));
+                waitUntil(() -> !api.request("/v1/snapshot", null).optBoolean("available"));
+            }
+            i.waitForIdleSync();
             i.runOnMainSync(() -> {
                 assertTrue(contains(activity.getWindow().getDecorView(), user.optString("name")));
                 assertFalse(contains(activity.getWindow().getDecorView(), "Entrar"));
@@ -64,6 +83,20 @@ public final class BackendConnectionTest {
                 assertEquals(user.getString("id"), replacement.request("/v1/snapshot", null).getJSONObject("user").getString("id"));
             } finally { i.runOnMainSync(recovered::finish); }
         } finally { i.runOnMainSync(activity::finish); }
+    }
+    interface Condition { boolean get() throws Exception; }
+    private void waitUntil(Condition condition) throws Exception {
+        long deadline = System.currentTimeMillis() + 25000;
+        while (System.currentTimeMillis() < deadline) {
+            if (condition.get()) return;
+            Thread.sleep(500);
+        }
+        throw new AssertionError("Estado operacional esperado não chegou pelo GPS/backend reais do ambiente de testes");
+    }
+    private boolean click(View view, String text) {
+        if (view instanceof TextView && ((TextView)view).getText().toString().equals(text) && view.isClickable()) return view.performClick();
+        if (view instanceof ViewGroup) { ViewGroup group=(ViewGroup)view; for(int n=0;n<group.getChildCount();n++) if(click(group.getChildAt(n),text)) return true; }
+        return false;
     }
     private boolean contains(View view, String text) {
         if (view instanceof TextView && ((TextView)view).getText().toString().equals(text)) return true;

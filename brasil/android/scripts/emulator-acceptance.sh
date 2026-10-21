@@ -2,10 +2,17 @@
 # CI-only backend and APKs. This verifies account startup, not original-UI fidelity or Google routing.
 set -euo pipefail
 mkdir -p brasil/android/evidence
-trap 'adb logcat -d 2>/dev/null | sed -E "s/(API Key:).*/\1 [redacted]/I" > brasil/android/evidence/logcat.txt || true' EXIT
+cleanup() {
+  if [ -n "${gps_feed_pid:-}" ]; then kill "$gps_feed_pid" 2>/dev/null || true; fi
+  adb logcat -d 2>/dev/null | sed -E 's/(API Key:).*/\1 [redacted]/I' > brasil/android/evidence/logcat.txt || true
+}
+trap cleanup EXIT
 gradle -p brasil/android :app:lintPassageiroDebug :app:lintMotoristaDebug :app:assemblePassageiroDebugAndroidTest :app:assembleMotoristaDebugAndroidTest --stacktrace
-# The test sensor location is explicit; it is not evidence of physical-device GPS operation.
-adb emu geo fix -46.6333 -23.5505
+# Repeat the explicit test sensor fix after listeners register, with global location enabled.
+# This is not evidence of physical-device GPS operation.
+adb shell cmd location set-location-enabled true
+(while true; do adb emu geo fix -46.6333 -23.5505 > /dev/null; sleep 2; done) &
+gps_feed_pid=$!
 gradle -p brasil/android :app:connectedPassageiroDebugAndroidTest --stacktrace
 adb emu geo fix -46.6333 -23.5505
 gradle -p brasil/android :app:connectedMotoristaDebugAndroidTest --stacktrace
