@@ -67,7 +67,11 @@ SSE e ofertas são acompanhados com a Activity em primeiro plano. O motorista
 usa serviço foreground de localização com indicação persistente do Android,
 iniciado com o app visível ao ficar disponível ou recuperar uma corrida ativa.
 Ele continua reportando GPS durante navegação externa, sem Firebase ou push.
-Posições antigas nunca são reenviadas como novas. Ao ficar indisponível sem
+O serviço agenda envios com intervalo após cada tentativa, em vez de acumular
+requisições na fila da Activity durante perda de rede. Ele não envia posições
+com idade superior a 30 segundos na origem da tentativa. A Activity revalida a
+idade do GPS antes do envio inicial para ativar disponibilidade.
+Ao ficar indisponível sem
 corrida ativa ou sair da conta, o serviço para. A continuidade sob economia de
 bateria, revogação de permissão e fabricantes diferentes precisa de validação
 em dispositivos reais; não considerar pronta para um turno real de motorista.

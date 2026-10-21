@@ -4,6 +4,8 @@ Código na branch `passageiro-pt-br` do repositório
 [`luizamedice-glitch/namma-yatri-br.`](https://github.com/luizamedice-glitch/namma-yatri-br./tree/passageiro-pt-br).
 O ponto final faz parte do nome do repositório.
 
+Downloads e certificados dos APKs desta versão estão em [ENTREGA.md](ENTREGA.md).
+
 Dois clientes Android independentes do HyperSDK compartilham uma API Node e
 PostgreSQL. Nenhuma corrida é criada ou aceita automaticamente por usuários
 fictícios. Para conhecer o que foi efetivamente testado, consulte
@@ -113,8 +115,17 @@ gradle :app:lintPassageiroDebug :app:lintMotoristaDebug
 gradle :app:connectedPassageiroDebugAndroidTest :app:connectedMotoristaDebugAndroidTest
 ```
 
+Os testes de cadastro e logout pelo Android requerem backend local em execução
+e `-Pandroid.testInstrumentationRunnerArguments.BR_TEST_INVITE=SEU_CONVITE_DE_TESTES`
+no comando Gradle. Sem esse argumento, esses testes são explicitamente ignorados;
+os testes de abertura e polyline continuam offline. No workflow do emulador,
+PostgreSQL e Node são iniciados no runner e o argumento é fornecido automaticamente.
+Use ambiente exclusivo de testes: esse teste cadastra contas reais no banco.
+
 Integração exercita HTTP real e PostgreSQL real, com somente o transporte Google
 substituído por fixture explícita de teste. Essa fixture não existe no servidor
 de operação. Teste de abertura e screenshots não comprovam uma corrida completa
 nos APKs. Contrato REST está em [backend/openapi.json](backend/openapi.json),
 com detalhes de SSE em [backend/API.md](backend/API.md).
+
+Relatório por funcionalidade: [FUNCIONALIDADES.md](FUNCIONALIDADES.md).
