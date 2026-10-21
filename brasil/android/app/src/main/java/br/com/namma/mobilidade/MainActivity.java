@@ -173,7 +173,7 @@ public final class MainActivity extends Activity implements LocationListener {
         if (!BuildConfig.MAPS_KEY.isEmpty()) {
             FrameLayout host = new FrameLayout(this); host.setId(View.generateViewId()); root.addView(host, new LinearLayout.LayoutParams(-1, 0, 1));
             MapFragment fragment = MapFragment.newInstance(); getFragmentManager().beginTransaction().add(host.getId(), fragment, "map").commit();
-            fragment.getMapAsync(g -> { map = g; g.getUiSettings().setMapToolbarEnabled(false); drawMap(); });
+            fragment.getMapAsync(g -> { map = g; g.getUiSettings().setMapToolbarEnabled(false); startLocations(); drawMap(); });
         } else root.addView(label("Mapa indisponível: configure GOOGLE_MAPS_API_KEY no build Android.", 14));
         ScrollView scroll = new ScrollView(this); LinearLayout body = column(); scroll.addView(body); root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
         tripForm = column(); body.addView(tripForm);
@@ -322,7 +322,7 @@ public final class MainActivity extends Activity implements LocationListener {
         try { setPoint(true, json("lat", gps.getLatitude(), "lng", gps.getLongitude(), "address", "Localização GPS selecionada")); showMessage("Confira o ponto de origem no mapa"); }
         catch (JSONException e) { showMessage("Localização inválida"); }
     }
-    private boolean fresh(Location location) { return SystemClock.elapsedRealtimeNanos() - location.getElapsedRealtimeNanos() < 30000000000L; }
+    private boolean fresh(Location location) { long age = SystemClock.elapsedRealtimeNanos() - location.getElapsedRealtimeNanos(); return age >= 0 && age < 30000000000L; }
     private void startLocations() {
         if (api.token.isEmpty()) return;
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -331,8 +331,13 @@ public final class MainActivity extends Activity implements LocationListener {
             return;
         }
         try {
+            if (map != null) map.setMyLocationEnabled(true);
             for (String provider : Arrays.asList(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)) {
-                if (locations.isProviderEnabled(provider)) locations.requestLocationUpdates(provider, 5000, 0, this);
+                if (locations.isProviderEnabled(provider)) {
+                    locations.requestLocationUpdates(provider, 5000, 0, this);
+                    Location last = locations.getLastKnownLocation(provider);
+                    if (last != null && fresh(last) && (gps == null || last.getElapsedRealtimeNanos() > gps.getElapsedRealtimeNanos())) onLocationChanged(last);
+                }
             }
         } catch (SecurityException e) { showMessage("Permissão de localização necessária"); }
     }
@@ -342,7 +347,12 @@ public final class MainActivity extends Activity implements LocationListener {
         else showMessage("Localização não autorizada. O passageiro pode pesquisar a origem; o motorista precisa de GPS.");
     }
     @Override public void onLocationChanged(Location location) {
-        if (!fresh(location)) return; gps = location;
+        if (!fresh(location)) return;
+        boolean firstFix = gps == null; gps = location;
+        if (!driver && origin == null && originButton != null) {
+            try { setPoint(true, json("lat", location.getLatitude(), "lng", location.getLongitude(), "address", "Localização GPS atual")); }
+            catch (JSONException e) { showMessage("Não foi possível selecionar a localização atual"); }
+        } else if (firstFix) drawMap();
         // Periodic uploads belong to DriverLocationService: fixed-delay scheduling
         // prevents stale fixes accumulating in the UI request queue while offline.
     }
@@ -353,6 +363,7 @@ public final class MainActivity extends Activity implements LocationListener {
     private void drawMap() {
         if (map == null) return;
         try {
+            if (gps != null && active == null && origin == null && destination == null) map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(gps.getLatitude(), gps.getLongitude()), 16));
             map.clear(); JSONObject from = active == null ? origin : active.getJSONObject("origin");
             JSONObject to = active == null ? destination : active.getJSONObject("destination");
             LatLngBounds.Builder bounds = new LatLngBounds.Builder(); int count = 0;

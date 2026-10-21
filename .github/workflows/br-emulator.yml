@@ -28,11 +28,14 @@ jobs:
       YATRI_DRIVER_MODEL: Veículo de testes automatizados
       YATRI_DRIVER_COLOR: Prata
       MOBILITY_API_URL: http://10.0.2.2:8080
+      GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify original source provenance
+        run: node brasil/scripts/audit-original-ui.mjs --verify
       - name: Generate isolated development credentials
         run: |
           node --input-type=module <<'NODE'

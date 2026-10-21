@@ -2,8 +2,13 @@
 # CI-only backend and APKs. This verifies account startup, not original-UI fidelity or Google routing.
 set -euo pipefail
 mkdir -p brasil/android/evidence
-trap 'adb logcat -d > brasil/android/evidence/logcat.txt 2>/dev/null || true' EXIT
-gradle -p brasil/android :app:lintPassageiroDebug :app:lintMotoristaDebug :app:connectedPassageiroDebugAndroidTest :app:connectedMotoristaDebugAndroidTest --stacktrace
+trap 'adb logcat -d 2>/dev/null | sed -E "s/(API Key:).*/\1 [redacted]/I" > brasil/android/evidence/logcat.txt || true' EXIT
+gradle -p brasil/android :app:lintPassageiroDebug :app:lintMotoristaDebug :app:assemblePassageiroDebugAndroidTest :app:assembleMotoristaDebugAndroidTest --stacktrace
+# The test sensor location is explicit; it is not evidence of physical-device GPS operation.
+adb emu geo fix -46.6333 -23.5505
+gradle -p brasil/android :app:connectedPassageiroDebugAndroidTest --stacktrace
+adb emu geo fix -46.6333 -23.5505
+gradle -p brasil/android :app:connectedMotoristaDebugAndroidTest --stacktrace
 adb pull /sdcard/br-passenger-home.png brasil/android/evidence/passageiro-home.png
 adb pull /sdcard/br-driver-home.png brasil/android/evidence/motorista-home.png
 for profile in passageiro motorista; do
@@ -11,6 +16,7 @@ for profile in passageiro motorista; do
   # Installation by the test runner resets permissions. Grant again before screenshot capture.
   adb shell pm grant "br.com.namma.mobilidade.$profile" android.permission.ACCESS_COARSE_LOCATION
   adb shell pm grant "br.com.namma.mobilidade.$profile" android.permission.ACCESS_FINE_LOCATION
+  adb emu geo fix -46.6333 -23.5505
   adb shell am start -W -n "br.com.namma.mobilidade.$profile/br.com.namma.mobilidade.MainActivity"
   found=false
   for attempt in {1..15}; do
