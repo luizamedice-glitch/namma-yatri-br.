@@ -1,0 +1,38 @@
+name: Validar API brasileira de mobilidade
+on:
+  workflow_dispatch:
+  push:
+    branches: [passageiro-pt-br]
+    paths:
+      - 'brasil/backend/**'
+      - '.github/workflows/validar-api-brasil.yml'
+permissions:
+  contents: read
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar sintaxe do serviço
+        run: node --check brasil/backend/server.mjs
+      - name: Verificar endpoints e bloqueio sem credenciais
+        run: |
+          set -euo pipefail
+          PORT=8787 node brasil/backend/server.mjs &
+          API_PID=$!
+          trap 'kill "$API_PID" 2>/dev/null || true' EXIT
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:8787/health > /tmp/health.json; then break; fi
+            sleep 1
+          done
+          grep -q '"status":"ok"' /tmp/health.json
+          grep -q '"mapsConfigured":false' /tmp/health.json
+          HTTP_CODE=$(curl -s -o /tmp/places.json -w '%{http_code}' \
+            -H 'Content-Type: application/json' \
+            -d '{"input":"Avenida Brasil"}' \
+            http://127.0.0.1:8787/v1/places/autocomplete)
+          test "$HTTP_CODE" = "503"
+          echo 'API real responde, sem simular resultados quando a chave não existe.'
