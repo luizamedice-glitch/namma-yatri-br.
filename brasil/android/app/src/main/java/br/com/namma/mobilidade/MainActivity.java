@@ -198,6 +198,18 @@ public final class MainActivity extends Activity implements LocationListener {
             destinationButton.setTextSize(17);
             destinationButton.setTextColor(Color.rgb(44, 47, 58));
             destinationButton.setMinHeight(dp(60));
+            // Ícone real da tela PureScript original; compõe o botão nativo sem alterar sua ação.
+            try (java.io.InputStream iconStream = getAssets().open("original-ui/ny_ic_bent_right_arrow.png")) {
+                android.graphics.Bitmap source = android.graphics.BitmapFactory.decodeStream(iconStream);
+                if (source != null) {
+                    android.graphics.drawable.BitmapDrawable icon = new android.graphics.drawable.BitmapDrawable(getResources(), source);
+                    icon.setBounds(0, 0, dp(21), dp(16));
+                    destinationButton.setCompoundDrawables(icon, null, null, null);
+                    destinationButton.setCompoundDrawablePadding(dp(17));
+                }
+            } catch (java.io.IOException ex) {
+                android.util.Log.w("YatriBrasil", "Ícone original de destino indisponível", ex);
+            }
             button("Calcular rota e estimativa", tripForm, this::calculate);
             summary = label("Defina origem e destino para calcular a rota", 16); tripForm.addView(summary);
             requestButton = button("Solicitar corrida", tripForm, () -> { if (quote != null) { JSONObject selected = quote; run(() -> api.request("/v1/rides", json("quoteId", selected.getString("id"))), r -> { quote = null; refresh(); }); } });
