@@ -67,4 +67,19 @@ tasks.register('recoverOriginalPassengerUi', Copy) {
         }
     }
 }
-tasks.named('preBuild').configure { dependsOn 'recoverOriginalTypography', 'recoverOriginalPassengerUi' }
+// Ícones oficiais recuperados do painel Namma Yatri Partner.
+def originalDriverDrawables = rootProject.file('../../Frontend/android-native/app/src/driver/nammaYatriPartner/res/drawable')
+tasks.register('recoverOriginalDriverUi', Copy) {
+    from(originalDriverDrawables) {
+        include 'ic_driver_status_online.png', 'ic_driver_status_offline.png'
+    }
+    into layout.buildDirectory.dir('generated/originalAssets/original-ui')
+    doFirst {
+        ['ic_driver_status_online.png', 'ic_driver_status_offline.png'].each { name ->
+            if (!new File(originalDriverDrawables, name).isFile()) {
+                throw new GradleException('Recurso de status original do motorista ausente: ' + name)
+            }
+        }
+    }
+}
+tasks.named('preBuild').configure { dependsOn 'recoverOriginalTypography', 'recoverOriginalPassengerUi', 'recoverOriginalDriverUi' }
