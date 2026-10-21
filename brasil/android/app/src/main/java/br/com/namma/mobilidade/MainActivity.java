@@ -293,13 +293,13 @@ public final class MainActivity extends Activity implements LocationListener {
             activeCard.addView(label(active.getJSONObject("origin").getString("address") + " → " + active.getJSONObject("destination").getString("address"), 16));
             activeCard.addView(label(routeSummary(active.getJSONObject("route"), active.getInt("fare_cents")), 16));
             if (driver) {
-                panel.addView(label("Passageiro: " + active.getString("passenger_name"), 18));
-                button(status.equals("in_progress") ? "Navegar até o destino" : "Navegar até a origem", panel, () -> navigate(status.equals("in_progress") ? "destination" : "origin"));
-                if (status.equals("accepted")) button("Cheguei à origem", panel, () -> action(id, "arrive"));
-                if (status.equals("arrived")) button("Iniciar viagem", panel, () -> action(id, "start"));
-                if (status.equals("in_progress")) button("Concluir viagem", panel, () -> action(id, "complete"));
+                activeCard.addView(label("Passageiro: " + active.getString("passenger_name"), 18));
+                button(status.equals("in_progress") ? "Navegar até o destino" : "Navegar até a origem", activeCard, () -> navigate(status.equals("in_progress") ? "destination" : "origin"));
+                if (status.equals("accepted")) button("Cheguei à origem", activeCard, () -> action(id, "arrive"));
+                if (status.equals("arrived")) button("Iniciar viagem", activeCard, () -> action(id, "start"));
+                if (status.equals("in_progress")) button("Concluir viagem", activeCard, () -> action(id, "complete"));
             } else if (!active.isNull("driver_id")) {
-                panel.addView(label("Motorista: " + active.getString("driver_name") + "\n" + active.getString("model") + " · " + active.getString("color") + " · " + active.getString("plate"), 18));
+                activeCard.addView(label("Motorista: " + active.getString("driver_name") + "\n" + active.getString("model") + " · " + active.getString("color") + " · " + active.getString("plate"), 18));
             }
             if (!status.equals("in_progress")) button("Cancelar corrida", panel, () -> new AlertDialog.Builder(this).setMessage("Cancelar esta solicitação?").setNegativeButton("Voltar", null).setPositiveButton("Cancelar corrida", (d,w) -> action(id, "cancel")).show());
         } else if (driver) {
@@ -337,7 +337,8 @@ public final class MainActivity extends Activity implements LocationListener {
                 offerRoute.setTypeface(originalSemiBold);
                 offerCard.addView(offerRoute);
                 offerCard.addView(label("Passageiro: " + offer.getString("passenger_name") + "\n" + routeSummary(offer.getJSONObject("route"), offer.getInt("fare_cents")), 16));
-                button("Aceitar corrida", offerCard, () -> action(id, "accept"));
+                Button acceptButton = button("Aceitar corrida", offerCard, () -> action(id, "accept"));
+                originalPrimaryAction(acceptButton);
                 button("Recusar oferta", offerCard, () -> action(id, "reject"));
             }
         }
