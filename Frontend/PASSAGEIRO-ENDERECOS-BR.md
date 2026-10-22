@@ -44,3 +44,5 @@ Run 39864104050: cache 39835346434 recuperado, sem compilação fria. Parou no l
 Secret informada pelo usuário: `Google_Maps_API_Key` (nomes são insensíveis à caixa no GitHub). O workflow usa esse nome explicitamente e publica somente indicadores booleanos de presença de configuração. BR debug deixa de usar a chave histórica de fallback do projeto original; release mantém o comportamento anterior. O GPS não reescreve o campo enquanto a busca está aberta. Limpar uma seleção também limpa endereço estruturado, placeId, coordenadas e marcador correspondente, evitando reaproveitamento de um ponto anterior.
 
 O controle de recentrar usa o GPS nativo com timeout de 8 s, sem apagar seleções manuais. Ao reabrir o mapa, a câmera respeita se a última seleção foi origem ou destino, mesmo quando ambos já estão definidos. O teste de contrato também cobre nova busca bem-sucedida após falha de conexão.
+
+O arquivo que contém a configuração e a credencial de Fagner pertence exclusivamente ao source set `nyUserProdDebug`. Ele não é incorporado aos APKs do motorista nem às variantes release.

@@ -261,7 +261,7 @@ android {
         if (brTestMode) {
             debug.manifest.srcFile 'src/brTest/AndroidManifest.xml'
             debug.assets.srcDir 'src/brTest/assets'
-            debug.assets.srcDir layout.buildDirectory.dir('generated/brPlacesAssets')
+            maybeCreate('nyUserProdDebug').assets.srcDir layout.buildDirectory.dir('generated/brPlacesAssets')
             debug.res.srcDir 'src/brTest/res'
         }
         nyUser.setRoot('src/user/nammaYatri')
@@ -575,7 +575,7 @@ if (brTestMode) {
         }
     }
     tasks.configureEach { task ->
-        if (task.name.startsWith('merge') && task.name.endsWith('DebugAssets')) {
+        if (task.name == 'mergeNyUserProdDebugAssets') {
             task.dependsOn(placesConfigTask)
         }
     }
