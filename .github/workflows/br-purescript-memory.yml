@@ -179,7 +179,7 @@ jobs:
           from zipfile import ZipFile
           import hashlib
           bundle = Path('Frontend/ui-customer/dist/android/index_bundle.js').read_bytes()
-          apks = list(Path('Frontend/android-native/app/build/outputs/apk/nyUser/prod/debug').glob('*.apk'))
+          apks = list(Path('Frontend/android-native/app/build/outputs/apk').rglob('*.apk'))
           if len(apks) != 1:
               raise SystemExit(f'Esperado exatamente um APK; encontrados {len(apks)}')
           with ZipFile(apks[0]) as apk:
@@ -193,7 +193,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: yatri-brasil-passageiro-original-apk
-          path: Frontend/android-native/app/build/outputs/apk/nyUser/prod/debug/*.apk
+          path: Frontend/android-native/app/build/outputs/apk/**/*.apk
           if-no-files-found: error
           retention-days: 14
       - name: Publicar diagnostico Android
