@@ -190,4 +190,5 @@ finally:
     log=adb('logcat','-d').decode(errors='replace')
     log=re.sub(r'AIza[0-9A-Za-z_-]{20,}','[REDACTED_GOOGLE_KEY]',log)
     log=re.sub(r'(?i)(bearer\s+)[a-z0-9._~-]+',r'\1[REDACTED]',log)
+    log=re.sub(r'\b[a-fA-F0-9]{64}\b','[REDACTED_SESSION_OR_HASH]',log)
     (out/'home-logcat.txt').write_text(log)

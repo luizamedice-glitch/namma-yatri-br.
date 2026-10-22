@@ -31,6 +31,7 @@ raw = out / 'logcat.private'
 text = raw.read_text(errors='replace')
 text = re.sub(r'AIza[0-9A-Za-z_-]{20,}', '[REDACTED_GOOGLE_KEY]', text)
 text = re.sub(r'(?i)(bearer\s+)[a-z0-9._~-]+', r'\1[REDACTED]', text)
+text = re.sub(r'\b[a-fA-F0-9]{64}\b', '[REDACTED_SESSION_OR_HASH]', text)
 (out / 'logcat.txt').write_text(text)
 raw.unlink()
 PY
