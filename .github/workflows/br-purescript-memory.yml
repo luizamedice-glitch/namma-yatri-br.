@@ -1,22 +1,38 @@
 name: BR - Diagnostico PureScript original
 
 on:
+  push:
+    branches: [passageiro-pt-br]
+    paths:
+      - '.github/workflows/br-purescript-memory.yml'
+      - 'Frontend/scripts/diagnose-purescript.py'
+      - 'Frontend/packages.dhall'
+      - 'Frontend/ui-customer/**'
+      - 'Frontend/ui-common/**'
   pull_request:
     branches: [passageiro-pt-br]
     paths:
       - '.github/workflows/br-purescript-memory.yml'
       - 'Frontend/scripts/diagnose-purescript.py'
       - 'Frontend/ui-customer/package.json'
+      - 'Frontend/ui-customer/src/**'
+      - 'Frontend/ui-common/**'
+      - 'Frontend/packages.dhall'
   workflow_dispatch:
     inputs:
+      compilador:
+        description: '0.15.14 inclui correcoes oficiais de memoria; 0.15.4 reproduz o historico'
+        type: choice
+        options: ['0.15.14', '0.15.4']
+        default: '0.15.14'
       aplicativo:
         type: choice
         options: [passageiro, motorista]
         default: passageiro
       modo:
         type: choice
-        options: [staged, full, module]
-        default: staged
+        options: [full, staged, module]
+        default: full
       heap:
         description: 'Limite GHC, com margem para RSS e sistema (ex.: 2500m ou 10g)'
         default: '10g'
@@ -34,7 +50,8 @@ jobs:
     timeout-minutes: 55
     env:
       APP: ${{ inputs.aplicativo || 'passageiro' }}
-      MODE: ${{ inputs.modo || 'staged' }}
+      MODE: ${{ inputs.modo || 'full' }}
+      PURS_VERSION: ${{ inputs.compilador || '0.15.14' }}
       HEAP: ${{ inputs.heap || '10g' }}
       GHCRTS: '-N1 -M512m'
     steps:
@@ -43,9 +60,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '18.20.8'
-      - name: Instalar ferramentas historicas
+      - name: Instalar ferramentas com versoes fixas
         run: |
-          npm install --global --ignore-scripts=false purescript@0.15.4 spago@0.21.0
+          npm install --global --ignore-scripts=false "purescript@$PURS_VERSION" spago@0.21.0
           sudo apt-get update -qq
           sudo apt-get install -y time
           purs --version
@@ -60,9 +77,9 @@ jobs:
             Frontend/${{ env.APP == 'motorista' && 'ui-driver' || 'ui-customer' }}/.spago
             Frontend/${{ env.APP == 'motorista' && 'ui-driver' || 'ui-customer' }}/output
             ~/.cache/dhall
-          key: purs-0154-v1-${{ runner.os }}-${{ env.APP }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: purs-${{ env.PURS_VERSION }}-v2-${{ runner.os }}-${{ env.APP }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            purs-0154-v1-${{ runner.os }}-${{ env.APP }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-
+            purs-${{ env.PURS_VERSION }}-v2-${{ runner.os }}-${{ env.APP }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-
       - name: Instalar dependencias sem atualizar manifestos
         run: |
           mkdir -p purescript-diagnostics
@@ -73,8 +90,8 @@ jobs:
       - name: Medir compilacao original e retomada por cache
         timeout-minutes: 40
         run: |
-          python3 Frontend/scripts/diagnose-purescript.py --app "$APP" --mode "$MODE" --heap "$HEAP" --label measured
-          python3 Frontend/scripts/diagnose-purescript.py --app "$APP" --mode full --heap "$HEAP" --label incremental
+          python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode "$MODE" --heap "$HEAP" --label measured
+          python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode full --heap "$HEAP" --label incremental
       - name: Preservar cache inclusive em caso de falha
         if: always() && steps.cache.outcome == 'success'
         uses: actions/cache/save@v4
@@ -88,7 +105,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: purescript-memory-${{ env.APP }}-${{ github.run_attempt }}
+          name: purescript-memory-${{ env.APP }}-${{ env.PURS_VERSION }}-${{ github.run_attempt }}
           path: purescript-diagnostics/
           retention-days: 14
           if-no-files-found: warn

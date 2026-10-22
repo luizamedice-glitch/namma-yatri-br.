@@ -54,6 +54,7 @@ def stop_group(process):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--app', choices=['passageiro', 'motorista'], default='passageiro')
+    parser.add_argument('--compiler-version', choices=['0.15.4', '0.15.14'], default='0.15.4')
     parser.add_argument('--heap', default='2500m', help='GHC heap cap, not a Node/V8 setting')
     parser.add_argument('--label', default='build')
     parser.add_argument('--mode', choices=['full', 'module', 'staged'], default='full')
@@ -70,7 +71,7 @@ def main():
         parser.error('--heap must be a positive integer followed by m or g')
     if not re.fullmatch(r'[A-Za-z0-9_.-]+', args.label) or min(args.batch_size, args.timeout_seconds) < 1:
         parser.error('invalid label or batch size')
-    for binary, version in [('purs', '0.15.4'), ('spago', '0.21.0')]:
+    for binary, version in [('purs', args.compiler_version), ('spago', '0.21.0')]:
         actual = subprocess.check_output([binary, '--version'], text=True).strip()
         if actual != version:
             parser.error(f'{binary}: expected {version}, found {actual}')
@@ -94,7 +95,8 @@ def main():
     # Spago itself does not need the compiler heap. Compiler flags override this cap.
     env = dict(os.environ, GHCRTS='-N1 -M512m')
     compiler_args = ['--codegen', args.codegen, '+RTS', '-N1', '-M' + args.heap, '-s', '-RTS']
-    metadata = {'app': args.app, 'mode': args.mode, 'codegen': args.codegen, 'heap': args.heap,
+    metadata = {'app': args.app, 'compiler_version': args.compiler_version,
+                'mode': args.mode, 'codegen': args.codegen, 'heap': args.heap,
                 'started_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 'commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                 'purs': shutil.which('purs'), 'spago': shutil.which('spago'),

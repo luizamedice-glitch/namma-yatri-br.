@@ -6,7 +6,7 @@ FFI e backend brasileiro devem permanecer intactos durante este diagnóstico.
 
 ## Ferramentas e reprodução
 
-Usar Node **18.20.8**, PureScript **0.15.4**, Spago **0.21.0**, Python 3,
+Para reproduzir o histórico, usar Node **18.20.8**, PureScript **0.15.4**, Spago **0.21.0**, Python 3,
 GNU time (`time` no Debian/Ubuntu), Git e `procps`. O pacote histórico
 `hyper-purescript@0.0.25` instala o executável `fastpurs`; nesta instalação ele
 reportou **0.15.15**, portanto não serve como prova de uso do `purs` 0.15.4.
@@ -145,6 +145,49 @@ de tarefas 658–659. O log não demonstra sucesso nem Heap exhausted nessa
 tentativa. Aumentar o heap sozinho não ficou validado como solução.
 
 ## Alterações e limites
+
+### Correção pontual avaliada no compilador
+
+O [changelog oficial da versão 0.15.14](https://github.com/purescript/purescript/releases/tag/v0.15.14)
+documenta dois problemas diretamente relevantes:
+
+- [#4517](https://github.com/purescript/purescript/pull/4517): módulos demais
+  intercalados, especialmente com `-N1`, e retenção de memória dos módulos
+  compilados com avisos. O código novo usa `QSem` e força resultados/avisos.
+- [#4521](https://github.com/purescript/purescript/pull/4521): crescimento de
+  memória do passe CSE em arquivos grandes. A correção troca `Data.Map` por
+  `Data.Map.Strict`; o código 0.15.4 usa o mapa preguiçoso. Isso é compatível com
+  a predominância de mapas e thunks observada no perfil, sem atribuir toda a
+  diferença a apenas um commit.
+
+A comparação usa **0.15.14**, primeira versão com essas correções, em outro
+checkout e outro `output`. Os **1.189 hashes de fontes PureScript coincidem**
+entre 0.15.4 local, CI inicial e 0.15.14 local. Node, Spago, package-set,
+dependências e fontes de ambos os aplicativos permanecem iguais. Não foi
+executado `npm audit fix` nem atualização geral de pacotes.
+
+O medidor aceita `--compiler-version 0.15.14` e exige essa versão real no PATH.
+O workflow agora seleciona explicitamente essa correção e separa caches por
+versão do compilador; a opção 0.15.4 continua disponível para diagnóstico.
+A compilação 0.15.14 com heap de 6500 MiB já gerou `Services.API`, enquanto o
+mesmo módulo isolado na 0.15.4 atingiu o limite de 300 s. **A validação completa
+ainda está em execução** e será registrada antes de afirmar sucesso.
+
+```bash
+npm install --global --ignore-scripts=false purescript@0.15.14 spago@0.21.0
+python3 Frontend/scripts/diagnose-purescript.py --compiler-version 0.15.14 --mode full --heap 6500m --label fixed
+```
+
+O histórico do compilador 0.15.4 permanece reproduzível com os comandos da
+primeira seção. Os binários oficiais Linux usados na comparação foram obtidos
+dos releases do projeto, com SHA-256:
+
+| Versão | SHA-256 do executável nativo |
+|---|---|
+| 0.15.4 | `e6ced6356331ea9dec89f3ac3fb1c022224ca558ca6c34f65ff33f39c6cd7ff1` |
+| 0.15.14 | `68b5b9a0f71e07820d11bfcaa434f2d824b1ec0256ac1aecaea336c4ab0102aa` |
+
+### Escopo preservado
 
 - Removido `--censor-warnings` dos scripts `compile:purs` de ambos os apps:
   `purs compile --censor-warnings` retorna `Invalid option` no compilador exigido.
