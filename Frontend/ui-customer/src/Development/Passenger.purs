@@ -23,6 +23,7 @@ import Helpers.PrestoUtils (initUIWrapper)
 import JBridge as JB
 import PrestoDOM (Eval, Screen, continue, continueWithCmd, exit)
 import PrestoDOM.Core.Types.Language.Flow (runScreen)
+import PrestoDOM.Types.Core (class Loggable)
 import Screens.HomeScreen.Controllers.Types (Action(..)) as Home
 import Screens.HomeScreen.Controller (getPeekHeight)
 import Screens.HomeScreen.ScreenData as HomeData
@@ -35,6 +36,13 @@ data Action = Original Home.Action
   | SuggestionsLoaded Boolean (Array Places.Suggestion)
   | PlaceLoaded Boolean Places.Place
   | PlacesFailed String
+
+instance showDevelopmentAction :: Show Action where
+  show _ = ""
+
+-- Do not forward addresses or development identity/session events to legacy analytics.
+instance loggableDevelopmentAction :: Loggable Action where
+  performLog _ _ = pure unit
 
 start :: Boolean -> FlowBT String Unit
 start initialize = do
@@ -105,7 +113,7 @@ eval (PlaceLoaded field place) state = do
 
 suggestionItem :: Places.Suggestion -> LocationListItemState
 suggestionItem item =
-  { prefixImageUrl: "ny_ic_loc_unfilled", postfixImageUrl: "", postfixImageVisibility: false
+  { prefixImageUrl: "ny_ic_loc_grey,", postfixImageUrl: "", postfixImageVisibility: false
   , lat: Nothing, lon: Nothing, placeId: Just item.placeId, subTitle: item.subTitle, title: item.title
   , description: item.address, tag: "", tagType: Nothing, cardType: Nothing, address: item.address
   , tagName: "", isEditEnabled: false, savedLocation: "", placeName: item.title, isClickable: true
@@ -120,7 +128,9 @@ evalHome (Home.UpdateCurrentLocation latitude longitude) state = position state 
 evalHome (Home.CurrentLocation latitude longitude) state = position state latitude longitude
 evalHome (Home.MAPREADY _ _ _) state = do
   when (JB.isLocationPermissionEnabledWithoutEff unit) $ void $ pure $ JB.enableMyLocation true
-  continue state
+  continueWithCmd state [do
+    restoreMap state
+    pure (Original Home.NoAction)]
 
 evalHome Home.RecenterCurrentLocation state = exit state {props {sourcePlaceId = Nothing}}
 
@@ -225,7 +235,24 @@ position state latitude longitude = case fromString latitude, fromString longitu
       , data {source = label}
       }
       [ do
-          JB.animateCamera lat lng 16.0 "ZOOM"
+          when (state.props.destinationPlaceId == Nothing) $ JB.animateCamera lat lng 16.0 "ZOOM"
           pure (Original Home.NoAction)
       ]
   _, _ -> continue state
+
+-- A map may become ready after the search overlay closes; repaint only real selected points.
+restoreMap :: HomeScreenState -> Effect Unit
+restoreMap state = do
+  case state.props.sourcePlaceId of
+    Just _ -> marker true state.props.sourceLat state.props.sourceLong
+    Nothing -> pure unit
+  case state.props.destinationPlaceId of
+    Just _ -> do
+      marker false state.props.destinationLat state.props.destinationLong
+      JB.animateCamera state.props.destinationLat state.props.destinationLong 16.0 "ZOOM"
+    Nothing -> when (state.props.sourceLat /= 0.0 || state.props.sourceLong /= 0.0) $
+      JB.animateCamera state.props.sourceLat state.props.sourceLong 16.0 "ZOOM"
+  where
+  marker field lat lng = void $ JB.showMarker JB.defaultMarkerConfig
+    {markerId = if field then "ny_ic_src_marker" else "ny_ic_dest_marker", pointerIcon = if field then "ny_ic_src_marker" else "ny_ic_dest_marker"}
+    lat lng 110 0.5 0.9 (getNewIDWithTag "CustomerHomeScreen")

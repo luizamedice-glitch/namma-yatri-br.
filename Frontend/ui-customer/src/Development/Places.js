@@ -3,7 +3,7 @@ import {callbackMapper} from 'presto-ui';
 import {createPlacesClient} from '../../src/Development/PlacesClient.mjs';
 
 let listener, revision = 0, input = '', source = false, client;
-let snapshot = {configured:false, phase:'idle', source:null, destination:null};
+let snapshot = {configured:false, phase:'idle', source:null, destination:null, suggestions:[]};
 function enabled() {
   try { return window.__OS === 'ANDROID' && window.__YATRI_BR_DEVELOPMENT__ === true &&
     JSON.parse(window.JBridge.getDeviceInfo()).package_name.endsWith('.debug'); }
@@ -65,7 +65,7 @@ export const autocomplete = value => isSource => lat => lng => () => {
   snapshot.phase = 'searching';
   Promise.resolve().then(() => getClient().autocomplete(value, {lat,lng})).then(items => {
     if (revision !== version || !listener) return;
-    snapshot.phase = items.length ? 'results' : 'empty'; listener.predictions(isSource)(items)();
+    snapshot.phase = items.length ? 'results' : 'empty'; snapshot.suggestions = items; listener.predictions(isSource)(items)();
   }).catch(error => fail(error, version));
 };
 export const details = placeId => isSource => () => {

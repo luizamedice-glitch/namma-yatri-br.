@@ -110,3 +110,11 @@ test('FFI configurações ausentes/503/release não travam e não inventam resul
   release.subscribe(_=>_=>()=>{})(_=>_=>()=>{})(_=>()=>{})();release.inputChanged('fixture')(false)();release.autocomplete('fixture')(false)(0)(0)();await tick();
   assert.equal(calls,2);
 });
+
+test('FFI sem configuração retorna erro explícito sem iniciar HTTP',async () => {
+  const module=await runtime(async()=>{assert.fail('Backend não configurado não deve receber HTTP');});
+  window.JBridge.loadFileInDUI=()=>JSON.stringify({backendUrl:'',passengerCredential:''});
+  const events=[]; const stop=module.subscribe(_=>_=>()=>assert.fail('Não há sugestões'))(_=>_=>()=>{})(e=>()=>events.push(e))();
+  module.inputChanged('fixture')(false)();module.autocomplete('fixture')(false)(0)(0)();await tick();
+  assert.match(events[0],/não configurado/);assert.equal(window.__YATRI_BR_PLACES_STATE__.phase,'error');stop();
+});

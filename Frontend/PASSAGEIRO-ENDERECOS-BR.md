@@ -34,3 +34,7 @@ Sem servidor/credencial, a home continua acessível e a busca informa que o back
 A compilação utiliza `cache_run_id=39835346434`, lotes de 25, limites de memória e guarda de progresso existentes. Sem alteração nos módulos compartilhados ou no HomeScreen original. Build incremental e testes Android desta implementação ainda em execução; resultados serão acrescentados ao concluir.
 
 **Critério de aceitação real ainda pendente:** emulador/celular → backend Yatri com sessão real → Google Places → sugestão/seleção no componente original → mapa. Não há backend acessível informado. Não há implementação de corridas nesta etapa.
+
+### Primeira compilação incremental
+
+Run 39864104050: cache 39835346434 recuperado, sem compilação fria. Parou no lote 40/55 por ausência de Show/Loggable na ação local nova (erro de tipo, não OOM); instâncias adicionadas com logging vazio, preservando privacidade dos endereços. Provider real registrou `not_configured`: GOOGLE_MAPS_SERVER_KEY ausente no CI. Dez testes locais do adaptador passaram e o Webpack original compilou isoladamente o FFI em 2,27 s. Nova execução verificará a correção e os testes Android ampliados.
