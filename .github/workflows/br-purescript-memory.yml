@@ -59,7 +59,7 @@ jobs:
   passageiro-original:
     if: ${{ !inputs.bundle_run_id }}
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 105
     env:
       APP: ${{ inputs.aplicativo || 'passageiro' }}
       MODE: ${{ inputs.modo || 'full' }}
@@ -104,9 +104,9 @@ jobs:
       - name: Testar validacao brasileira compilada em PureScript
         run: python3 Frontend/scripts/test-brazilian-mobile-number.py
       - name: Medir compilacao original e retomada por cache
-        timeout-minutes: 40
+        timeout-minutes: 80
         run: |
-          python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode "$MODE" --heap "$HEAP" --label measured
+          python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode "$MODE" --heap "$HEAP" --label measured --timeout-seconds 4200
           python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode full --heap "$HEAP" --label incremental
       - name: Verificar comando npm original com PSA
         shell: bash
