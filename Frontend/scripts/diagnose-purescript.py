@@ -51,6 +51,37 @@ def stop_group(process):
     process.wait()
 
 
+def dependency_batches(graph, ordered, size):
+    """Bound new targets; include only their transitive imports, never prior unrelated targets."""
+    batches, targets = [], []
+    heavy = {'Screens.HomeScreen.Controller', 'Screens.HomeScreen.View', 'Flow', 'Main', 'Development.Passenger'}
+    def flush():
+        if not targets:
+            return
+        closure = set()
+        def visit(name):
+            if name in closure or name not in graph:
+                return
+            closure.add(name)
+            for dep in graph[name]['depends']:
+                visit(dep)
+        for name in targets:
+            visit(name)
+        batches.append({'targets': list(targets), 'sources': [n for n in ordered if n in closure]})
+        targets.clear()
+    for name in ordered:
+        if name in heavy:
+            flush()
+            targets.append(name)
+            flush()
+        else:
+            targets.append(name)
+            if len(targets) >= size:
+                flush()
+    flush()
+    return batches
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--app', choices=['passageiro', 'motorista'], default='passageiro')
@@ -66,10 +97,13 @@ def main():
     parser.add_argument('--logs', type=Path, default=ROOT / 'purescript-diagnostics')
     parser.add_argument('--time-bin', default='/usr/bin/time')
     parser.add_argument('--timeout-seconds', type=int, default=1800, help='Time limit per compiler invocation')
+    parser.add_argument('--stall-seconds', type=int, default=300, help='Stop when compiler output stops advancing')
+    parser.add_argument('--rss-limit-mib', type=int, default=0, help='Stop at total sampled compiler RSS; zero derives from memory budget')
+    parser.add_argument('--require-cache', action='store_true', help='Fail if this verification starts compiling any module')
     args = parser.parse_args()
     if not re.fullmatch(r'[1-9][0-9]*[mMgG]', args.heap):
         parser.error('--heap must be a positive integer followed by m or g')
-    if not re.fullmatch(r'[A-Za-z0-9_.-]+', args.label) or min(args.batch_size, args.timeout_seconds) < 1:
+    if not re.fullmatch(r'[A-Za-z0-9_.-]+', args.label) or min(args.batch_size, args.timeout_seconds, args.stall_seconds) < 1 or args.rss_limit_mib < 0:
         parser.error('invalid label or batch size')
     for binary, version in [('purs', args.compiler_version), ('spago', '0.21.0')]:
         actual = subprocess.check_output([binary, '--version'], text=True).strip()
@@ -129,28 +163,24 @@ def main():
         warmups = [] if args.no_default_warmup else [
             name for name in ('Resources.LocalizableV2.Strings', 'Common.RemoteConfig.Utils') if name in graph]
         warmups = list(dict.fromkeys(warmups + args.warmup_module))
-        ends = []
         for name in warmups:
             if name not in graph:
                 parser.error(f'warmup module absent from graph: {name}')
             visit(name)
-            if not ends or len(ordered) != ends[-1]:
-                ends.append(len(ordered))
-        warmup_count = len(ordered)
         metadata['warmup_modules'] = warmups
         for name in sorted(graph):
             visit(name)
-        # Every batch includes its full dependency closure, retaining normal externs/cache.
-        ends += list(range(warmup_count + args.batch_size, len(ordered), args.batch_size))
-        if not ends or ends[-1] != len(ordered):
-            ends.append(len(ordered))
-        metadata['stage_prefix_modules'] = ends
-        commands = [['purs', 'compile', *compiler_args, *[graph[n]['path'] for n in ordered[:end]]]
-                    for end in ends]
-        # Verify the complete original Spago graph with the selected target (default: JS).
-        commands += [['spago', '-P', '-j', '1', 'build', '--no-install', '--purs-args', ' '.join(compiler_args)]]
+        batches = dependency_batches(graph, ordered, args.batch_size)
+        metadata['batches'] = batches
+        commands = [['purs', 'compile', *compiler_args, *[graph[n]['path'] for n in batch['sources']]]
+                    for batch in batches]
+        # The caller performs a guarded cache verification separately; never append a blind full build.
+
     else:
         commands = [['spago', '-P', '-j', '1', 'build', '--no-install', '--purs-args', ' '.join(compiler_args)]]
+    rss_limit = args.rss_limit_mib * 1024 if args.rss_limit_mib else ((limit - reserve) // 1024 if limit else 0)
+    metadata['rss_limit_kib'] = rss_limit
+    (logs / 'plan.json').write_text(json.dumps(metadata, indent=2))
     result = 0
     cancelled = []
     for signum in (signal.SIGINT, signal.SIGTERM):
@@ -165,6 +195,9 @@ def main():
                                         *command], cwd=app, env=env, stdout=log,
                                        stderr=subprocess.STDOUT, start_new_session=True)
             timed_out = False
+            stop_reason = None
+            last_size, last_progress, last_report = 0, started, started
+            peak_rss = 0
             while process.poll() is None:
                 # Capture all compiler PIDs separately, never confuse cgroup cache with heap/RSS.
                 stats = subprocess.run(['ps', '-C', 'purs', '-o', 'pid=,ppid=,rss=,etimes='],
@@ -172,17 +205,34 @@ def main():
                 samples.write(json.dumps({'seconds': round(time.monotonic() - started, 2),
                                           'purs_ps': stats.strip(), 'cgroup': snapshot()}) + '\n')
                 samples.flush()
-                if cancelled or time.monotonic() - started >= args.timeout_seconds:
-                    timed_out = not cancelled
+                now = time.monotonic()
+                output_size = prefix.with_suffix('.log').stat().st_size
+                if output_size != last_size:
+                    last_size, last_progress = output_size, now
+                rss = sum(int(row.split()[2]) for row in stats.splitlines() if row.strip())
+                peak_rss = max(peak_rss, rss)
+                if now - last_report >= 30:
+                    print(f'step {index}: elapsed={now-started:.0f}s RSS={rss/1024:.0f}MiB idle={now-last_progress:.0f}s', flush=True)
+                    last_report = now
+                if args.require_cache and output_size and 'Compiling ' in prefix.with_suffix('.log').read_text(errors='replace'):
+                    stop_reason = 'unexpected_recompile'
+                elif rss_limit and rss >= rss_limit:
+                    stop_reason = 'rss_limit'
+                elif now - last_progress >= args.stall_seconds:
+                    stop_reason = 'no_compiler_output'
+                if cancelled or stop_reason or now - started >= args.timeout_seconds:
+                    timed_out = not cancelled and not stop_reason
+                    stop_reason = stop_reason or ('cancelled' if cancelled else 'timeout')
                     stop_group(process)
                     break
                 try:
                     process.wait(timeout=1)
                 except subprocess.TimeoutExpired:
                     pass
-            result = 128 + cancelled[0] if cancelled else (124 if timed_out else process.returncode)
+            result = 128 + cancelled[0] if cancelled else (125 if stop_reason and not timed_out else (124 if timed_out else process.returncode))
         metadata['runs'].append({'step': index, 'exit_code': result,
                                  'seconds': round(time.monotonic() - started, 2), 'timed_out': timed_out,
+                                 'stop_reason': stop_reason, 'peak_sampled_rss_kib': peak_rss,
                                  'signal': cancelled[0] if cancelled else None,
                                  'before': before, 'after': snapshot()})
         metadata['after'] = snapshot()

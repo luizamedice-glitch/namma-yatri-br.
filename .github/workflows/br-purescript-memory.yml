@@ -99,6 +99,8 @@ jobs:
           cd "$APP_DIR"
           npm install --legacy-peer-deps --ignore-scripts=false 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/npm-install.log"
           spago -j 2 install 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/spago-install.log"
+      - name: Validar planejamento dos lotes
+        run: python3 Frontend/scripts/test-purescript-batches.py
       - name: Testar isolamento do modo de desenvolvimento
         run: node Frontend/scripts/test-development-mode.mjs
       - name: Testar validacao brasileira compilada em PureScript
@@ -110,8 +112,8 @@ jobs:
           # Keep MODE=full for the existing bundle/APK publishing conditions.
           BUILD_MODE="$MODE"
           if [[ "$APP" == "passageiro" && "$MODE" == "full" ]]; then BUILD_MODE=staged; fi
-          python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode "$BUILD_MODE" --batch-size 150 --heap "$HEAP" --label measured --timeout-seconds 1500
-          python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode full --heap "$HEAP" --label incremental --timeout-seconds 900
+          python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode "$BUILD_MODE" --batch-size 25 --heap "$HEAP" --label measured --timeout-seconds 600 --stall-seconds 300 --rss-limit-mib 12288
+          python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode full --heap "$HEAP" --label incremental --timeout-seconds 120 --stall-seconds 60 --rss-limit-mib 12288 --require-cache
       - name: Verificar comando npm original com PSA
         shell: bash
         run: |
@@ -158,7 +160,7 @@ jobs:
 
   android-passageiro-original:
     needs: passageiro-original
-    if: always() && (inputs.bundle_run_id || needs.passageiro-original.result == 'success') && (inputs.aplicativo == '' || inputs.aplicativo == 'passageiro') && (inputs.modo == '' || inputs.modo == 'full')
+    if: always() && !cancelled() && (inputs.bundle_run_id || needs.passageiro-original.result == 'success') && (inputs.aplicativo == '' || inputs.aplicativo == 'passageiro') && (inputs.modo == '' || inputs.modo == 'full')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -270,7 +272,7 @@ jobs:
           retention-days: 14
 
   abertura-passageiro-original:
-    if: always() && needs.android-passageiro-original.result == 'success'
+    if: always() && !cancelled() && needs.android-passageiro-original.result == 'success'
     needs: android-passageiro-original
     uses: ./.github/workflows/br-passageiro-original-emulator.yml
     with:
