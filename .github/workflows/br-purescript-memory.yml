@@ -30,6 +30,10 @@ on:
         description: 'Opcional: reutilizar bundle de run anterior com os mesmos fontes PureScript, compilando apenas Android'
         required: false
         type: string
+      cache_run_id:
+        description: 'Opcional: recuperar cache de um job PureScript bem-sucedido, validando novamente os fontes atuais'
+        required: false
+        type: string
       compilador:
         description: '0.15.14 inclui correcoes oficiais de memoria; 0.15.4 reproduz o historico'
         type: choice
@@ -82,6 +86,23 @@ jobs:
           free -h
           if [[ "$APP" == motorista ]]; then DIR=ui-driver; else DIR=ui-customer; fi
           echo "APP_DIR=Frontend/$DIR" >> "$GITHUB_ENV"
+      - name: Validar compilacao de referencia do cache
+        if: inputs.cache_run_id
+        uses: actions/github-script@v7
+        env:
+          CACHE_RUN_ID: ${{ inputs.cache_run_id }}
+        with:
+          script: |
+            const value = process.env.CACHE_RUN_ID;
+            if (!/^[1-9][0-9]*$/.test(value)) throw new Error('cache_run_id invalido');
+            const run_id = Number(value);
+            if (!Number.isSafeInteger(run_id)) throw new Error('cache_run_id fora do intervalo');
+            const {data: run} = await github.rest.actions.getWorkflowRun({...context.repo, run_id});
+            if (run.path !== '.github/workflows/br-purescript-memory.yml') throw new Error('Workflow de cache invalido');
+            const {data} = await github.rest.actions.listJobsForWorkflowRun({...context.repo, run_id});
+            if (!data.jobs.some(j => j.name === 'passageiro-original' && j.conclusion === 'success')) {
+              throw new Error('Cache de referencia nao possui compilacao PureScript validada');
+            }
       - uses: actions/cache/restore@v4
         id: cache
         with:
@@ -91,7 +112,15 @@ jobs:
             ~/.cache/dhall
           key: purs-${{ env.PURS_VERSION }}-v2-${{ runner.os }}-${{ env.APP }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
+            purs-${{ env.PURS_VERSION }}-v2-${{ runner.os }}-${{ env.APP }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-${{ inputs.cache_run_id }}-
             purs-${{ env.PURS_VERSION }}-v2-${{ runner.os }}-${{ env.APP }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-
+      - name: Exigir o cache de referencia solicitado
+        if: inputs.cache_run_id
+        env:
+          CACHE_RUN_ID: ${{ inputs.cache_run_id }}
+          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
+        run: |
+          [[ "$MATCHED_KEY" == *-"$CACHE_RUN_ID"-* ]] || { echo 'Cache solicitado indisponivel; interrompendo para evitar compilacao fria inesperada'; exit 1; }
       - name: Instalar dependencias sem atualizar manifestos
         run: |
           mkdir -p purescript-diagnostics
