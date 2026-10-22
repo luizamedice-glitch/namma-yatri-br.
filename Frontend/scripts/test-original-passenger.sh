@@ -69,3 +69,6 @@ if not any(n.get('package') == 'in.juspay.nammayatri.debug' and
 print('Frontend original inicializado, splash encerrada e controles Android presentes.')
 PYTHON
 echo 'Abertura da interface original validada por 120 segundos. Capturas exigem inspecao visual; mapas e corridas nao foram validados.' | tee "$OUT/result.txt"
+
+# Exercise the actual EditText and controller with networking restored; never submit OTP.
+python3 Frontend/scripts/test-original-phone.py "$OUT"
