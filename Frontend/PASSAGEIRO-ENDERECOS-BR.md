@@ -46,3 +46,5 @@ Secret informada pelo usuário: `Google_Maps_API_Key` (nomes são insensíveis �
 O controle de recentrar usa o GPS nativo com timeout de 8 s, sem apagar seleções manuais. Ao reabrir o mapa, a câmera respeita se a última seleção foi origem ou destino, mesmo quando ambos já estão definidos. O teste de contrato também cobre nova busca bem-sucedida após falha de conexão.
 
 O arquivo que contém a configuração e a credencial de Fagner pertence exclusivamente ao source set `nyUserProdDebug`. Ele não é incorporado aos APKs do motorista nem às variantes release.
+
+A permissão nativa de HTTP para testes em LAN também é um overlay exclusivo do `nyUserProdDebug`, ativado por `brTestMode`; o manifesto compartilhado do motorista não foi alterado por esta etapa.
