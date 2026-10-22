@@ -32,3 +32,7 @@ Cada fase deve entregar resultado verificável. O trabalho pode ser organizado e
 
 ## Priorização imediata
 Executar Fase 1 em paralelo ao diagnóstico de build da Fase 2. Concentrar intervenções de produto na Fase 3 até haver evidência real de navegação. Não antecipar recursos cosméticos ou comerciais que dependam de fluxos ainda não integrados.
+
+## Incremento atual — endereços reais antes de corridas
+
+Prioridade imediata: conectar os campos/lista originais ao contrato brasileiro de autocomplete/detalhes, manter origem GPS/manual, persistir seleção durante a navegação e mover mapa/marcadores. Adaptador implementado, em compilação incremental e validação Android. Sem backend Yatri acessível informado, o aceite de pesquisa real permanece pendente; testes de contrato não substituem o fluxo com Google e servidor reais. Corridas e motorista ficam fora deste incremento. Identidade aprovada no run 39852288044 deve ser preservada.

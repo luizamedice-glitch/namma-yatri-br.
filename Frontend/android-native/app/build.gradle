@@ -261,6 +261,7 @@ android {
         if (brTestMode) {
             debug.manifest.srcFile 'src/brTest/AndroidManifest.xml'
             debug.assets.srcDir 'src/brTest/assets'
+            debug.assets.srcDir layout.buildDirectory.dir('generated/brPlacesAssets')
             debug.res.srcDir 'src/brTest/res'
         }
         nyUser.setRoot('src/user/nammaYatri')
@@ -557,4 +558,25 @@ void browserify(String inPath, String outPath, boolean shouldMinify) {
         throw new Error(result.toString())
     }
     println "Processed and packaged at " + result
+}
+
+// Brazilian development only. Never embed a Google server key or driver credential.
+if (brTestMode) {
+    def placesConfigTask = tasks.register('generateBrPlacesConfig') {
+        def backendUrl = providers.environmentVariable('YATRI_BACKEND_URL').orElse('')
+        def passengerKey = providers.environmentVariable('YATRI_PASSENGER_DEV_KEY').orElse('')
+        inputs.property('backendUrl', backendUrl)
+        // Disable caching/up-to-date reuse of credential-bearing assets.
+        outputs.upToDateWhen { false }
+        doLast {
+            def target = layout.buildDirectory.file('generated/brPlacesAssets/juspay/yatri_places_config.json').get().asFile
+            target.parentFile.mkdirs()
+            target.text = groovy.json.JsonOutput.toJson([backendUrl: backendUrl.get(), passengerCredential: passengerKey.get()])
+        }
+    }
+    tasks.configureEach { task ->
+        if (task.name.startsWith('merge') && task.name.endsWith('DebugAssets')) {
+            task.dependsOn(placesConfigTask)
+        }
+    }
 }
