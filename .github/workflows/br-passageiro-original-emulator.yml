@@ -1,0 +1,83 @@
+name: BR - Abertura do passageiro original
+
+on:
+  pull_request:
+    branches: [passageiro-pt-br]
+    paths:
+      - '.github/workflows/br-passageiro-original-emulator.yml'
+      - 'Frontend/scripts/test-original-passenger.sh'
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Run bem-sucedido de br-purescript-memory.yml que publicou o APK'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  abertura-original:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Selecionar APK compilado com os mesmos fontes
+        id: source
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let id = Number(context.payload.inputs?.run_id || 0);
+            if (!id) {
+              const branch = context.payload.pull_request.head.ref;
+              const {data} = await github.rest.actions.listWorkflowRuns({
+                ...context.repo, workflow_id: 'br-purescript-memory.yml',
+                branch, status: 'success', per_page: 20
+              });
+              id = data.workflow_runs[0]?.id;
+            }
+            if (!id) throw new Error('Nenhum build original bem-sucedido encontrado');
+            const {data: run} = await github.rest.actions.getWorkflowRun({...context.repo, run_id: id});
+            if (run.conclusion !== 'success' || run.path !== '.github/workflows/br-purescript-memory.yml') {
+              throw new Error('Origem deve ser o workflow original concluido com sucesso');
+            }
+            core.setOutput('run_id', String(id));
+            core.setOutput('sha', run.head_sha);
+            core.info(`APK do run ${id}, fontes ${run.head_sha}`);
+      - name: Impedir teste de APK com fontes diferentes
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          git cat-file -e "$SOURCE_SHA^{commit}" || git fetch origin "$SOURCE_SHA"
+          git diff --exit-code "$SOURCE_SHA" HEAD -- Frontend/ui-customer Frontend/ui-common Frontend/packages.dhall Frontend/android-native
+      - uses: actions/download-artifact@v4
+        with:
+          name: yatri-brasil-passageiro-original-apk
+          path: original-apk
+          run-id: ${{ steps.source.outputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Habilitar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Abrir APK original em Android 29 sem rede
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          script: bash Frontend/scripts/test-original-passenger.sh
+      - name: Publicar capturas e diagnostico de abertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yatri-passageiro-original-abertura
+          path: android-original-evidence/
+          if-no-files-found: warn
+          retention-days: 14

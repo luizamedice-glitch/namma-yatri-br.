@@ -34,4 +34,23 @@ Não existe backend exclusivo de desenvolvimento acessível aos celulares inform
 - O primeiro job Android falhou na preparação do SDK: a action tentou instalar o pacote removido `tools`. Correção: lista explícita `platform-tools platforms;android-34 build-tools;34.0.0`.
 - Corrigido também o diretório usado para conferir o SHA-256 baixado: o arquivo contém o caminho relativo `dist/android/index_bundle.js` e deve ser verificado a partir de `ui-customer`.
 - Acrescentada verificação de igualdade dos bytes do bundle no APK e medição GNU time da compilação Android.
-- Nova execução necessária para validar o SDK e o build nativo; ainda não há APK desta montagem.
+
+## APK gerado e conferido
+
+Execução bem-sucedida: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39713548999
+
+- Fontes do build: `6e7add54325287f396d230da1c9ae5f3a56f120a`.
+- PureScript, bundle e compilação Android: passaram.
+- Variante: `nyUserProdDebug`, pacote `in.juspay.nammayatri.debug`.
+- APK: `app-nyUser-prod-debug.apk`, 126.281.483 bytes.
+- Artefato: `yatri-brasil-passageiro-original-apk`, ID `12399050340`.
+- SHA-256 APK: `021b5608dfdd65d542a260bae936ac53e0392ae3e9b75a416843877c537b709d`.
+- O bundle extraído do APK é idêntico ao publicado pelo job PureScript: SHA-256 `8591e6e33441dad82a1eb3243b8fd89cd0d89ba0a9d0ed80fc14c2ef62f81ad6`. Verificação repetida localmente após baixar o artefato.
+- Gradle: `BUILD SUCCESSFUL in 2m 51s`, exit 0. O GNU time mediu 2min51,53s. O RSS de 155.344 KiB é do cliente Gradle, não representa o pico total do daemon de compilação.
+- O AAPT emitiu seis avisos com texto `string too large to encode using UTF-8 ... STRING_TOO_LARGE`; o build terminou com sucesso. É necessário investigar seu efeito nos recursos e nas capturas.
+
+## Validação de abertura
+
+Foi adicionado `br-passageiro-original-emulator.yml`, que reutiliza um APK previamente compilado, exige igualdade dos fontes Android/PureScript com o build de origem e captura tela, hierarquia e logs no Android 29. O teste inicia sem rede para verificar a abertura sem depender de recursos indianos. Chaves Google são removidas dos logs publicados. Processo ativo não é tratado como prova de interface operacional.
+
+Resultado do teste de abertura: pendente de execução e inspeção das capturas.
