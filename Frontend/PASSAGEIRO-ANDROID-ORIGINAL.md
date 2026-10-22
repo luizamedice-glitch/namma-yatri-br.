@@ -1,5 +1,14 @@
 # Montagem do passageiro Android original
 
+**Resultado verificado em 22/10/2026:** o frontend PureScript original foi empacotado num APK Android, instalado no emulador Android 29 e inicializado com seu runtime JOS original. A splash foi encerrada e a interface original de ausência de conexão foi renderizada durante o teste sem rede. Não houve recriação de telas Java nem alterações no backend.
+
+- [Baixar APK de teste em ZIP](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39779316975/artifacts/12426905099).
+- [Capturas, hierarquia, CDP e logs sanitizados](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39779316975/artifacts/12425964864).
+- [Execução validada](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39779316975).
+- [Resumo verificável em JSON](build-reports/passageiro-android/resultado.json).
+
+A integração brasileira, navegação online, autenticação, mapas, Places, Routes e corridas ainda não foram validados neste APK. O idioma e a identidade continuam os da variante histórica. O motorista não foi compilado ou testado nesta etapa.
+
 Esta montagem continua a recuperação documentada em [PURESCRIPT-MEMORIA.md](PURESCRIPT-MEMORIA.md). Usa `ui-customer`, `ui-common` e o container `android-native` históricos; não utiliza as telas Java de `brasil/android` e não modifica o backend.
 
 ## Pipeline
@@ -99,3 +108,28 @@ A próxima execução restaura essa arquitetura: a raiz inicia `v1-boot_loader.j
 Não foi fabricado um objeto JOS, substituída interface ou simulado callback de API. O `boot_loader.js` legível preservado no repositório foi usado como referência da arquitetura; a execução usa a versão do runtime distribuída junto ao SDK, para evitar combinar interfaces de versões diferentes.
 
 O teste foi reforçado: exige a versão do frontend original e seu callback `onEvent'` no contexto JOS, ausência da splash na hierarquia final e controles textuais Android da aplicação. Processo ativo sozinho deixa de ser suficiente para sucesso dessa validação.
+
+
+## Resultado final da abertura original
+
+A execução `39779316975`, com fontes `ba93999d9daae3472ab70cbd0f37c9af7d94a665`, passou no build nativo e no teste reforçado de renderização. O bundle foi reutilizado da execução `39773571962`, após comprovar igualdade dos fontes PureScript. O build nativo levou 3min13,46s. O RSS registrado pelo GNU time é do cliente Gradle, não do conjunto de processos do build.
+
+O APK final tem 126.281.431 bytes, SHA-256 `75ad87b594614eb821e553a0a05994c4b08215e72e2b8808f7509d3ac149aa4a`. O download foi conferido localmente: bundle e `becknbase.html` correspondem exatamente aos arquivos esperados. Os APKs das tentativas anteriores são evidências de diagnóstico; o link no início deste relatório aponta para o resultado final.
+
+O CDP confirmou um iframe `about:srcdoc`, `JOS.self = in.yatri.consumer`, frontend `3.0.118`, configuração `1.0.0` e callbacks `onEvent` / `onEvent'` definidos. O runtime fornecido pelo SDK identifica-se como `3.6.2-nammayatri.01`. Não foi usado um objeto JOS artificial nem transplantado o bootloader antigo `2.1.3` preservado em `js/juspay`.
+
+A hierarquia final não contém `:id/splash` e inclui os controles originais. As capturas foram inspecionadas: mostram **You're Offline**, o texto original sobre ausência de conexão e **Try Again**. Esse é um resultado de tratamento real de falta de rede, não uma tela criada para o teste. A rede foi desligada intencionalmente; não houve simulação de endereços, rotas, login ou corridas.
+
+### Limitações observadas
+
+- Os valores extensos em Remote Config continuam sujeitos a `STRING_TOO_LARGE` no XML compilado. A migração desses dados para assets permanece pendente.
+- O CDP registrou 44 exceções referentes a hooks `onEvent'` e `onSharedPreferenceChanged` ainda indisponíveis durante a inicialização. Elas não encerraram o processo nem impediram a renderização offline; outros estados e transições não foram exercitados.
+- Bibliotecas HyperSDK e Firebase permanecem no APK para compatibilidade. Crashlytics, Sessions, Performance e In-App Messaging deixam de se registrar no modo BR; há referências e listeners históricos de Remote Config em outros módulos. Isso não equivale a ter removido toda a dependência desses SDKs.
+- O backend brasileiro não foi alterado e não foi conectado ao protocolo histórico dos aplicativos. Não há operação brasileira validada ou sessão Fagner automaticamente provisionada por este APK.
+- Não houve validação de mapa, localização física, sugestões de destino, rotas, motorista ou corridas. Nenhum serviço foi implantado publicamente.
+
+### Repetir a montagem
+
+O workflow `br-purescript-memory.yml` executa o caminho completo por padrão. Para iterar apenas no Android com os mesmos fontes PureScript, é possível dispará-lo na branch de trabalho com `bundle_run_id=39773571962`, `aplicativo=passageiro` e `modo=full`. O artefato de origem deve continuar disponível; a retenção configurada é de 14 dias. Se os fontes PureScript mudarem ou o artefato expirar, execute novamente o caminho completo sem `bundle_run_id`.
+
+Para instalar o resultado validado por USB, extraia o ZIP e execute `adb install -r nyUserProd/debug/app-nyUser-prod-debug.apk`. O APK abre a aplicação histórica; não fornece backend brasileiro ou autenticação operacional por si só.

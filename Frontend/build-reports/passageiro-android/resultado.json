@@ -1,0 +1,60 @@
+{
+  "source_commit": "ba93999d9daae3472ab70cbd0f37c9af7d94a665",
+  "run_id": 39779316975,
+  "original_frontend_compile_run": 39705578513,
+  "reused_bundle_run": 39773571962,
+  "apk_artifact_id": 12426905099,
+  "screenshots_artifact_id": 12425964864,
+  "apk_bytes": 126281431,
+  "apk_sha256": "75ad87b594614eb821e553a0a05994c4b08215e72e2b8808f7509d3ac149aa4a",
+  "bundle_sha256": "8591e6e33441dad82a1eb3243b8fd89cd0d89ba0a9d0ed80fc14c2ef62f81ad6",
+  "package": "in.juspay.nammayatri.debug",
+  "variant": "nyUserProdDebug",
+  "emulator": {
+    "api": 29,
+    "arch": "x86_64",
+    "network": "disabled",
+    "duration_seconds": 120,
+    "process_alive": true,
+    "fatal_exception": false,
+    "native_splash_visible": false,
+    "original_text_controls_present": true,
+    "screen": "Original PureScript offline screen: You're Offline / Try Again",
+    "jos_self": "in.yatri.consumer",
+    "frontend_version": "3.0.118",
+    "configuration_version": "1.0.0",
+    "sdk_js_runtime": "3.6.2-nammayatri.01",
+    "cdp_errors": 0,
+    "js_hook_exceptions_observed": 44
+  },
+  "verified": [
+    "original frontend compiled",
+    "bundle syntax",
+    "bundle bytes inside APK",
+    "BR entrypoint inside APK",
+    "BR Crashlytics registrar removed",
+    "APK installation",
+    "original JOS context and callbacks",
+    "native splash closed",
+    "original offline interface rendered"
+  ],
+  "not_verified": [
+    "online onboarding and navigation",
+    "Brazilian backend integration",
+    "maps/places/routes",
+    "passenger-driver ride flow",
+    "physical device",
+    "driver APK",
+    "Play Store visual comparison"
+  ],
+  "backend_changed": false,
+  "purescript_ui_changed": false,
+  "tools": {
+    "purescript": "0.15.14",
+    "spago": "0.21.0",
+    "node": "18.20.8",
+    "gradle": "8.0",
+    "agp": "8.0.2",
+    "jdk": "17"
+  }
+}
