@@ -1,0 +1,90 @@
+name: BR - Diagnostico PureScript original
+
+on:
+  pull_request:
+    branches: [passageiro-pt-br]
+    paths:
+      - '.github/workflows/br-purescript-memory.yml'
+      - 'Frontend/scripts/diagnose-purescript.py'
+      - 'Frontend/ui-customer/package.json'
+  workflow_dispatch:
+    inputs:
+      aplicativo:
+        type: choice
+        options: [passageiro, motorista]
+        default: passageiro
+      modo:
+        type: choice
+        options: [staged, full, module]
+        default: staged
+      heap:
+        description: 'Limite GHC, com margem para RSS e sistema (ex.: 2500m ou 10g)'
+        default: '10g'
+
+permissions:
+  contents: read
+
+jobs:
+  passageiro-original:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      APP: ${{ inputs.aplicativo || 'passageiro' }}
+      MODE: ${{ inputs.modo || 'staged' }}
+      HEAP: ${{ inputs.heap || '10g' }}
+      GHCRTS: '-N1 -M512m'
+    steps:
+      - uses: actions/checkout@v4
+        # Build the actual PR/selected ref, never a hard-coded older branch.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18.20.8'
+      - name: Instalar ferramentas historicas
+        run: |
+          npm install --global --ignore-scripts=false purescript@0.15.4 spago@0.21.0
+          sudo apt-get update -qq
+          sudo apt-get install -y time
+          purs --version
+          spago --version
+          free -h
+          if [[ "$APP" == motorista ]]; then DIR=ui-driver; else DIR=ui-customer; fi
+          echo "APP_DIR=Frontend/$DIR" >> "$GITHUB_ENV"
+      - uses: actions/cache/restore@v4
+        id: cache
+        with:
+          path: |
+            Frontend/${{ env.APP == 'motorista' && 'ui-driver' || 'ui-customer' }}/.spago
+            Frontend/${{ env.APP == 'motorista' && 'ui-driver' || 'ui-customer' }}/output
+            ~/.cache/dhall
+          key: purs-0154-v1-${{ runner.os }}-${{ env.APP }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            purs-0154-v1-${{ runner.os }}-${{ env.APP }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-
+      - name: Instalar dependencias sem atualizar manifestos
+        run: |
+          mkdir -p purescript-diagnostics
+          set -o pipefail
+          cd "$APP_DIR"
+          npm install --legacy-peer-deps --ignore-scripts=false 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/npm-install.log"
+          spago -j 2 install 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/spago-install.log"
+      - name: Medir compilacao original e retomada por cache
+        timeout-minutes: 40
+        run: |
+          python3 Frontend/scripts/diagnose-purescript.py --app "$APP" --mode "$MODE" --heap "$HEAP" --label measured
+          python3 Frontend/scripts/diagnose-purescript.py --app "$APP" --mode full --heap "$HEAP" --label incremental
+      - name: Preservar cache inclusive em caso de falha
+        if: always() && steps.cache.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            Frontend/${{ env.APP == 'motorista' && 'ui-driver' || 'ui-customer' }}/.spago
+            Frontend/${{ env.APP == 'motorista' && 'ui-driver' || 'ui-customer' }}/output
+            ~/.cache/dhall
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+      - name: Publicar evidencias, inclusive em caso de falha
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: purescript-memory-${{ env.APP }}-${{ github.run_attempt }}
+          path: purescript-diagnostics/
+          retention-days: 14
+          if-no-files-found: warn

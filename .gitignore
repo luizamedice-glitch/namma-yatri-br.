@@ -55,3 +55,7 @@ control-center/
 
 # Deploy/start bookkeeping (workspace fingerprint + last-started commit)
 /.stack-state.json
+
+# Local measurements from the historical PureScript compiler
+/purescript-diagnostics/
+/Frontend/scripts/__pycache__/
