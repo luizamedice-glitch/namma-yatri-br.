@@ -99,6 +99,25 @@ jobs:
           export GHCRTS="-N1 -M$HEAP"
           cd "$APP_DIR"
           /usr/bin/time -v -o "$GITHUB_WORKSPACE/purescript-diagnostics/npm-entrypoint.time" npm run compile:purs 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/npm-entrypoint.log"
+      - name: Empacotar frontend original para Android
+        if: env.APP == 'passageiro' && env.MODE == 'full'
+        working-directory: Frontend/ui-customer
+        env:
+          NODE_OPTIONS: '--openssl-legacy-provider --max-old-space-size=6144'
+        run: |
+          set -o pipefail
+          /usr/bin/time -v -o "$GITHUB_WORKSPACE/purescript-diagnostics/webpack.time" npm run bundle:android 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/webpack.log"
+          test -s dist/android/index_bundle.js
+          node --check dist/android/index_bundle.js
+          sha256sum dist/android/index_bundle.js > dist/android/SHA256SUMS
+      - name: Publicar bundle Android original
+        if: env.APP == 'passageiro' && env.MODE == 'full'
+        uses: actions/upload-artifact@v4
+        with:
+          name: yatri-passageiro-bundle-original
+          path: Frontend/ui-customer/dist/android/
+          if-no-files-found: error
+          retention-days: 14
       - name: Preservar cache inclusive em caso de falha
         if: always() && steps.cache.outcome == 'success'
         uses: actions/cache/save@v4
@@ -116,3 +135,54 @@ jobs:
           path: purescript-diagnostics/
           retention-days: 14
           if-no-files-found: warn
+
+  android-passageiro-original:
+    needs: passageiro-original
+    if: (inputs.aplicativo == '' || inputs.aplicativo == 'passageiro') && (inputs.modo == '' || inputs.modo == 'full')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: actions/download-artifact@v4
+        with:
+          name: yatri-passageiro-bundle-original
+          path: Frontend/ui-customer/dist/android
+      - name: Integrar bundle aos recursos originais
+        working-directory: Frontend
+        run: |
+          cd ui-customer/dist/android
+          sha256sum -c SHA256SUMS
+          cd ../../..
+          cp ui-customer/dist/android/index_bundle.js android-native/app/src/user/nammaYatri/assets/juspay/index_bundle.js
+          bash userJuspayAssets.sh nammaYatri
+          python3 -m json.tool android-native/app/src/user/nammaYatri/assets/juspay/juspay_assets.json > /dev/null
+          cp android-native/local-temp.properties android-native/local.properties
+      - name: Compilar container Android original do passageiro
+        working-directory: Frontend/android-native
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+        run: |
+          set -o pipefail
+          bash gradlew :app:assembleNyUserProdDebug -PbrTestMode=true --no-daemon --max-workers=2 --stacktrace 2>&1 | tee android-build.log
+      - name: Publicar APK original
+        uses: actions/upload-artifact@v4
+        with:
+          name: yatri-brasil-passageiro-original-apk
+          path: Frontend/android-native/app/build/outputs/apk/nyUser/prod/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Publicar diagnostico Android
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yatri-passageiro-android-diagnostico
+          path: |
+            Frontend/android-native/android-build.log
+            Frontend/android-native/app/build/reports/
+          if-no-files-found: warn
+          retention-days: 14
