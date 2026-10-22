@@ -132,7 +132,7 @@ android {
             buildConfigField "String", "RS_INSTANCE_TYPE", properties.getProperty("RS_INSTANCE_TYPE", "")
             buildConfigField "String", "RS_ALGO_PADDING", properties.getProperty("RS_ALGO_PADDING", "")
 
-            manifestPlaceholders = [isUsesCleartextTraffic: "false", mapsApiKey : (brTestMode ? (System.getenv("GOOGLE_MAPS_API_KEY") ?: "") : (System.getenv("GOOGLE_MAPS_API_KEY") ?: properties.getProperty("MAPS_API_KEY", "")))]
+            manifestPlaceholders = [isUsesCleartextTraffic: "false", mapsApiKey : (System.getenv("GOOGLE_MAPS_API_KEY") ?: properties.getProperty("MAPS_API_KEY", ""))]
             resValue "string", "facebook_app_id", properties.getProperty("FACEBOOK_APP_ID","")
             resValue "string", "facebook_client_token", properties.getProperty("FACEBOOK_CLIENT_TOKEN","")
             resValue "string", "fb_login_protocol_scheme", properties.getProperty("FB_LOGIN_PROTOCOL_SCHEMA","")
@@ -563,6 +563,7 @@ void browserify(String inPath, String outPath, boolean shouldMinify) {
 
 // Brazilian development only. Never embed a Google server key or driver credential.
 if (brTestMode) {
+    android.defaultConfig.manifestPlaceholders['brPassengerMapsApiKey'] = System.getenv('GOOGLE_MAPS_API_KEY') ?: ''
     def placesConfigTask = tasks.register('generateBrPlacesConfig') {
         def backendUrl = providers.environmentVariable('YATRI_BACKEND_URL').orElse('')
         def passengerKey = providers.environmentVariable('YATRI_PASSENGER_DEV_KEY').orElse('')

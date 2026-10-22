@@ -48,3 +48,5 @@ O controle de recentrar usa o GPS nativo com timeout de 8 s, sem apagar seleçõ
 O arquivo que contém a configuração e a credencial de Fagner pertence exclusivamente ao source set `nyUserProdDebug`. Ele não é incorporado aos APKs do motorista nem às variantes release.
 
 A permissão nativa de HTTP para testes em LAN também é um overlay exclusivo do `nyUserProdDebug`, ativado por `brTestMode`; o manifesto compartilhado do motorista não foi alterado por esta etapa.
+
+A exigência da chave Android BR sem fallback histórico é aplicada por meta-data no mesmo overlay específico do passageiro; as configurações de mapas das outras variantes permanecem iguais às anteriores.
