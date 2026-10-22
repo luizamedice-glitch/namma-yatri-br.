@@ -132,7 +132,10 @@ evalHome (Home.MAPREADY _ _ _) state = do
     restoreMap state
     pure (Original Home.NoAction)]
 
-evalHome Home.RecenterCurrentLocation state = exit state {props {sourcePlaceId = Nothing}}
+evalHome Home.RecenterCurrentLocation state = continueWithCmd state
+  [do
+    recenter
+    pure (Original Home.NoAction)]
 
 evalHome Home.UpdatePeekHeight state = continue state {data {peekHeight = getPeekHeight state}}
 
@@ -189,8 +192,11 @@ evalHome (Home.SearchLocationModelActionController Search.DestinationClear) stat
   _ <- pure $ unsafePerformEffect Places.cancel
   _ <- pure $ JB.removeMarker "ny_ic_dest_marker"
   continue state {data {destination = "", destinationAddress = HomeData.dummyAddress, locationList = []}, props {destinationPlaceId = Nothing, destinationLat = 0.0, destinationLong = 0.0, searchLocationModelProps {crossBtnDestVisibility = false, showLoader = false}}}
-evalHome (Home.SearchLocationModelActionController Search.SetCurrentLocation) state = exit state {props {sourcePlaceId = Nothing}}
-evalHome (Home.SearchLocationModelActionController Search.RecenterCurrentLocation) state = exit state {props {sourcePlaceId = Nothing}}
+evalHome (Home.SearchLocationModelActionController Search.SetCurrentLocation) state = do
+  _ <- pure $ unsafePerformEffect Places.cancel
+  _ <- pure $ updateLocalStage HomeScreen
+  exit state {data {source = "Localização atual", sourceAddress = HomeData.dummyAddress}, props {sourcePlaceId = Nothing, sourceLat = 0.0, sourceLong = 0.0, isSource = Just true, currentStage = HomeScreen}}
+evalHome (Home.SearchLocationModelActionController Search.RecenterCurrentLocation) state = evalHome Home.RecenterCurrentLocation state
 evalHome (Home.SearchLocationModelActionController (Search.DebounceCallBack value field)) state
   | field /= fromMaybe false state.props.isSource = continue state
   | String.length value < 3 = continue state {data {locationList = []}, props {searchLocationModelProps {showLoader = false}}}
@@ -237,7 +243,7 @@ position state latitude longitude = case fromString latitude, fromString longitu
       , data {source = if state.props.currentStage == HomeScreen then label else state.data.source}
       }
       [ do
-          when (state.props.destinationPlaceId == Nothing) $ JB.animateCamera lat lng 16.0 "ZOOM"
+          when (state.props.destinationPlaceId == Nothing || state.props.isSource == Just true) $ JB.animateCamera lat lng 16.0 "ZOOM"
           pure (Original Home.NoAction)
       ]
   _, _ -> continue state
@@ -249,12 +255,23 @@ restoreMap state = do
     Just _ -> marker true state.props.sourceLat state.props.sourceLong
     Nothing -> pure unit
   case state.props.destinationPlaceId of
-    Just _ -> do
-      marker false state.props.destinationLat state.props.destinationLong
-      JB.animateCamera state.props.destinationLat state.props.destinationLong 16.0 "ZOOM"
-    Nothing -> when (state.props.sourceLat /= 0.0 || state.props.sourceLong /= 0.0) $
+    Just _ -> marker false state.props.destinationLat state.props.destinationLong
+    Nothing -> pure unit
+  if state.props.isSource == Just true || state.props.destinationPlaceId == Nothing then
+    when (state.props.sourceLat /= 0.0 || state.props.sourceLong /= 0.0) $
       JB.animateCamera state.props.sourceLat state.props.sourceLong 16.0 "ZOOM"
+  else JB.animateCamera state.props.destinationLat state.props.destinationLong 16.0 "ZOOM"
   where
   marker field lat lng = void $ JB.showMarker JB.defaultMarkerConfig
     {markerId = if field then "ny_ic_src_marker" else "ny_ic_dest_marker", pointerIcon = if field then "ny_ic_src_marker" else "ny_ic_dest_marker"}
     lat lng 110 0.5 0.9 (getNewIDWithTag "CustomerHomeScreen")
+
+-- Recentring the map must not erase a manually selected origin or destination.
+recenter :: Effect Unit
+recenter = do
+  JB.requestLocation unit
+  JB.getCurrentPositionWithTimeout (\point -> case fromString point.lat, fromString point.lng of
+    Just lat, Just lng | lat >= -90.0 && lat <= 90.0 && lng >= -180.0 && lng <= 180.0 && (lat /= 0.0 || lng /= 0.0) ->
+      JB.animateCamera lat lng 16.0 "ZOOM"
+    _, _ -> showToast "Localização indisponível. Ative o GPS ou pesquise um endereço.")
+    (\lat lng _ -> {lat, lng}) 8000 false

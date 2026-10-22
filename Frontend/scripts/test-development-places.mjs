@@ -118,3 +118,15 @@ test('FFI sem configuração retorna erro explícito sem iniciar HTTP',async () 
   module.inputChanged('fixture')(false)();module.autocomplete('fixture')(false)(0)(0)();await tick();
   assert.match(events[0],/não configurado/);assert.equal(window.__YATRI_BR_PLACES_STATE__.phase,'error');stop();
 });
+
+test('após falha de conexão, nova pesquisa funciona sem sessão presa nem resultados antigos',async () => {
+  let auth=0, searches=0;
+  const client=createPlacesClient(config,async u=>{
+    if(u.endsWith('/session')) {auth++;return session;}
+    if(++searches===1) throw new Error('offline de fixture');
+    return {suggestions:[suggestion]};
+  });
+  await assert.rejects(client.autocomplete('primeira fixture'),/offline/);
+  assert.equal((await client.autocomplete('segunda fixture'))[0].placeId,suggestion.placeId);
+  assert.equal(auth,1);assert.equal(searches,2);
+});
