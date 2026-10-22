@@ -1,10 +1,7 @@
 const JBridge = window.JBridge;
 
 let fibers = [];
-const nativePackageName = JSON.parse(JBridge.getDeviceInfo()).package_name;
-const isDebug = nativePackageName.includes(".debug") || nativePackageName.includes(".staging");
-const isBrDevelopment = window.__OS === "ANDROID" && window.__YATRI_BR_DEVELOPMENT__ === true && nativePackageName.endsWith(".debug");
-let brConfigurationNoticeShown = false;
+const isDebug =  JSON.parse(JBridge.getDeviceInfo()).package_name.includes(".debug") || JSON.parse(JBridge.getDeviceInfo()).package_name.includes(".staging")
 export const getFromWindow = function (key,nothing,just) {
   if (typeof window[key] !== "undefined") {
     return just(window[key]);
@@ -48,16 +45,6 @@ export const stringifyJSON = function (obj) {
 }
 
 export const toastWithLog = function (str) {
-  if (isBrDevelopment && typeof str === "string" && str.startsWith("Config Decode Failed")) {
-    // Decoding and original local defaults are unchanged. Retain every diagnostic,
-    // but do not enqueue a new debugging toast for each field on every keystroke.
-    console.error(str);
-    if (!brConfigurationNoticeShown) {
-      brConfigurationNoticeShown = true;
-      window.JBridge.toast("Configuração legada incompleta. Detalhes no log.");
-    }
-    return;
-  }
   const JOSFlags = window.JOS.getJOSflags()
   if (JOSFlags.isCUGUser || isDebug) {
     if (window.__OS == "IOS") {

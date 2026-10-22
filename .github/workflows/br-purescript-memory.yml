@@ -152,6 +152,10 @@ jobs:
           export GHCRTS="-N1 -M$HEAP"
           cd "$APP_DIR"
           /usr/bin/time -v -o "$GITHUB_WORKSPACE/purescript-diagnostics/npm-entrypoint.time" npm run compile:purs 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/npm-entrypoint.log"
+      - name: Validar adaptador Android no Webpack real
+        env:
+          NODE_OPTIONS: '--openssl-legacy-provider'
+        run: node Frontend/scripts/test-development-config-webpack.cjs
       - name: Conferir FFI atual dentro do output compilado
         run: cmp Frontend/ui-common/src/DecodeUtil/DecodeUtil.js Frontend/ui-customer/output/DecodeUtil/foreign.js
       - name: Empacotar frontend original para Android
@@ -164,6 +168,7 @@ jobs:
           /usr/bin/time -v -o "$GITHUB_WORKSPACE/purescript-diagnostics/webpack.time" npm run bundle:android 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/webpack.log"
           test -s dist/android/index_bundle.js
           node --check dist/android/index_bundle.js
+          grep -Fq YATRI_BR_CONFIG_DIAGNOSTICS dist/android/index_bundle.js
           sha256sum dist/android/index_bundle.js > dist/android/SHA256SUMS
       - name: Publicar bundle Android original
         if: env.APP == 'passageiro' && env.MODE == 'full'

@@ -60,6 +60,8 @@ try:
             if state.get('developmentMode'):
                 development.append(state)
     assert development, 'Flag de desenvolvimento nao chegou ao frontend.'
+    assert all(isinstance(s.get('configDiagnostics'), dict) for s in development), 'Adaptador Android de diagnosticos nao foi carregado.'
+    assert all(s['configDiagnostics'].get('notices') == (1 if s['configDiagnostics'].get('warnings', 0) else 0) for s in development), 'Avisos de configuracao nao foram agregados.'
     assert all(s.get('hasRegistrationToken') is False for s in development), 'Home depende de um token preexistente ou a leitura nao foi verificada.'
     nodes = capture('offline')
     no_auth(nodes)

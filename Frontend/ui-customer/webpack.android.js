@@ -4,6 +4,7 @@ const {
 } = require('webpack-merge');
 const common = require('./webpack.config.js');
 const webpack = require('webpack');
+const brConfigDiagnosticsPlugin = require('./webpack.br-config-diagnostics.cjs');
 const packageJSON = require("./package.json");
 var path = require('path');
 
@@ -13,6 +14,7 @@ const getOutputFileLocation = (mode) => getOutputFileDir(mode) + outputFileName;
 
 module.exports = (env, argv) => {
   let plugins = [
+    brConfigDiagnosticsPlugin(),
     new webpack.DefinePlugin({
       __VERSION__: JSON.stringify(packageJSON.version),
       "window.configEnv": JSON.stringify(env)
