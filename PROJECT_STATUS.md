@@ -38,4 +38,4 @@ Obter uma versão reproduzível do APK passageiro com HomeScreen original e nave
 
 - IMPLEMENTADO: recursos Alce Yatri Brasil fornecidos pelo usuário, sem edição dos PNGs, em `brasil/branding` e overlay `brTest/res` do Android original. Ícones por densidade, adaptativo Android 8+, abertura e aliases dos logotipos originais.
 - Escopo: somente `brTestMode=true` + `debug`. Nenhuma tela PureScript, backend ou projeto Alce externo foi alterado.
-- Validação local: integridade dos oito arquivos do ZIP, dimensões PNG e XML dos recursos. Build Android e conferência visual desta versão ainda pendentes de CI.
+- Validação local: integridade dos oito arquivos do ZIP, dimensões PNG e XML dos recursos. COMPILADO e TESTADO EM ANDROID: run 39852288044, commit bb13872b40; abertura sem login, digitação e retorno offline/online aprovados. Captura home-online-1.png confirma o logotipo no cabeçalho e mapa com tiles. APK: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39852288044/artifacts/12458705677 . SHA256 75d8785b21fb6284ffe0af08b915d5d50264cc3ee460a728c464a65d8f671c78. PureScript reutilizado sem recompilação.

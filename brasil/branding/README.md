@@ -13,4 +13,4 @@ gh workflow run br-purescript-memory.yml --ref codex/issue-1-purescript-memory \
   -f aplicativo=passageiro -f modo=full -f bundle_run_id=39835346434
 ```
 
-O workflow confere igualdade dos fontes PureScript antes de reutilizar o bundle. Build e abertura da versão com esta identidade precisam de confirmação no CI; o APK anterior não contém estas imagens.
+O workflow confere igualdade dos fontes PureScript antes de reutilizar o bundle. Build e teste Android aprovados no run 39852288044 (commit bb13872b40). Captura `home-online-1.png` confirma a nova marca no cabeçalho original. APK: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39852288044/artifacts/12458705677 . Os três PNGs principais e os cinco ícones dentro do APK foram comparados por pixels com os arquivos fornecidos, sem diferenças.
