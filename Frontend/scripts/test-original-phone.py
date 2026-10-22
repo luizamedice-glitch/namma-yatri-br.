@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise native onboarding controls without submitting a phone number or OTP."""
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -56,6 +57,16 @@ try:
     assert any(n.get('text') == '11987654321' for n in fields), 'O campo nao preservou os 11 digitos brasileiros.'
     assert any(n.get('text') == '+55' for n in nodes), 'O codigo do Brasil nao esta selecionado.'
     assert any(n.get('content-desc') == 'Continue : Button' for n in nodes), 'O controlador nao habilitou Continuar.'
+    message = 'Backend de desenvolvimento não configurado.'
+    assert any(message in (n.get('text') or '') for n in nodes), 'Diagnostico de backend ausente nao foi exibido.'
+    # Only this explicitly unconfigured build may be clicked: no OTP can be sent.
+    target = next(n for n in nodes if n.get('content-desc') == 'Continue : Button')
+    tap(target)
+    time.sleep(3)
+    nodes = capture('continue-without-backend')
+    assert any(n.get('class') == 'android.widget.EditText' and n.get('text') == '11987654321' for n in nodes), 'Continuar perdeu o formulario sem backend.'
+    assert not any(n.get('text') == "You're Offline" for n in nodes), 'Configuracao ausente foi confundida com falta de internet.'
+    tap(next(n for n in nodes if n.get('class') == 'android.widget.EditText'))
     # Invalid mobile prefix must disable the original button again.
     adb('shell', 'input', 'keyevent', 'KEYCODE_MOVE_END')
     for _ in range(11):
@@ -72,3 +83,8 @@ except Exception as error:
     raise
 finally:
     (out / 'phone-navigation.json').write_text(json.dumps(trace, ensure_ascii=False, indent=2))
+
+    log = adb('logcat', '-d').decode(errors='replace')
+    log = re.sub(r'AIza[0-9A-Za-z_-]{20,}', '[REDACTED_GOOGLE_KEY]', log)
+    log = re.sub(r'(?i)(bearer\s+)[a-z0-9._~-]+', r'\1[REDACTED]', log)
+    (out / 'phone-logcat.txt').write_text(log)

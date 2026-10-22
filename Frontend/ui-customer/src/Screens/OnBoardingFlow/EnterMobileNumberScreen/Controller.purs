@@ -15,6 +15,7 @@
 
 module Screens.EnterMobileNumberScreen.Controller where
 
+import Services.Config as ServiceConfig
 import Effect.Unsafe
 
 import Common.Types.App (LazyCheck(..)) as Lazy
@@ -127,6 +128,20 @@ data Action = EnterOTP
             | WhatsAppOTPButtonAction PrimaryButtonController.Action
 
 eval :: Action -> EnterMobileNumberScreenState -> Eval Action ScreenOutput EnterMobileNumberScreenState
+
+-- An empty API URL is a missing build configuration, not a loss of connectivity.
+-- Keep the original screen and never trigger an OTP against an absent backend.
+eval (MobileNumberButtonAction PrimaryButtonController.OnClick) state
+  | ServiceConfig.getBaseUrl "" == "" = do
+      _ <- pure $ toggleBtnLoader "PrimaryButtonMobileNumber" false
+      _ <- pure $ unsafePerformEffect $ EHU.showToast "Backend de desenvolvimento não configurado. Não é possível autenticar nesta versão."
+      continue state
+
+eval (WhatsAppOTPButtonAction PrimaryButtonController.OnClick) state
+  | ServiceConfig.getBaseUrl "" == "" = do
+      _ <- pure $ toggleBtnLoader "PrimaryButtonMobileNumber" false
+      _ <- pure $ unsafePerformEffect $ EHU.showToast "Backend de desenvolvimento não configurado. Não é possível autenticar nesta versão."
+      continue state
 
 eval (MobileNumberButtonAction PrimaryButtonController.OnClick) state = do
     let _ = EHE.addEvent (EHE.defaultEventObject "phone_num_continue_clicked") { module = "onboarding"}
