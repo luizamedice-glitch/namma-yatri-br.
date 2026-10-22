@@ -53,4 +53,10 @@ Execução bem-sucedida: https://github.com/luizamedice-glitch/namma-yatri-br./a
 
 Foi adicionado `br-passageiro-original-emulator.yml`, que reutiliza um APK previamente compilado, exige igualdade dos fontes Android/PureScript com o build de origem e captura tela, hierarquia e logs no Android 29. O teste inicia sem rede para verificar a abertura sem depender de recursos indianos. Chaves Google são removidas dos logs publicados. Processo ativo não é tratado como prova de interface operacional.
 
-Resultado do teste de abertura: pendente de execução e inspeção das capturas.
+Primeiro teste: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39772477919 . A instalação passou, mas a abertura falhou com `Unable to create application ... The Crashlytics build ID is missing`, durante `FirebaseApp.initializeApp` em `MainApplicationConsumer.java:27`. O processo morreu; as capturas mostram o launcher Android, não a interface do passageiro. Artefato de evidências: `12422882488`.
+
+A correção em validação aplica um manifesto adicional somente ao debug com `-PbrTestMode=true`: remove os registradores de Crashlytics, Sessions, Performance e In-App Messaging e desativa coleta/registro automático. Não cria um build ID fictício. O SDK continua no classpath para compatibilidade com o código histórico. O bootstrap de promoções/CleverTap é desativado nesse modo para não exigir credenciais de analytics. Telas, layouts, componentes PureScript/PrestoDOM e backend permanecem intactos.
+
+O teste de emulador passa a ser chamado pelo mesmo workflow após publicar o APK, garantindo que valide o artefato desta execução. Mesmo um processo ativo ainda exige inspeção das capturas; não comprova fluxo de corridas.
+
+Também foi confirmado que `STRING_TOO_LARGE` existe no XML compilado de Remote Config, para valores históricos longos. A migração desses valores para arquivos não compilados continua pendente; não foi mascarada como fidelidade integral.

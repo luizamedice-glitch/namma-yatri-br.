@@ -46,6 +46,7 @@ android {
     }
 
     defaultConfig {
+        buildConfigField "boolean", "BR_TEST_MODE", brTestMode.toString()
         minSdkVersion 24
         targetSdkVersion 34
     versionCode 192
@@ -257,6 +258,9 @@ android {
         abortOnError false
     }
     sourceSets {
+        if (brTestMode) {
+            debug.manifest.srcFile 'src/brTest/AndroidManifest.xml'
+        }
         nyUser.setRoot('src/user/nammaYatri')
         myUser.setRoot('src/user/manaYatri')
         oyUser.setRoot('src/user/odishaYatri')

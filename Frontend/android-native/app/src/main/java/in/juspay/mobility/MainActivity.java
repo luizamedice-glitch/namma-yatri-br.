@@ -441,7 +441,9 @@ public class MainActivity extends AppCompatActivity {
         mobilityAppUpdate.checkAndUpdateApp(remoteConfigs);
 
         updateConfigURL();
-        mFirebaseAnalytics.setUserProperty("ct_objectId", Objects.requireNonNull(CleverTapAPI.getDefaultInstance(context)).getCleverTapID());
+        if (!BuildConfig.BR_TEST_MODE) {
+            mFirebaseAnalytics.setUserProperty("ct_objectId", Objects.requireNonNull(CleverTapAPI.getDefaultInstance(context)).getCleverTapID());
+        }
 
         JSONObject results = new JSONObject();
         try {
@@ -600,16 +602,19 @@ public class MainActivity extends AppCompatActivity {
         String clientId = context.getResources().getString(R.string.client_id);
 
         mFirebaseAnalytics.logEvent(isMigrated ?"migrate_local_store_success" : "migrate_local_store_failed",new Bundle());
-        CleverTapAPI cleverTap = CleverTapAPI.getDefaultInstance(context);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CleverTapAPI.createNotificationChannel(context,clientId,"Promotion","Notifications Related to promotion",NotificationManager.IMPORTANCE_MAX, "4_promotional",true);
-            CleverTapAPI.createNotificationChannel(context,"nammayatriHindi","nammayatriHindi","notification",NotificationManager.IMPORTANCE_MAX,true,"clevertap_custom_notification.mp3");
-        }else{
-            CleverTapAPI.createNotificationChannel(context,clientId,"Promotion","Notifications Related to promotion",NotificationManager.IMPORTANCE_MAX,true);
+        // External analytics and promotional notifications are optional in BR tests.
+        if (!BuildConfig.BR_TEST_MODE) {
+            CleverTapAPI cleverTap = CleverTapAPI.getDefaultInstance(context);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                CleverTapAPI.createNotificationChannel(context,clientId,"Promotion","Notifications Related to promotion",NotificationManager.IMPORTANCE_MAX, "4_promotional",true);
+                CleverTapAPI.createNotificationChannel(context,"nammayatriHindi","nammayatriHindi","notification",NotificationManager.IMPORTANCE_MAX,true,"clevertap_custom_notification.mp3");
+            }else{
+                CleverTapAPI.createNotificationChannel(context,clientId,"Promotion","Notifications Related to promotion",NotificationManager.IMPORTANCE_MAX,true);
+            }
+            CleverTapAPI.setDebugLevel(CleverTapAPI.LogLevel.VERBOSE);
+            cleverTap.enableDeviceNetworkInfoReporting(true);
+            CleverTapAPI.setNotificationHandler((NotificationHandler)new PushTemplateNotificationHandler());
         }
-        CleverTapAPI.setDebugLevel(CleverTapAPI.LogLevel.VERBOSE);
-        cleverTap.enableDeviceNetworkInfoReporting(true);
-        CleverTapAPI.setNotificationHandler((NotificationHandler)new PushTemplateNotificationHandler());
         // Crashlytics is disabled in offline debug builds; keep production behavior.
         if (!BuildConfig.DEBUG) {
             FirebaseCrashlytics crashlytics = FirebaseCrashlytics.getInstance();

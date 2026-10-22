@@ -1,11 +1,11 @@
 name: BR - Abertura do passageiro original
 
 on:
-  pull_request:
-    branches: [passageiro-pt-br]
-    paths:
-      - '.github/workflows/br-passageiro-original-emulator.yml'
-      - 'Frontend/scripts/test-original-passenger.sh'
+  workflow_call:
+    inputs:
+      run_id:
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       run_id:
@@ -28,21 +28,19 @@ jobs:
       - name: Selecionar APK compilado com os mesmos fontes
         id: source
         uses: actions/github-script@v7
+        env:
+          REQUESTED_RUN_ID: ${{ inputs.run_id }}
         with:
           script: |
-            let id = Number(context.payload.inputs?.run_id || 0);
-            if (!id) {
-              const branch = context.payload.pull_request.head.ref;
-              const {data} = await github.rest.actions.listWorkflowRuns({
-                ...context.repo, workflow_id: 'br-purescript-memory.yml',
-                branch, status: 'success', per_page: 20
-              });
-              id = data.workflow_runs[0]?.id;
-            }
-            if (!id) throw new Error('Nenhum build original bem-sucedido encontrado');
+            const id = Number(process.env.REQUESTED_RUN_ID);
+            if (!Number.isSafeInteger(id) || id <= 0) throw new Error('run_id invalido');
             const {data: run} = await github.rest.actions.getWorkflowRun({...context.repo, run_id: id});
-            if (run.conclusion !== 'success' || run.path !== '.github/workflows/br-purescript-memory.yml') {
-              throw new Error('Origem deve ser o workflow original concluido com sucesso');
+            if (run.path !== '.github/workflows/br-purescript-memory.yml') {
+              throw new Error('Origem deve ser o workflow original');
+            }
+            const {data: jobs} = await github.rest.actions.listJobsForWorkflowRun({...context.repo, run_id: id});
+            if (!jobs.jobs.some(job => job.name === 'android-passageiro-original' && job.conclusion === 'success')) {
+              throw new Error('O job que publicou o APK ainda nao concluiu com sucesso');
             }
             core.setOutput('run_id', String(id));
             core.setOutput('sha', run.head_sha);

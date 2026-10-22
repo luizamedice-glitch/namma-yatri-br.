@@ -5,6 +5,9 @@ on:
     branches: [passageiro-pt-br]
     paths:
       - '.github/workflows/br-purescript-memory.yml'
+      - '.github/workflows/br-passageiro-original-emulator.yml'
+      - 'Frontend/android-native/**'
+      - 'Frontend/scripts/test-original-passenger.sh'
       - 'Frontend/scripts/diagnose-purescript.py'
       - 'Frontend/packages.dhall'
       - 'Frontend/ui-customer/**'
@@ -13,6 +16,9 @@ on:
     branches: [passageiro-pt-br]
     paths:
       - '.github/workflows/br-purescript-memory.yml'
+      - '.github/workflows/br-passageiro-original-emulator.yml'
+      - 'Frontend/android-native/**'
+      - 'Frontend/scripts/test-original-passenger.sh'
       - 'Frontend/scripts/diagnose-purescript.py'
       - 'Frontend/ui-customer/package.json'
       - 'Frontend/ui-customer/src/**'
@@ -39,6 +45,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: purescript-memory-${{ github.event.pull_request.number || github.ref }}
@@ -186,6 +193,18 @@ jobs:
               embedded = apk.read('assets/juspay/index_bundle.js')
           if embedded != bundle:
               raise SystemExit('APK nao contem o bundle recompilado desta execucao')
+          import xml.etree.ElementTree as ET
+          manifests = list(Path('Frontend/android-native/app/build/intermediates/merged_manifests').rglob('AndroidManifest.xml'))
+          if len(manifests) != 1:
+              raise SystemExit('Nao foi encontrado um manifesto final unico')
+          android = '{http://schemas.android.com/apk/res/android}'
+          root = ET.parse(manifests[0]).getroot()
+          metadata = {n.get(android + 'name'): n.get(android + 'value') for n in root.iter('meta-data')}
+          if 'com.google.firebase.components:com.google.firebase.crashlytics.CrashlyticsRegistrar' in metadata:
+              raise SystemExit('Crashlytics ainda registrado no modo BR')
+          if metadata.get('firebase_crashlytics_collection_enabled') != 'false':
+              raise SystemExit('Coleta Crashlytics nao esta desativada')
+          print('Manifesto BR: Crashlytics nao registrado, coleta desativada')
           print('Bundle conferido:', hashlib.sha256(bundle).hexdigest())
           print('APK:', apks[0], 'SHA256:', hashlib.sha256(apks[0].read_bytes()).hexdigest())
           PYTHON
@@ -207,3 +226,9 @@ jobs:
             Frontend/android-native/app/build/reports/
           if-no-files-found: warn
           retention-days: 14
+
+  abertura-passageiro-original:
+    needs: android-passageiro-original
+    uses: ./.github/workflows/br-passageiro-original-emulator.yml
+    with:
+      run_id: ${{ format('{0}', github.run_id) }}
