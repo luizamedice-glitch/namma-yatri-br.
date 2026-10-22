@@ -92,6 +92,13 @@ jobs:
         run: |
           python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode "$MODE" --heap "$HEAP" --label measured
           python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode full --heap "$HEAP" --label incremental
+      - name: Verificar comando npm original com PSA
+        shell: bash
+        run: |
+          set -o pipefail
+          export GHCRTS="-N1 -M$HEAP"
+          cd "$APP_DIR"
+          /usr/bin/time -v -o "$GITHUB_WORKSPACE/purescript-diagnostics/npm-entrypoint.time" npm run compile:purs 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/npm-entrypoint.log"
       - name: Preservar cache inclusive em caso de falha
         if: always() && steps.cache.outcome == 'success'
         uses: actions/cache/save@v4
