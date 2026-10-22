@@ -148,6 +148,9 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+          log-accepted-android-sdk-licenses: false
       - uses: actions/download-artifact@v4
         with:
           name: yatri-passageiro-bundle-original
@@ -155,9 +158,9 @@ jobs:
       - name: Integrar bundle aos recursos originais
         working-directory: Frontend
         run: |
-          cd ui-customer/dist/android
-          sha256sum -c SHA256SUMS
-          cd ../../..
+          cd ui-customer
+          sha256sum -c dist/android/SHA256SUMS
+          cd ..
           cp ui-customer/dist/android/index_bundle.js android-native/app/src/user/nammaYatri/assets/juspay/index_bundle.js
           bash userJuspayAssets.sh nammaYatri
           python3 -m json.tool android-native/app/src/user/nammaYatri/assets/juspay/juspay_assets.json > /dev/null
@@ -168,7 +171,24 @@ jobs:
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
         run: |
           set -o pipefail
-          bash gradlew :app:assembleNyUserProdDebug -PbrTestMode=true --no-daemon --max-workers=2 --stacktrace 2>&1 | tee android-build.log
+          /usr/bin/time -v -o android-build.time bash gradlew :app:assembleNyUserProdDebug -PbrTestMode=true --no-daemon --max-workers=2 --stacktrace 2>&1 | tee android-build.log
+      - name: Confirmar bundle recompilado dentro do APK
+        run: |
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import hashlib
+          bundle = Path('Frontend/ui-customer/dist/android/index_bundle.js').read_bytes()
+          apks = list(Path('Frontend/android-native/app/build/outputs/apk/nyUser/prod/debug').glob('*.apk'))
+          if len(apks) != 1:
+              raise SystemExit(f'Esperado exatamente um APK; encontrados {len(apks)}')
+          with ZipFile(apks[0]) as apk:
+              embedded = apk.read('assets/juspay/index_bundle.js')
+          if embedded != bundle:
+              raise SystemExit('APK nao contem o bundle recompilado desta execucao')
+          print('Bundle conferido:', hashlib.sha256(bundle).hexdigest())
+          print('APK:', apks[0], 'SHA256:', hashlib.sha256(apks[0].read_bytes()).hexdigest())
+          PYTHON
       - name: Publicar APK original
         uses: actions/upload-artifact@v4
         with:
@@ -183,6 +203,7 @@ jobs:
           name: yatri-passageiro-android-diagnostico
           path: |
             Frontend/android-native/android-build.log
+            Frontend/android-native/android-build.time
             Frontend/android-native/app/build/reports/
           if-no-files-found: warn
           retention-days: 14
