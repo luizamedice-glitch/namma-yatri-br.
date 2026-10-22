@@ -49,8 +49,12 @@ import Storage (setValueToLocalStore, KeyStore(..))
 main :: Event -> Boolean -> Effect Unit
 main event callInitUI | DevelopmentMode.isEnabled unit = do
   void $ launchAff $ flowRunner defaultGlobalState $ do
-    _ <- runExceptT $ runBackT $ DevelopmentPassenger.start callInitUI
-    pure unit
+    result <- runExceptT $ runBackT $ DevelopmentPassenger.start callInitUI
+    case result of
+      Right _ -> pure unit
+      Left err -> do
+        _ <- pure $ printLog "Yatri BR: falha ao abrir HomeScreen original" err
+        pure unit
 
 main event callInitUI = do
   void $ markPerformance "MAIN_FLOW"

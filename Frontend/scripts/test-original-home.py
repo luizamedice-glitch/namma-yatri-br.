@@ -16,6 +16,7 @@ def adb(*args):
     return subprocess.check_output(['adb', *args], timeout=30)
 
 def capture(stage):
+    adb('shell', 'rm', '-f', '/sdcard/home-window.xml')
     adb('shell', 'uiautomator', 'dump', '/sdcard/home-window.xml')
     xml = adb('shell', 'cat', '/sdcard/home-window.xml')
     (out / f'home-{stage}.xml').write_bytes(xml)

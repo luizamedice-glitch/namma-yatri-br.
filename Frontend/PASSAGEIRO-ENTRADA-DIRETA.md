@@ -12,7 +12,7 @@ A orientação atual é adiar a autenticação própria e abrir primeiro o núcl
 - O nome Fagner é uma preferência local de exibição. Não representa uma conta autenticada: nenhum ID de passageiro ou token é inventado ou gravado.
 - A localização usa os métodos nativos existentes, solicita a permissão Android e atualiza origem/câmera somente com coordenadas válidas recebidas do serviço. Ausência de GPS não deve impedir a abertura da home.
 - O botão central abre os campos originais de origem e destino, que permitem edição e retorno à home. Busca de endereços, seleção no mapa e corridas ainda não têm integração operacional neste controlador: ações correspondentes informam essa pendência, sem gerar sugestões, tarifas ou viagens fictícias.
-- Serviços opcionais de Remote Config usam seus **defaults locais existentes** nesse modo, por um provedor separado. O decoder de configuração do merchant e os decoders de respostas de API permanecem intactos. Não é uma resposta simulada de backend.
+- Os leitores e decoders originais de Remote Config foram restaurados, incluindo seus defaults e diagnósticos. A camada genérica adicionada na primeira tentativa foi retirada para investigar a regressão de compilação. Os serviços paralelos não são iniciados pelo controlador de desenvolvimento. Configuração ausente pode produzir avisos originais; esses avisos não são ocultados nem convertidos em respostas de API.
 - O menu paralelo não oferece as opções que exigem serviços ainda desativados; seu componente original e a ação de fechar são mantidos.
 
 ## Verificação
@@ -21,7 +21,9 @@ A orientação atual é adiar a autenticação própria e abrir primeiro o núcl
 
 O teste Android foi ampliado para verificar: home original sem token, abertura sem rede, ausência de telefone/OTP, botão `Where To` real, edição dos campos originais, retorno e nova abertura com rede. Publica PNG, hierarquia Android e logs sanitizados. O teste não interpreta o simples carregamento do mapa como validação de Places/Routes ou de uma corrida.
 
-A compilação e o teste do novo modo ainda estão pendentes nesta versão do relatório. Nenhum APK da etapa anterior deve ser apresentado como contendo a entrada direta.
+A primeira compilação deste modo, [execução 39791852321](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39791852321), fontes `725cd2fa712e01d289a4ed14865581fd329e5657`, atingiu o limite de 30 minutos na recompilação incremental: 500 de 529 módulos pendentes, último módulo anunciado `Screens.HomeScreen.Controller`. RSS máximo amostrado do processo `purs`: 14.073.572 KiB (13,42 GiB), heap limitado a 10 GiB. Não foi emitido diagnóstico de erro de código antes da interrupção. [Registro](build-reports/passageiro-entrada-direta/primeira-tentativa.json).
+
+A auditoria e o build acompanhado em lotes estão registrados em [RELATORIO-AUDITORIA-LOTES.md](RELATORIO-AUDITORIA-LOTES.md). A execução `39820258245` concluiu 36 lotes e isolou o controller no lote 37, interrompendo após cinco minutos sem saída. A nova tentativa restaura os dois leitores originais de configuração remota e mantém os limites de progresso e RSS. A validação Android continua pendente até a nova execução terminar. Nenhum APK anterior deve ser apresentado como contendo a entrada direta.
 
 ## Limites
 
