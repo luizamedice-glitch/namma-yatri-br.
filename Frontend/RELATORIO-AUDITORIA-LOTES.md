@@ -36,3 +36,10 @@ O cache foi salvo com sufixo `39820258245-1`. O artefato `12445420144` contém p
 Também foram verificados localmente: reutilização de cache com três módulos reais no compilador 0.15.14; guardas de ausência de saída, recompilação inesperada e RSS com processos controlados. Essas guardas encerraram os processos com código 125 e o motivo esperado. Os processos controlados não representam o frontend nem uma integração de corridas.
 
 Conclusão desta tentativa: a divisão e a interrupção funcionaram, mas o controller ainda não concluiu. A próxima investigação deve medir esse módulo isoladamente e examinar suas dependências e alterações, preservando o cache; não repetir o grafo inteiro nem ampliar cegamente os timeouts. Não foi iniciada outra execução após esta falha.
+
+
+## Entrega posterior validada
+
+O APK e a navegação passaram na execução [39835346434](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39835346434): 55 lotes, 290,45 s acumulados, pico RSS 9.572.472 KiB (9,13 GiB), apenas Development.Passenger e Main recompilados; verificação completa em 32,86 s sem recompilação. A entrada direta, os campos originais, a digitação inteira de Avenida Paulista, o retorno e a reabertura online foram testados no APK real em Android 29. Detalhes, links e limites em [PASSAGEIRO-ENTRADA-DIRETA.md](PASSAGEIRO-ENTRADA-DIRETA.md).
+
+A alteração de um FFI compartilhado em `39832410686` invalidou 336 módulos e foi interrompida novamente no controller: 314,70 s, pico 10.859.396 KiB, 249,83 s em GC em 313,91 s totais (produtividade 20,4%). O arquivo foi restaurado e a adaptação de apresentação isolada no Webpack Android, com a mesma interface/exportações, sem alterar dados do decoder nem editar bundle manualmente. O custo da compilação fria do controller continua uma limitação; cache válido não é uma solução geral para esse custo.

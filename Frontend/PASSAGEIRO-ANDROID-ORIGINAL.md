@@ -1,3 +1,5 @@
+> Entrega atual: [APK com entrada direta na HomeScreen original, aprovado no emulador](PASSAGEIRO-ENTRADA-DIRETA.md#apk-aprovado-para-esta-etapa). Os APKs de onboarding e as falhas históricas abaixo são referências anteriores, não a entrega atual.
+
 # Montagem do passageiro Android original
 
 > Etapa atual: [entrada direta no núcleo original, sem onboarding no modo de desenvolvimento](PASSAGEIRO-ENTRADA-DIRETA.md).

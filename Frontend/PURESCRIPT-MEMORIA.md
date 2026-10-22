@@ -65,17 +65,29 @@ python3 Frontend/scripts/diagnose-purescript.py --heap 5500m --label incremental
 python3 Frontend/scripts/diagnose-purescript.py --heap 5500m --mode module --label strings
 ```
 
-`staged` pré-compila os fechos de `Resources.LocalizableV2.Strings` e
-`Common.RemoteConfig.Utils` em processos separados, quando presentes no grafo.
-Depois compila prefixos topológicos cumulativos de **um novo módulo por processo**
-(configurável com `--batch-size`), mantendo os módulos críticos no cache. Cada
-prefixo contém todas as dependências necessárias. A última etapa chama o
-**Spago original com todas as fontes** e geração JavaScript padrão. Uma etapa
-com êxito grava `cache-db.json`; uma falha não é transformada em sucesso.
-`--warmup-module Nome` acrescenta outro ponto de pré-compilação.
-`--no-default-warmup --batch-size 100` reproduz a primeira estratégia testada,
-que não bastou. Lotes de 25 também permitiram sobreposição de
-`RemoteConfig.Utils` e `Services.API`; por isso o padrão é conservador.
+`staged` organiza alvos em ordem topológica, priorizando os fechos de
+`Resources.LocalizableV2.Strings` e `Common.RemoteConfig.Utils`. Cada chamada
+inclui somente os alvos do lote e suas dependências transitivas, sem acumular
+alvos anteriores sem relação. `--batch-size` limita novos alvos, não o tamanho
+do fechamento nem o consumo de memória. O workflow usa 25 alvos; os módulos
+HomeScreen.Controller, HomeScreen.View, Flow, Main e Development.Passenger
+ficam isolados. `plan.json` registra o plano antes da execução.
+
+A estratégia antiga de prefixos cumulativos foi substituída após a auditoria
+em [RELATORIO-AUDITORIA-LOTES.md](RELATORIO-AUDITORIA-LOTES.md). Não há mais
+Spago completo automático ao final de `staged`. O workflow faz a verificação
+completa separadamente, com `--require-cache`, que interrompe se encontrar
+recompilação inesperada. Falha interrompe os próximos lotes; não é convertida
+em sucesso. `--warmup-module Nome` prioriza o fecho de outro módulo na ordem;
+`--no-default-warmup` remove as prioridades padrão.
+
+O workflow limita cada chamada a 600 s, ausência de saída a 300 s e RSS
+amostrado a 12 GiB. Publica RSS e tempo a cada 30 s. Ausência de saída não
+comprova deadlock: o limite existe para exigir investigação antes de outra
+espera longa. O cache é verificado pelo compilador, não substitui código novo
+por um bundle antigo. A opção `cache_run_id` recupera uma referência completa
+com job PureScript bem-sucedido e exige que o cache solicitado esteja presente.
+
 `module` compila somente o módulo escolhido e seu
 fecho transitivo: é um experimento, não valida o aplicativo inteiro.
 `--codegen corefn` permite separar experimentalmente geração JS das fases

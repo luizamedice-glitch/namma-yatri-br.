@@ -1,0 +1,59 @@
+{
+  "run_id": 39835346434,
+  "source_sha": "0412c314a090398adb21d35b000bbe929b8dd712",
+  "result": "success: compiler, Android APK and real emulator navigation",
+  "reference_cache_run": 39824204819,
+  "compiler": "0.15.14",
+  "graph_modules": 1192,
+  "compiled_modules": [
+    "Development.Passenger",
+    "Main"
+  ],
+  "apk_artifact_id": 12451188384,
+  "emulator_artifact_id": 12451452845,
+  "compiler_artifact_id": 12450788444,
+  "apk": {
+    "size_bytes": 126296403,
+    "sha256": "bc150dc65105b2c0d232d5b977e272996658fa4f565f32e00be16e7e62cc4b07",
+    "signer_certificate_sha256": "a25bc937bcb6f0e247ab81c154315df6a4e50a1853e174d8adaece03044c24cf",
+    "signer_certificate_sha1": "31e53a2e5122f044002f01add6efdb6a64b762cb"
+  },
+  "emulator": {
+    "api": 29,
+    "no_registration_token": true,
+    "offline_home": true,
+    "original_source_destination_edittexts": true,
+    "typed_destination": "Avenida Paulista",
+    "back_to_home": true,
+    "restart_online_home": true,
+    "config_diagnostics": {
+      "warnings": 124,
+      "notices": 1
+    },
+    "fatal_exceptions_in_home_log": 0,
+    "result": "PASS: HomeScreen original sem token, offline/online, busca editavel e retorno; nenhuma corrida ou sessao simulada."
+  },
+  "backend_modified": false,
+  "rides_or_api_responses_simulated": false,
+  "measured": {
+    "invocations": 55,
+    "seconds": 290.45,
+    "peak_sampled_rss_kib": 9572472,
+    "all_exit_zero": true
+  },
+  "incremental": {
+    "invocations": 1,
+    "seconds": 32.86,
+    "peak_sampled_rss_kib": 6732128,
+    "all_exit_zero": true
+  },
+  "screenshots": {
+    "home-typed.png": "095d6609bc4192180c4871067e8eaa834424121484c8722e3c29add1af313457",
+    "home-back-0.png": "04d3dede28667469687ea5f9b546a8df14c8dfd77c8f447988819c1a0c9512c8",
+    "home-online-1.png": "655df6a10a1371e65c9a01c0533f7b99702fc830e8ccc916546c7df6087bfab7",
+    "home-online-0.png": "93d0c2bcf4b821721e659a58061259549a22498278c65f4ae2cef614f8ba4727",
+    "home-back-1.png": "cafc01bb42796cfa83023bd41166ba1c6e0e2e21736a42f6630efef97a27755f",
+    "home-search.png": "e5257d2cd648f9fe753eb69218020b3b1ca6f642f4f6b7eb8106a4d774e0704b",
+    "home-offline.png": "76793b19a1e0c1879e593c19d20cc40671c265d634dca0608e07f8b064efeaaf"
+  }
+}
