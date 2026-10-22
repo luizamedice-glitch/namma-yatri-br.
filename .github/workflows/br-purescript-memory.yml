@@ -222,6 +222,9 @@ jobs:
               raise SystemExit(f'Esperado exatamente um APK; encontrados {len(apks)}')
           with ZipFile(apks[0]) as apk:
               embedded = apk.read('assets/juspay/index_bundle.js')
+              entry = apk.read('assets/juspay/becknbase.html')
+          if entry != Path('Frontend/android-native/app/src/brTest/assets/juspay/becknbase.html').read_bytes():
+              raise SystemExit('APK nao contem o entrypoint local do modo BR')
           if embedded != bundle:
               raise SystemExit('APK nao contem o bundle recompilado desta execucao')
           import xml.etree.ElementTree as ET

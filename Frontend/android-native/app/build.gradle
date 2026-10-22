@@ -260,6 +260,7 @@ android {
     sourceSets {
         if (brTestMode) {
             debug.manifest.srcFile 'src/brTest/AndroidManifest.xml'
+            debug.assets.srcDir 'src/brTest/assets'
         }
         nyUser.setRoot('src/user/nammaYatri')
         myUser.setRoot('src/user/manaYatri')

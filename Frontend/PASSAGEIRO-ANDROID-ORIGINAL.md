@@ -88,3 +88,14 @@ O diagnóstico CDP inicial chegou ao WebView `about:blank`, mas o coletor usou i
 O `MobilityServices.java` histórico continha explicitamente o comentário `update index_bundle.js to share apk`, mas continuava carregando o downloader `.jsa`. No modo `BR_TEST_MODE`, o bootstrap passa a carregar o bundle local pelo mesmo `JBridge.loadFileInDUI`; a sequência original de produção é mantida. Essa alteração precisa de validação em execução: não pressupõe que os contextos JOS estejam prontos.
 
 O workflow recebeu a opção `bundle_run_id` para iterar somente no Android, baixando um bundle já compilado. Antes de reutilizá-lo, exige sucesso do job PureScript de origem, igualdade dos fontes/manifestos/configuração PureScript e checksum do bundle. A execução completa permanece o padrão. Isso evita repetir a compilação e minificação quando apenas o bootstrap nativo ou os testes mudam.
+
+
+## Correção da sequência de runtime
+
+O teste de carregamento direto (`39777289547`, APK `940474c3c2c852caca96ae1b3d23eb48bf7773049789aba01e36728089a59c13`) confirmou execução de `INDEX_BUNDLE_START`, mas o CDP registrou `TypeError: Cannot read property 'self' of undefined` e `josType: undefined`. Portanto, apenas trocar o arquivo da raiz não resolve: o frontend requer o contexto JOS criado pelo runtime original.
+
+A próxima execução restaura essa arquitetura: a raiz inicia `v1-boot_loader.jsa`, fornecido pelo próprio SDK já presente no APK; o runtime cria o iframe da aplicação e seu objeto JOS. O entrypoint `becknbase.html` original é reutilizado num overlay BR, alterando a seleção do script para o `index_bundle.js` recompilado. O payload usa as opções históricas `use_local_assets=true` e `attempt_recovery=false` para não atualizar aplicações de servidores indianos.
+
+Não foi fabricado um objeto JOS, substituída interface ou simulado callback de API. O `boot_loader.js` legível preservado no repositório foi usado como referência da arquitetura; a execução usa a versão do runtime distribuída junto ao SDK, para evitar combinar interfaces de versões diferentes.
+
+O teste foi reforçado: exige a versão do frontend original e seu callback `onEvent'` no contexto JOS, ausência da splash na hierarquia final e controles textuais Android da aplicação. Processo ativo sozinho deixa de ser suficiente para sucesso dessa validação.
