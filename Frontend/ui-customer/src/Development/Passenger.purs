@@ -10,6 +10,7 @@ import Components.SettingSideBar.Controller as Sidebar
 import Control.Monad.Except.Trans (lift)
 import Data.Maybe (Maybe(..))
 import Data.Number (fromString)
+import Data.String.CodeUnits as String
 import Effect.Unsafe (unsafePerformEffect)
 import Engineering.Helpers.BackTrack (liftFlowBT)
 import Engineering.Helpers.Commons (getVersionByKey)
@@ -98,12 +99,23 @@ eval Home.BackPressed state = do
 
 eval (Home.SearchLocationModelActionController Search.GoBack) state = eval Home.BackPressed state
 eval (Home.SearchLocationModelActionController Search.GoBackSearchModel) state = eval Home.BackPressed state
+-- Match the original controller's input contract: editing belongs to the native EditText.
+-- Rewriting data.source/destination on each key resets selection through afterRender/showKeyboard.
 eval (Home.SearchLocationModelActionController (Search.SourceChanged value)) state =
-  continue state {data {source = value}, props {searchLocationModelProps {crossBtnSrcVisibility = value /= "", isAutoComplete = false}}}
+  continueWithCmd state {props {searchLocationModelProps {crossBtnSrcVisibility = String.length value > 2, isAutoComplete = false}}}
+    [ do
+        _ <- pure $ JB.updateInputString value
+        pure Home.NoAction
+    ]
 eval (Home.SearchLocationModelActionController (Search.DestinationChanged value)) state =
-  continue state {data {destination = value}, props {searchLocationModelProps {crossBtnDestVisibility = value /= "", isAutoComplete = false}}}
-eval (Home.SearchLocationModelActionController (Search.EditTextFocusChanged field)) state =
-  continue state {props {isSource = Just (field /= "D")}}
+  continueWithCmd state {props {searchLocationModelProps {crossBtnDestVisibility = String.length value > 2, isAutoComplete = false}}}
+    [ do
+        _ <- pure $ JB.updateInputString value
+        pure Home.NoAction
+    ]
+eval (Home.SearchLocationModelActionController (Search.EditTextFocusChanged field)) state
+  | state.props.isSource == Just (field /= "D") = continue state
+  | otherwise = continue state {props {isSource = Just (field /= "D")}}
 eval (Home.SearchLocationModelActionController Search.SourceClear) state =
   continue state {data {source = ""}, props {searchLocationModelProps {crossBtnSrcVisibility = false}}}
 eval (Home.SearchLocationModelActionController Search.DestinationClear) state =
