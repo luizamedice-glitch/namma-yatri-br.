@@ -1,0 +1,94 @@
+[ 2 of 93] Compiling Type.Proxy
+[ 1 of 93] Compiling Unsafe.Coerce
+[ 3 of 93] Compiling Record.Unsafe
+[ 4 of 93] Compiling Partial
+[ 5 of 93] Compiling Data.Traversable.Accum
+[ 6 of 93] Compiling Data.String.Unsafe
+[ 8 of 93] Compiling Data.NaturalTransformation
+[ 9 of 93] Compiling Safe.Coerce
+[ 7 of 93] Compiling Data.Symbol
+[10 of 93] Compiling Data.Boolean
+[11 of 93] Compiling Partial.Unsafe
+[12 of 93] Compiling Control.Semigroupoid
+[13 of 93] Compiling Data.Show
+[14 of 93] Compiling Control.Category
+[15 of 93] Compiling Data.Unit
+[16 of 93] Compiling Data.Void
+[17 of 93] Compiling Control.Lazy
+[18 of 93] Compiling Data.Semiring
+[19 of 93] Compiling Data.HeytingAlgebra
+[20 of 93] Compiling Data.Semigroup
+[21 of 93] Compiling Data.Generic.Rep
+[22 of 93] Compiling Data.Ring
+[23 of 93] Compiling Data.BooleanAlgebra
+[24 of 93] Compiling Data.Eq
+[25 of 93] Compiling Data.CommutativeRing
+[27 of 93] Compiling Data.Ordering
+[26 of 93] Compiling Data.EuclideanRing
+[28 of 93] Compiling Data.Ord
+[29 of 93] Compiling Data.DivisionRing
+[30 of 93] Compiling Data.Field
+[31 of 93] Compiling Data.Monoid
+[32 of 93] Compiling Data.Function
+[33 of 93] Compiling Data.Bounded
+[34 of 93] Compiling Data.Functor
+[36 of 93] Compiling Control.Alt
+[35 of 93] Compiling Control.Extend
+[37 of 93] Compiling Control.Apply
+[38 of 93] Compiling Control.Plus
+[39 of 93] Compiling Control.Comonad
+[40 of 93] Compiling Control.Applicative
+[42 of 93] Compiling Control.Alternative
+[41 of 93] Compiling Control.Bind
+[43 of 93] Compiling Control.Monad
+[44 of 93] Compiling Control.MonadPlus
+[45 of 93] Compiling Prelude
+[46 of 93] Compiling Data.Semigroup.Last
+[47 of 93] Compiling Data.Monoid.Disj
+[48 of 93] Compiling Data.Monoid.Dual
+[49 of 93] Compiling Data.Traversable.Accum.Internal
+[50 of 93] Compiling Data.Monoid.Endo
+[51 of 93] Compiling Data.Semigroup.First
+[52 of 93] Compiling Data.Monoid.Additive
+[53 of 93] Compiling Data.Monoid.Conj
+[55 of 93] Compiling Data.Monoid.Multiplicative
+[54 of 93] Compiling Effect
+[56 of 93] Compiling Effect.Ref
+[57 of 93] Compiling Data.Newtype
+[58 of 93] Compiling Data.Ord.Max
+[59 of 93] Compiling Data.String.Pattern
+[60 of 93] Compiling Data.Ord.Min
+[61 of 93] Compiling Data.Monoid.Alternate
+[62 of 93] Compiling Data.Functor.App
+[63 of 93] Compiling Data.Functor.Invariant
+[64 of 93] Compiling Data.Functor.Compose
+[66 of 93] Compiling Data.Const
+[65 of 93] Compiling Data.Maybe
+[67 of 93] Compiling Data.Tuple
+[68 of 93] Compiling Data.Identity
+[69 of 93] Compiling Data.String.CodeUnits
+[70 of 93] Compiling Data.Maybe.Last
+[71 of 93] Compiling Data.Either
+[72 of 93] Compiling Data.Maybe.First
+[73 of 93] Compiling Data.Bifunctor
+[74 of 93] Compiling Data.Functor.Coproduct
+[75 of 93] Compiling Data.Functor.Product
+[76 of 93] Compiling Control.Monad.Rec.Class
+[77 of 93] Compiling Data.Foldable
+[78 of 93] Compiling Data.FunctorWithIndex
+[79 of 93] Compiling Control.Monad.ST.Internal
+[80 of 93] Compiling Control.Monad.ST
+[81 of 93] Compiling Data.Array.ST
+[82 of 93] Compiling Control.Monad.ST.Ref
+[83 of 93] Compiling Data.Array.ST.Iterator
+[84 of 93] Compiling Data.Traversable
+[85 of 93] Compiling Data.FoldableWithIndex
+[86 of 93] Compiling Data.Semigroup.Foldable
+[87 of 93] Compiling Data.Semigroup.Traversable
+[88 of 93] Compiling Data.Unfoldable1
+[89 of 93] Compiling Data.TraversableWithIndex
+[90 of 93] Compiling Data.Unfoldable
+[91 of 93] Compiling Data.Array.NonEmpty.Internal
+[92 of 93] Compiling Data.Array
+[93 of 93] Compiling Engineering.Helpers.BrazilianMobileNumber
+PASS: 4 validos, 48 prefixos, 14 invalidos e 8 prefixos invalidos; validador PureScript compilado.
