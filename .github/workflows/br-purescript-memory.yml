@@ -242,6 +242,8 @@ jobs:
           bash userJuspayAssets.sh nammaYatri
           python3 -m json.tool android-native/app/src/user/nammaYatri/assets/juspay/juspay_assets.json > /dev/null
           cp android-native/local-temp.properties android-native/local.properties
+      - name: Testar isolamento dos avisos de configuracao BR
+        run: python3 Frontend/scripts/test-development-config-diagnostics.py
       - name: Compilar container Android original do passageiro
         working-directory: Frontend/android-native
         env:
@@ -275,6 +277,8 @@ jobs:
           metadata = {n.get(android + 'name'): n.get(android + 'value') for n in root.iter('meta-data')}
           if 'com.google.firebase.components:com.google.firebase.crashlytics.CrashlyticsRegistrar' in metadata:
               raise SystemExit('Crashlytics ainda registrado no modo BR')
+          if metadata.get('yatri_br_development') != 'true':
+              raise SystemExit('Flag explicita de desenvolvimento BR ausente')
           if metadata.get('firebase_crashlytics_collection_enabled') != 'false':
               raise SystemExit('Coleta Crashlytics nao esta desativada')
           print('Manifesto BR: Crashlytics nao registrado, coleta desativada')

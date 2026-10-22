@@ -218,6 +218,27 @@ import in.juspay.mobility.common.utils.Utils;
 
 public class MobilityCommonBridge extends HyperBridge {
 
+    private final DevelopmentConfigDiagnostics brConfigDiagnostics = new DevelopmentConfigDiagnostics();
+    private volatile Boolean brDevelopmentBuild;
+
+    private boolean isBrDevelopmentBuild() {
+        Boolean cached = brDevelopmentBuild;
+        if (cached != null) return cached;
+        boolean enabled = false;
+        try {
+            Context context = bridgeComponents.getContext();
+            android.content.pm.ApplicationInfo info = context.getPackageManager()
+                    .getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            enabled = (info.flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
+                    && info.metaData != null && info.metaData.getBoolean("yatri_br_development", false);
+        } catch (PackageManager.NameNotFoundException error) {
+            Log.w("YatriBRConfig", "Unable to read development metadata", error);
+        }
+        brDevelopmentBuild = enabled;
+        return enabled;
+    }
+
+
     public static final int REQUEST_CONTACTS = 7;
     public static final int LOCATION_PERMISSION_REQ_CODE = 1;
     public static final int BACKGROUND_LOCATION_REQ_CODE = 190;
@@ -5137,6 +5158,12 @@ public class MobilityCommonBridge extends HyperBridge {
 
     @JavascriptInterface
     public void toast(String msg) {
+        if (brConfigDiagnostics.isDevelopmentConfigWarning(isBrDevelopmentBuild(), msg)) {
+            // Keep every original diagnostic; avoid a debug toast queue blocking input/accessibility.
+            Log.w("YatriBRConfig", msg);
+            msg = brConfigDiagnostics.nextVisibleNotice();
+            if (msg == null) return;
+        }
         Toast.makeText(bridgeComponents.getContext(), msg, Toast.LENGTH_SHORT).show();
     }
 

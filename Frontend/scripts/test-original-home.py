@@ -16,12 +16,22 @@ def adb(*args):
     return subprocess.check_output(['adb', *args], timeout=30)
 
 def capture(stage):
-    adb('shell', 'rm', '-f', '/sdcard/home-window.xml')
-    adb('shell', 'uiautomator', 'dump', '/sdcard/home-window.xml')
-    xml = adb('shell', 'cat', '/sdcard/home-window.xml')
+    # Map/IME accessibility events may prevent one idle snapshot; never reuse an old XML.
+    (out / f'home-{stage}.png').write_bytes(adb('exec-out', 'screencap', '-p'))
+    for attempt in range(3):
+        adb('shell', 'rm', '-f', '/sdcard/home-window.xml')
+        dump = adb('shell', 'uiautomator', 'dump', '/sdcard/home-window.xml').decode(errors='replace')
+        try:
+            xml = adb('shell', 'cat', '/sdcard/home-window.xml')
+            nodes = list(ET.fromstring(xml).iter('node'))
+            break
+        except (subprocess.CalledProcessError, ET.ParseError):
+            trace.append({'stage': stage, 'capture_attempt': attempt + 1, 'dump': dump[:300]})
+            if attempt == 2:
+                raise RuntimeError(f'No fresh UI hierarchy after 3 attempts at {stage}: {dump[:200]}')
+            time.sleep(2)
     (out / f'home-{stage}.xml').write_bytes(xml)
     (out / f'home-{stage}.png').write_bytes(adb('exec-out', 'screencap', '-p'))
-    nodes = list(ET.fromstring(xml).iter('node'))
     trace.append({'stage': stage, 'labels': [n.get('text') or n.get('content-desc') for n in nodes if n.get('text') or n.get('content-desc')]})
     return nodes
 
