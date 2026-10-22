@@ -79,3 +79,12 @@ Execução: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/3
 Resultado: instalação e inicialização fria passaram (8.688 ms para apresentar a Activity), processo ativo por 120 segundos e nenhum `FATAL EXCEPTION`. Os três jobs desta execução concluíram com sucesso. Entretanto, a inspeção visual das quatro capturas confirmou permanência na splash original. Portanto, isso **não** valida a renderização das telas PureScript nem o funcionamento do passageiro. [Capturas e logs](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39773571962/artifacts/12424241976).
 
 O log chega a `initiate_result: SUCCESS` do HyperSDK, mas não registra execução de `INDEX_BUNDLE_START` ou `DUI_READY`. A investigação passa a coletar, por CDP, contextos JavaScript, scripts carregados e mensagens do console do WebView, sem injetar interface ou respostas de APIs. O diagnóstico reutiliza o APK já conferido; não requer recompilar fontes sem alterações.
+
+
+## Investigação do carregamento local
+
+O diagnóstico CDP inicial chegou ao WebView `about:blank`, mas o coletor usou incorretamente o cliente WebSocket como context manager. O coletor foi corrigido para fechar a conexão com `contextlib.closing`.
+
+O `MobilityServices.java` histórico continha explicitamente o comentário `update index_bundle.js to share apk`, mas continuava carregando o downloader `.jsa`. No modo `BR_TEST_MODE`, o bootstrap passa a carregar o bundle local pelo mesmo `JBridge.loadFileInDUI`; a sequência original de produção é mantida. Essa alteração precisa de validação em execução: não pressupõe que os contextos JOS estejam prontos.
+
+O workflow recebeu a opção `bundle_run_id` para iterar somente no Android, baixando um bundle já compilado. Antes de reutilizá-lo, exige sucesso do job PureScript de origem, igualdade dos fontes/manifestos/configuração PureScript e checksum do bundle. A execução completa permanece o padrão. Isso evita repetir a compilação e minificação quando apenas o bootstrap nativo ou os testes mudam.

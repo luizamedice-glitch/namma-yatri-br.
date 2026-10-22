@@ -26,6 +26,10 @@ on:
       - 'Frontend/packages.dhall'
   workflow_dispatch:
     inputs:
+      bundle_run_id:
+        description: 'Opcional: reutilizar bundle de run anterior com os mesmos fontes PureScript, compilando apenas Android'
+        required: false
+        type: string
       compilador:
         description: '0.15.14 inclui correcoes oficiais de memoria; 0.15.4 reproduz o historico'
         type: choice
@@ -53,6 +57,7 @@ concurrency:
 
 jobs:
   passageiro-original:
+    if: ${{ !inputs.bundle_run_id }}
     runs-on: ubuntu-latest
     timeout-minutes: 55
     env:
@@ -145,7 +150,7 @@ jobs:
 
   android-passageiro-original:
     needs: passageiro-original
-    if: (inputs.aplicativo == '' || inputs.aplicativo == 'passageiro') && (inputs.modo == '' || inputs.modo == 'full')
+    if: always() && (inputs.bundle_run_id || needs.passageiro-original.result == 'success') && (inputs.aplicativo == '' || inputs.aplicativo == 'passageiro') && (inputs.modo == '' || inputs.modo == 'full')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -158,10 +163,36 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
           log-accepted-android-sdk-licenses: false
+      - name: Validar origem do bundle reutilizado
+        if: inputs.bundle_run_id
+        id: bundle_source
+        uses: actions/github-script@v7
+        env:
+          BUNDLE_RUN_ID: ${{ inputs.bundle_run_id }}
+        with:
+          script: |
+            const id = Number(process.env.BUNDLE_RUN_ID);
+            if (!Number.isSafeInteger(id) || id <= 0) throw new Error('bundle_run_id invalido');
+            const {data: run} = await github.rest.actions.getWorkflowRun({...context.repo, run_id: id});
+            if (run.path !== '.github/workflows/br-purescript-memory.yml') throw new Error('Workflow de origem invalido');
+            const {data} = await github.rest.actions.listJobsForWorkflowRun({...context.repo, run_id: id});
+            if (!data.jobs.some(j => j.name === 'passageiro-original' && j.conclusion === 'success')) {
+              throw new Error('Compilacao PureScript de origem nao foi validada');
+            }
+            core.setOutput('sha', run.head_sha);
+      - name: Exigir os mesmos fontes PureScript do bundle
+        if: inputs.bundle_run_id
+        env:
+          SOURCE_SHA: ${{ steps.bundle_source.outputs.sha }}
+        run: |
+          git cat-file -e "$SOURCE_SHA^{commit}" || git fetch origin "$SOURCE_SHA"
+          git diff --exit-code "$SOURCE_SHA" HEAD -- Frontend/ui-customer Frontend/ui-common Frontend/packages.dhall
       - uses: actions/download-artifact@v4
         with:
           name: yatri-passageiro-bundle-original
           path: Frontend/ui-customer/dist/android
+          run-id: ${{ inputs.bundle_run_id || github.run_id }}
+          github-token: ${{ github.token }}
       - name: Integrar bundle aos recursos originais
         working-directory: Frontend
         run: |
@@ -228,6 +259,7 @@ jobs:
           retention-days: 14
 
   abertura-passageiro-original:
+    if: always() && needs.android-passageiro-original.result == 'success'
     needs: android-passageiro-original
     uses: ./.github/workflows/br-passageiro-original-emulator.yml
     with:

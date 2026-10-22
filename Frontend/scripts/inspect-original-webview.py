@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Read-only CDP diagnostics for the original Android WebView; no UI injection."""
+from contextlib import closing
 import json
 import re
 import subprocess
@@ -22,7 +23,7 @@ try:
         if not target.get("webSocketDebuggerUrl"):
             continue
         contexts = []
-        with websocket.create_connection(target["webSocketDebuggerUrl"], timeout=5, suppress_origin=True) as ws:
+        with closing(websocket.create_connection(target["webSocketDebuggerUrl"], timeout=5, suppress_origin=True)) as ws:
             counter = 0
             def call(method, params=None):
                 global counter

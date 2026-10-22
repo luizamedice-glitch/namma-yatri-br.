@@ -51,7 +51,10 @@ public class MobilityServices extends HyperServices {
                         "    window.prevTimeStamp = Date.now();\n" +
                         "    window.isDev = " + BuildConfig.flavor.equals("dev") + ";" +
                         "    window.assetDownloadDuration = Date.now();\n" +
-                        "    let jsFile = JBridge.loadFileInDUI('v1-assets_downloader.jsa'); // update index_bundle.js to share apk\n" +
+                        // Use the historical local-bundle path in BR tests. Production
+                        // retains its original downloader and SDK boot sequence.
+                        "    let jsFile = JBridge.loadFileInDUI('" +
+                        (BuildConfig.BR_TEST_MODE ? "index_bundle.js" : "v1-assets_downloader.jsa") + "');\n" +
                         "    window.assetDownloadDurationEnd = Date.now();\n" +
                         "    let newScript = document.createElement('script');\n" +
                         "    newScript.type = 'text/javascript';\n" +
