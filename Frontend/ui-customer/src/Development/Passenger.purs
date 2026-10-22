@@ -183,10 +183,12 @@ evalHome (Home.SearchLocationModelActionController (Search.EditTextFocusChanged 
       continue state {data {locationList = []}, props {isSource = Just (field /= "D"), searchLocationModelProps {showLoader = false}}}
 evalHome (Home.SearchLocationModelActionController Search.SourceClear) state = do
   _ <- pure $ unsafePerformEffect Places.cancel
-  continue state {data {source = "", locationList = []}, props {sourcePlaceId = Nothing, searchLocationModelProps {crossBtnSrcVisibility = false, showLoader = false}}}
+  _ <- pure $ JB.removeMarker "ny_ic_src_marker"
+  continue state {data {source = "", sourceAddress = HomeData.dummyAddress, locationList = []}, props {sourcePlaceId = Nothing, sourceLat = 0.0, sourceLong = 0.0, searchLocationModelProps {crossBtnSrcVisibility = false, showLoader = false}}}
 evalHome (Home.SearchLocationModelActionController Search.DestinationClear) state = do
   _ <- pure $ unsafePerformEffect Places.cancel
-  continue state {data {destination = "", locationList = []}, props {destinationPlaceId = Nothing, destinationLat = 0.0, destinationLong = 0.0, searchLocationModelProps {crossBtnDestVisibility = false, showLoader = false}}}
+  _ <- pure $ JB.removeMarker "ny_ic_dest_marker"
+  continue state {data {destination = "", destinationAddress = HomeData.dummyAddress, locationList = []}, props {destinationPlaceId = Nothing, destinationLat = 0.0, destinationLong = 0.0, searchLocationModelProps {crossBtnDestVisibility = false, showLoader = false}}}
 evalHome (Home.SearchLocationModelActionController Search.SetCurrentLocation) state = exit state {props {sourcePlaceId = Nothing}}
 evalHome (Home.SearchLocationModelActionController Search.RecenterCurrentLocation) state = exit state {props {sourcePlaceId = Nothing}}
 evalHome (Home.SearchLocationModelActionController (Search.DebounceCallBack value field)) state
@@ -232,7 +234,7 @@ position state latitude longitude = case fromString latitude, fromString longitu
       continue state {props {currentLocation {lat = lat, lng = lng, place = label}}}
     else continueWithCmd state
       { props {sourceLat = lat, sourceLong = lng, currentLocation {lat = lat, lng = lng, place = label}}
-      , data {source = label}
+      , data {source = if state.props.currentStage == HomeScreen then label else state.data.source}
       }
       [ do
           when (state.props.destinationPlaceId == Nothing) $ JB.animateCamera lat lng 16.0 "ZOOM"

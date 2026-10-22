@@ -261,11 +261,19 @@ jobs:
       - name: Compilar container Android original do passageiro
         working-directory: Frontend/android-native
         env:
-          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          GOOGLE_MAPS_API_KEY: ${{ secrets.Google_Maps_API_Key }}
           YATRI_BACKEND_URL: ${{ vars.YATRI_BACKEND_URL }}
           YATRI_PASSENGER_DEV_KEY: ${{ secrets.YATRI_PASSENGER_DEV_KEY }}
         run: |
           set -o pipefail
+          python3 - <<'PYCONFIG'
+          import json, os
+          from pathlib import Path
+          status = {name: bool(os.environ.get(name)) for name in
+                    ('GOOGLE_MAPS_API_KEY', 'YATRI_BACKEND_URL', 'YATRI_PASSENGER_DEV_KEY')}
+          Path('android-config-status.json').write_text(json.dumps(status, indent=2) + '\n')
+          print('Configuracoes presentes (sem valores):', status)
+          PYCONFIG
           /usr/bin/time -v -o android-build.time bash gradlew :app:assembleNyUserProdDebug -PbrTestMode=true --no-daemon --max-workers=2 --stacktrace 2>&1 | tee android-build.log
       - name: Confirmar bundle recompilado dentro do APK
         run: |
@@ -314,6 +322,7 @@ jobs:
           path: |
             Frontend/android-native/android-build.log
             Frontend/android-native/android-build.time
+            Frontend/android-native/android-config-status.json
             Frontend/android-native/app/build/reports/
           if-no-files-found: warn
           retention-days: 14
