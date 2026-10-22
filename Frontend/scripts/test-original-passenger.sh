@@ -9,17 +9,18 @@ adb install -g "${APKS[0]}"
 adb shell svc wifi disable
 adb shell svc data disable
 adb logcat -c
-adb shell am start -W -n in.juspay.nammayatri.debug/in.juspay.mobility.MainActivity > "$OUT/launch.txt"
+timeout 60s adb shell am start -W -n in.juspay.nammayatri.debug/in.juspay.mobility.MainActivity > "$OUT/launch.txt"
 # Captures distinguish a live splash from an interface that actually rendered.
 ELAPSED=0
 for stage in 10 50 110 120; do
   sleep "$((stage - ELAPSED))"
   ELAPSED=$stage
   adb exec-out screencap -p > "$OUT/screen-${stage}.png"
-  adb shell uiautomator dump /sdcard/window.xml > /dev/null 2>&1 || true
+  timeout 20s adb shell uiautomator dump /sdcard/window.xml > /dev/null 2>&1 || true
   adb pull /sdcard/window.xml "$OUT/window-${stage}.xml" > /dev/null 2>&1 || true
   adb shell dumpsys activity activities > "$OUT/activity-${stage}.txt"
 done
+"$CDP_PYTHON" Frontend/scripts/inspect-original-webview.py "$OUT"
 adb logcat -d > "$OUT/logcat.private"
 python3 - "$OUT" <<'PY'
 from pathlib import Path

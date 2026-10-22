@@ -60,3 +60,22 @@ A correção em validação aplica um manifesto adicional somente ao debug com `
 O teste de emulador passa a ser chamado pelo mesmo workflow após publicar o APK, garantindo que valide o artefato desta execução. Mesmo um processo ativo ainda exige inspeção das capturas; não comprova fluxo de corridas.
 
 Também foi confirmado que `STRING_TOO_LARGE` existe no XML compilado de Remote Config, para valores históricos longos. A migração desses valores para arquivos não compilados continua pendente; não foi mascarada como fidelidade integral.
+
+
+## APK com isolamento de telemetria
+
+Execução: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39773571962
+
+- Fontes: `5a2659696ccfbefbff63ca79ee235a29ee4f833c`.
+- PureScript, comando npm, bundle e build Android: passaram.
+- Gradle: `BUILD SUCCESSFUL in 3m 12s`.
+- A verificação do manifesto mesclado confirmou ausência de `CrashlyticsRegistrar` e coleta Crashlytics desativada.
+- APK: 126.281.523 bytes, SHA-256 `f91cf480e015bf3a7ed11c0c3045a13c636c9f4da404293097db36cca0a52448`.
+- [Artefato APK](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39773571962/artifacts/12423628757), um ZIP contendo `nyUserProd/debug/app-nyUser-prod-debug.apk`.
+- O bundle embutido permanece idêntico ao frontend recompilado, SHA-256 `8591e6e33441dad82a1eb3243b8fd89cd0d89ba0a9d0ed80fc14c2ef62f81ad6`. Download e conferência repetidos localmente.
+- ABIs incluídas: arm64-v8a, armeabi-v7a, x86 e x86_64. APK debug para Android 7/API 24 ou posterior; não é um APK de publicação em loja.
+- O nome, identificador e números de versão continuam os da variante histórica, incluindo sufixo `.debug`. Não foi realizada comparação visual com a versão atual da Play Store.
+
+Resultado: instalação e inicialização fria passaram (8.688 ms para apresentar a Activity), processo ativo por 120 segundos e nenhum `FATAL EXCEPTION`. Os três jobs desta execução concluíram com sucesso. Entretanto, a inspeção visual das quatro capturas confirmou permanência na splash original. Portanto, isso **não** valida a renderização das telas PureScript nem o funcionamento do passageiro. [Capturas e logs](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39773571962/artifacts/12424241976).
+
+O log chega a `initiate_result: SUCCESS` do HyperSDK, mas não registra execução de `INDEX_BUNDLE_START` ou `DUI_READY`. A investigação passa a coletar, por CDP, contextos JavaScript, scripts carregados e mensagens do console do WebView, sem injetar interface ou respostas de APIs. O diagnóstico reutiliza o APK já conferido; não requer recompilar fontes sem alterações.
