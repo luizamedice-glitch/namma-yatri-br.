@@ -4,6 +4,37 @@ Base: `passageiro-pt-br`, commit `2c0506ab5c0306d7a94049304d676b8f4fbfc9b9`.
 Data: 22/10/2026. Fontes PureScript, componentes PrestoDOM, telas, navegação,
 FFI e backend brasileiro devem permanecer intactos durante este diagnóstico.
 
+## Resultado confirmado
+
+**O frontend original do passageiro compilou integralmente: 1.189 módulos,
+incluindo `Flow` e `Main`, geração JavaScript e saída zero.** O
+[CI 39705578513](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39705578513)
+usou Node 18.20.8, Spago 0.21.0 e a correção pontual do compilador PureScript
+**0.15.14**, sem mudar os pacotes ou as fontes do aplicativo.
+
+- Sem cache de compilação: **26min27,21s**, pico RSS **10.843.656 KiB (10,34 GiB)**.
+- Repetição: **41,07s**, **nenhum módulo recompilado**, pico RSS **8.804.840 KiB**.
+- Os **1.189 hashes de fontes** são idênticos entre o histórico 0.15.4, o teste
+  local 0.15.14 e esse CI. O manifesto agregado é
+  `a8edd26f3a3cf668487a982b8c9b20314934cd9603d3f0065c8b68d7833c59b3`.
+- Configuração completa validada: runner hospedado com aproximadamente **16 GiB
+  de RAM**, heap `-M10g`, uma capability GHC (`-N1`). Não foi contratado runner pago.
+- O [CI final 39709751955](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39709751955)
+  restaurou o cache, repetiu duas verificações completas e executou o comando
+  npm original com PSA: **saída zero, zero erros, 43,28 s**. Os manifests e
+  scripts npm são byte a byte idênticos aos originais.
+
+![RSS medido no CI](build-reports/issue-1/memoria-purescript.svg)
+
+O gráfico usa RSS por processo. Na primeira comparação, os tamanhos de lote
+são diferentes e não constituem benchmark de CPU; os logs completos preservam
+as amostras por segundo. O cache reduz o tempo, mas ainda carrega metadados
+volumosos das interfaces compiladas.
+
+O resultado é de compilação PureScript. APK, inicialização Android, integração
+com backend e fidelidade visual à Play Store não foram validados nesta issue.
+As interfaces históricas foram preservadas pelo código; não houve recriação de telas.
+
 ## Ferramentas e reprodução
 
 Para reproduzir o histórico, usar Node **18.20.8**, PureScript **0.15.4**, Spago **0.21.0**, Python 3,
@@ -90,6 +121,8 @@ Reprodução local, Linux x86_64, limite cgroup **8 GiB**, host 9,7 GiB, sem swa
 | Mesmos 100 módulos, quente | Passou | 0,16s | 64.800 KiB | Retomada confirmada |
 | Strings original, fecho de 369 módulos, heap 5500m | **Passou** | 1min05,34s | 3.988.860 KiB | 17 módulos recompilados, demais em cache |
 | Common.RemoteConfig.Utils original, fecho de 380 módulos, heap 6500m | **Passou** | 2min08,66s | 5.428.820 KiB | 22 módulos recompilados, demais em cache |
+| CI 0.15.14, frontend completo, heap 10g | **Passou: 1189/1189** | 26min27,21s | 10.843.656 KiB | Checkout sem cache de compilação |
+| CI 0.15.14, repetição completa | **Passou: 0 recompilados** | 41,07s | 8.804.840 KiB | Cache validado pelo compilador |
 
 ¹ Tempos medidos pelo sampler, que tem resolução de aproximadamente 1 s;
 as demais durações são de GNU time. Experimentos curtos paralelos ocorreram
@@ -97,8 +130,21 @@ durante parte do primeiro teste por lotes; não usar esses tempos para comparar 
 
 Os dois módulos críticos foram compilados com geração **JavaScript** real,
 produzindo `externs.cbor` e `index.js`, com saída zero e fontes originais intactas.
-A validação do frontend completo está em execução; não se confunde esses êxitos
-isolados com a conclusão do aplicativo.
+A validação completa posterior está registrada nas duas linhas de CI. Os êxitos
+isolados anteriores, por si sós, não haviam demonstrado a compilação do aplicativo.
+
+Na máquina local de 8 GiB, o teste completo 0.15.14 com heap de 6500 MiB chegou
+ao módulo 1177/1189 (`Screens.HomeScreen.Controller`) e foi encerrado pelo
+watchdog de 15 minutos, com saída 124. Foi um limite do teste, **não erro de tipo
+nem OOM do kernel**. Uma retomada por etapas preservou sete checkpoints até o
+prefixo de 891 módulos; a etapa seguinte foi interrompida após o CI completo
+passar. Esses testes locais não são apresentados como um build completo.
+
+No CI completo, o GHC mediu residência máxima de **7.650.447.200 bytes** e
+aproximadamente **1,82 TB de alocações cumulativas**: esse total não é RAM
+residente. GC consumiu 963,440 s de 1.585,800 s (cerca de 61%). A compilação
+continua pesada, apesar de viável no runner validado. Não foi determinado o
+menor heap possível nem garantida a conclusão integral em uma máquina de 8 GiB.
 
 GHC: 113.591.887.880 bytes alocados cumulativamente (não residentes), residência
 máxima 2.578.889.552 bytes, GC 204,048 s de 250,640 s; produtividade 18,6%.
@@ -169,13 +215,17 @@ executado `npm audit fix` nem atualização geral de pacotes.
 O medidor aceita `--compiler-version 0.15.14` e exige essa versão real no PATH.
 O workflow agora seleciona explicitamente essa correção e separa caches por
 versão do compilador; a opção 0.15.4 continua disponível para diagnóstico.
-A compilação 0.15.14 com heap de 6500 MiB já gerou `Services.API`, enquanto o
-mesmo módulo isolado na 0.15.4 atingiu o limite de 300 s. **A validação completa
-ainda está em execução** e será registrada antes de afirmar sucesso.
+A compilação 0.15.14 com heap de 6500 MiB gerou `Services.API`, enquanto o
+mesmo módulo isolado na 0.15.4 atingiu o limite de 300 s. O CI com heap de 10 GiB
+depois concluiu todas as fontes, sem cache, e repetiu a verificação com cache.
 
 ```bash
 npm install --global --ignore-scripts=false purescript@0.15.14 spago@0.21.0
-python3 Frontend/scripts/diagnose-purescript.py --compiler-version 0.15.14 --mode full --heap 6500m --label fixed
+# Em máquina com pelo menos a configuração validada de 16 GiB:
+python3 Frontend/scripts/diagnose-purescript.py --compiler-version 0.15.14 --mode full --heap 10g --label fixed
+python3 Frontend/scripts/diagnose-purescript.py --compiler-version 0.15.14 --mode full --heap 10g --label warm
+# Dentro de Frontend/ui-customer, no mesmo ambiente de 16 GiB:
+GHCRTS='-N1 -M10g' npm run compile:purs
 ```
 
 O histórico do compilador 0.15.4 permanece reproduzível com os comandos da
@@ -189,9 +239,16 @@ dos releases do projeto, com SHA-256:
 
 ### Escopo preservado
 
-- Removido `--censor-warnings` dos scripts `compile:purs` de ambos os apps:
-  `purs compile --censor-warnings` retorna `Invalid option` no compilador exigido.
-  Isso corrige uma opção incompatível; não corrige por si só a falta de heap.
+`Frontend/build-reports/issue-1/measurements.json` registra métricas e a auditoria
+de escopo. Nenhuma alteração foi feita em `Frontend/ui-customer/src`,
+`Frontend/ui-driver/src`, `Frontend/ui-common`, `Frontend/android-native`,
+`Frontend/packages.dhall`, `brasil/backend` ou `Backend`. As dependências
+declaradas, licenças, autores e scripts npm originais foram preservados.
+
+- Preservados os scripts npm originais. `--censor-warnings` pertence ao PSA
+  0.8.2 e é válido quando o Spago chama esse frontend; o `purs` direto não o
+  aceita. O medidor usa `spago -P` sem essa opção para capturar os avisos reais.
+  A rejeição isolada do argumento pelo `purs` não é tratada como defeito do app.
 - Adicionados medidor e workflow isolado, sem atualização de manifests de
   dependências, package-set, código de telas ou backend.
 - O workflow compila o ref efetivo da execução/PR, preserva caches mesmo após
@@ -201,3 +258,14 @@ dos releases do projeto, com SHA-256:
 - `corefn`, um módulo isolado, outputs parciais ou bundles históricos já
   existentes não comprovam build completo nem APK operacional. Empacotamento
   Android, comparação visual e integrações de execução estão fora desta issue.
+
+O novo workflow publica grafo, hashes, logs, estatísticas GHC, GNU time e séries
+RSS como artefatos, inclusive em falhas. O artefato da compilação completa é
+[purescript-memory-passageiro-0.15.14-1](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39705578513/artifacts/12395184363).
+A validação adicional do comando npm original com PSA **passou** no
+[artefato final](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39709751955/artifacts/12396094217).
+As verificações estáticas `python3 -m py_compile` e `actionlint` também passaram.
+O motorista teve dependências preparadas, mas seu frontend completo não foi
+compilado nesta execução. O workflow implementa seletor de aplicativo em
+`workflow_dispatch`; a execução manual depende de o arquivo também estar no
+branch padrão do GitHub. PRs e pushes em `passageiro-pt-br` têm execução automática.

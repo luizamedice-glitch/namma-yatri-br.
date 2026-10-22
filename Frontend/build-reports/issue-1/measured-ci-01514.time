@@ -1,0 +1,23 @@
+	Command being timed: "spago -P -j 1 build --no-install --purs-args --codegen js +RTS -N1 -M10g -s -RTS"
+	User time (seconds): 1566.45
+	System time (seconds): 23.45
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 26:27.21
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 10843656
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 7366734
+	Voluntary context switches: 164458
+	Involuntary context switches: 11216
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 1238096
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
