@@ -30,7 +30,9 @@ def tap(node):
     adb('shell','input','tap',str((x1+x2)//2),str((y1+y2)//2))
 
 def where(nodes):
-    return next((n for n in nodes if n.get('content-desc') == 'Where To : Button'),None)
+    # Both controls exist in the historical HomeScreen (primary button and new-home layout).
+    hints = {'Where To : Button', 'Where are you going? : Button'}
+    return next((n for n in nodes if n.get('package') == package and n.get('content-desc') in hints), None)
 
 def no_auth(nodes):
     labels = ' '.join(n.get('text','') for n in nodes)
