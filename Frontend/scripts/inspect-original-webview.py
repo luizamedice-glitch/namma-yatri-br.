@@ -44,6 +44,8 @@ try:
             call("Console.enable")
             for context in contexts:
                 expression = """JSON.stringify({url:location.href,readyState:document.readyState,os:window.__OS,
+                developmentMode:window.__YATRI_BR_DEVELOPMENT__===true,
+                hasRegistrationToken:(()=>{try{const t=window.JBridge.getKeysInSharedPref('REGISTERATION_TOKEN');return !!t && !['__failed','(null)','null'].includes(t);}catch(_){return null;}})(),
                 josType:typeof window.JOS,josSelf:window.JOS&&window.JOS.self,bridgeType:typeof window.JBridge,
                 version:window.version||null,merchant:window.merchantID,
                 scripts:Array.from(document.scripts).map(s=>({id:s.id,src:s.src,length:s.textContent.length})),

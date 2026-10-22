@@ -66,9 +66,14 @@ if not any(n.get('package') == 'in.juspay.nammayatri.debug' and
            n.get('class') in ('android.widget.TextView', 'android.widget.EditText', 'android.widget.Button') and
            (n.get('text') or n.get('content-desc')) for n in nodes):
     raise SystemExit('FALHA: nenhum controle textual da interface original foi encontrado')
+(out / 'development-mode.txt').write_text('true' if any(s.get('developmentMode') for s in states) else 'false')
 print('Frontend original inicializado, splash encerrada e controles Android presentes.')
 PYTHON
 echo 'Abertura da interface original validada por 120 segundos. Capturas exigem inspecao visual; mapas e corridas nao foram validados.' | tee "$OUT/result.txt"
 
 # Exercise the actual EditText and controller with networking restored; never submit OTP.
-python3 Frontend/scripts/test-original-phone.py "$OUT"
+if [[ "$(cat "$OUT/development-mode.txt")" == true ]]; then
+  python3 Frontend/scripts/test-original-home.py "$OUT"
+else
+  python3 Frontend/scripts/test-original-phone.py "$OUT"
+fi

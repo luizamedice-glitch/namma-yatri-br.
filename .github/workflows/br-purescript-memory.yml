@@ -99,6 +99,8 @@ jobs:
           cd "$APP_DIR"
           npm install --legacy-peer-deps --ignore-scripts=false 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/npm-install.log"
           spago -j 2 install 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/spago-install.log"
+      - name: Testar isolamento do modo de desenvolvimento
+        run: node Frontend/scripts/test-development-mode.mjs
       - name: Testar validacao brasileira compilada em PureScript
         run: python3 Frontend/scripts/test-brazilian-mobile-number.py
       - name: Medir compilacao original e retomada por cache

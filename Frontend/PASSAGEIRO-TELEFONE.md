@@ -1,5 +1,7 @@
 # Correção do formulário original de telefone
 
+> Orientação posterior: o build BR de desenvolvimento passa a abrir diretamente a home original. Consulte [PASSAGEIRO-ENTRADA-DIRETA.md](PASSAGEIRO-ENTRADA-DIRETA.md). A correção de telefone permanece no fluxo histórico, que não é a porta de entrada desse modo.
+
 A correção está implementada no PR #2. O teste de regressão reproduziu a falha no APK anterior; os testes do validador passaram localmente e no CI. A validação do novo APK está em andamento na [execução 39785756375](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39785756375).
 
 ## Problemas observados
@@ -45,6 +47,10 @@ O teste Android ampliado verifica entrada completa, `+55`, habilitação do bot�
 
 ## Limites
 
+O contrato existente em `brasil/backend/API.md` oferece `POST /v1/development/session` com `{role,credential}` e resposta `{token,user}`. O frontend histórico chama `/auth` para obter um identificador de OTP, seguido da verificação de token. Esses contratos são diferentes: apontar a URL para o Node brasileiro, isoladamente, não resolve a autenticação. Nenhuma chamada de teste foi feita a esses endpoints nesta correção.
+
 Reconhecer um número brasileiro e tratar a ausência de servidor **não autentica o passageiro**. Este trabalho não implementa a sessão automática de Fagner nem desbloqueia uma operação de corridas. A aplicação continuará sem acesso operacional até que exista uma integração real com um backend de desenvolvimento exclusivo. Não se deve digitar números de terceiros para tentar o OTP histórico.
 
 A tradução completa, a identidade Yatri Brasil, Google Maps/Places/Routes, o motorista e o fluxo de viagens não foram validados nesta correção. Os erros de callbacks e as limitações de recursos remotos registrados em [PASSAGEIRO-ANDROID-ORIGINAL.md](PASSAGEIRO-ANDROID-ORIGINAL.md) continuam pendentes, salvo evidência posterior específica.
+
+Na captura `phone-typed.png` da reprodução anterior à correção também aparece `Config Decode Failed ... ErrorAtProperty enable ... Undefined`, referente à configuração remota histórica. Este erro de configuração não foi tratado como falha do teclado nem suprimido. A recuperação dos valores locais desse recurso continua pendente; a correção do telefone não afirma eliminar todos os avisos do SDK.

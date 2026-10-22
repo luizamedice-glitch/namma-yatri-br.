@@ -15,7 +15,8 @@
 module Common.RemoteConfig.Utils where
 
 import Common.RemoteConfig.Types (RemoteConfig, RCCarousel(..), VariantLevelRemoteConfig(..), InvoiceConfig(..), ForwardBatchConfigData(..), TipsConfig, defaultForwardBatchConfigData, SubscriptionConfigVariantLevelEntity, SubscriptionConfigVariantLevel, GullakConfig, StuckRideFilterConfig, FeaturesConfigData(..), LottieSubscriptionInfo(..), LanguageKeyValue(..), defaultFeaturesConfigData, AppLanguage, AppConfigRC, WmbFlowConfig)
-import DecodeUtil (decodeForeignObject, parseJSON, setAnyInWindow)
+import Engineering.Helpers.OptionalRemoteConfig (decodeForeignObject)
+import DecodeUtil ( parseJSON, setAnyInWindow)
 import Data.String (null, toLower)
 import Data.Maybe (Maybe(..))
 import Prelude

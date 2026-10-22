@@ -1,7 +1,8 @@
 module RemoteConfig.Utils where
 
 import Prelude
-import DecodeUtil (decodeForeignObject, parseJSON , decodeForeignAny)
+import Engineering.Helpers.OptionalRemoteConfig (decodeForeignObject)
+import DecodeUtil ( parseJSON , decodeForeignAny)
 import Foreign (Foreign)
 import Foreign.Index (readProp)
 import Common.RemoteConfig (fetchRemoteConfigString, getCityBasedConfig, getAppBasedConfig, defaultCityRemoteConfig, defaultAppRemoteConfig, defaultVoipConfig, BundleLottieConfig, RemoteAC(..))

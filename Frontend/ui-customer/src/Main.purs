@@ -14,6 +14,8 @@
 -}
 module Main where
 
+import Development.Passenger as DevelopmentPassenger
+import Engineering.Helpers.DevelopmentMode as DevelopmentMode
 import Common.Types.App (GlobalPayload, FCMBundleUpdate, Event)
 import Control.Monad.Except (runExcept)
 import Control.Monad.Except.Trans (runExceptT)
@@ -45,6 +47,11 @@ import Engineering.Helpers.BackTrack (liftFlowBT)
 import Storage (setValueToLocalStore, KeyStore(..))
 
 main :: Event -> Boolean -> Effect Unit
+main event callInitUI | DevelopmentMode.isEnabled unit = do
+  void $ launchAff $ flowRunner defaultGlobalState $ do
+    _ <- runExceptT $ runBackT $ DevelopmentPassenger.start callInitUI
+    pure unit
+
 main event callInitUI = do
   void $ markPerformance "MAIN_FLOW"
   JBridge.cleanOnResumeCallback
@@ -79,6 +86,8 @@ onEvent event = do
     _ -> pure unit
 
 onConnectivityEvent :: String -> Effect Unit
+onConnectivityEvent _ | DevelopmentMode.isEnabled unit = pure unit
+
 onConnectivityEvent triggertype = do
   payload  ::  Either MultipleErrors GlobalPayload  <- runExcept <<< decode <<< fromMaybe (unsafeToForeign {}) <$> (liftEffect $ getWindowVariable "__payload" Just Nothing)
   case payload of
@@ -110,6 +119,8 @@ updateEventData event = do
       _ -> pure unit
 
 onNewIntent :: Event -> Effect Unit
+onNewIntent _ | DevelopmentMode.isEnabled unit = pure unit
+
 onNewIntent event = do
   payload  ::  Either MultipleErrors GlobalPayload  <- runExcept <<< decode <<< fromMaybe (unsafeToForeign {}) <$> (liftEffect $ getWindowVariable "__payload" Just Nothing)
   case payload of
@@ -130,6 +141,8 @@ onNewIntent event = do
         pure unit
 
 onBundleUpdatedEvent :: FCMBundleUpdate -> Effect Unit
+onBundleUpdatedEvent _ | DevelopmentMode.isEnabled unit = pure unit
+
 onBundleUpdatedEvent description= do
   _ <- launchAff $ flowRunner defaultGlobalState $ do
     _ ← runExceptT $ runBackT $ do

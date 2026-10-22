@@ -1,5 +1,7 @@
 # Montagem do passageiro Android original
 
+> Etapa atual: [entrada direta no núcleo original, sem onboarding no modo de desenvolvimento](PASSAGEIRO-ENTRADA-DIRETA.md).
+
 > Correção posterior do telefone brasileiro e diagnóstico da autenticação: [PASSAGEIRO-TELEFONE.md](PASSAGEIRO-TELEFONE.md). Os APKs e resultados abaixo registram a etapa anterior.
 
 **Resultado verificado em 22/10/2026:** o frontend PureScript original foi empacotado num APK Android, instalado no emulador Android 29 e inicializado com seu runtime JOS original. A splash foi encerrada e a interface original de ausência de conexão foi renderizada durante o teste sem rede. Não houve recriação de telas Java nem alterações no backend.
