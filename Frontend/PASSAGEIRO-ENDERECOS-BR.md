@@ -50,3 +50,51 @@ O arquivo que contém a configuração e a credencial de Fagner pertence exclusi
 A permissão nativa de HTTP para testes em LAN também é um overlay exclusivo do `nyUserProdDebug`, ativado por `brTestMode`; o manifesto compartilhado do motorista não foi alterado por esta etapa.
 
 A exigência da chave Android BR sem fallback histórico é aplicada por meta-data no mesmo overlay específico do passageiro; as configurações de mapas das outras variantes permanecem iguais às anteriores.
+
+## Resultado de compilação e configurações efetivas
+
+Fontes PureScript: commit `478901e0b2`, run `39866367286`, job PureScript aprovado. A execução completa foi cancelada depois desse job para evitar repetir o APK com configuração nativa anterior. Bundle e cache completos foram preservados. APK final: commit `76a6a0dd26`, run `39868182216`, reutilizando o mesmo bundle após comparação estrita dos fontes; não houve outra compilação PureScript nesse run.
+
+| Verificação | Resultado |
+| --- | --- |
+| Adaptador de contrato/FFI | 11 testes aprovados; fixtures explícitas |
+| Compilação incremental medida | 55 chamadas, **374,62 s (6 min 14,62 s)** |
+| Módulos recompilados | somente Development.Places, Development.Passenger e Main |
+| Pico de RSS do compilador | **8.346.884 KiB (7,96 GiB)** |
+| Verificação final de cache completo | 41,33 s; nenhuma recompilação; 8.031.576 KiB |
+| Comando original npm/PSA | aprovado, 41,85 s |
+| Webpack original | aprovado, 267,61 s |
+| Compilação Android final | aprovada, 197,35 s |
+| Google Places real no CI | **NÃO CONFIGURADO**: GOOGLE_MAPS_SERVER_KEY indisponível |
+
+O build final confirmou `GOOGLE_MAPS_API_KEY=true`, `YATRI_BACKEND_URL=false` e `YATRI_PASSENGER_DEV_KEY=false` (somente indicadores de presença, sem valores). A secret `Google_Maps_API_Key` informada pelo usuário foi disponibilizada à execução nova. O APK contém o arquivo de configuração, ainda sem servidor/credencial. Logo, **a pesquisa real de origem/destino não está aprovada de ponta a ponta**. O usuário confirmou que não há backend Yatri acessível; não foi implantado nenhum servidor público nem usado o backend Alce.
+
+As três imagens principais e os cinco ícones por densidade extraídos do APK final são idênticos, por pixels, aos PNGs fornecidos. HomeScreen e componentes originais, backend e motorista foram comparados com a baseline e permanecem sem mudanças nesta etapa. A autenticação de produção permanece preservada.
+
+APK: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39868182216/artifacts/12465491616 . SHA256 `2c1a87930e10ebc40e41886126bd58326540a7a6445aeaf57a1c558fb48283f0`, 128.341.644 bytes. Pacote `in.juspay.nammayatri.debug`. Certificado debug SHA-1 `2F:96:7F:CE:00:A5:3B:27:4B:40:AF:0B:BD:C0:EE:6B:4F:50:7D:C0`; use esse pacote/certificado para conferir restrições da chave Android. O certificado foi lido do APK; a validação criptográfica da instalação cabe ao Android no emulador. Assinaturas de builds debug anteriores podem diferir; nesse caso, é necessário desinstalar a versão anterior antes de instalar esta.
+
+## Arquivos desta etapa
+
+- `Development/Passenger.purs`: controlador BR, ações locais, sugestões/seleção, GPS, câmera e marcadores; a view é a original.
+- `Development/Places.purs`, `Places.js`, `PlacesClient.mjs`: FFI, transporte nativo, contrato e sessão de desenvolvimento.
+- `Frontend/android-native/app/build.gradle` e `app/src/brTest/passenger/AndroidManifest.xml`: configuração gerada e overlay exclusivos do passageiro BR debug.
+- `.github/workflows/br-purescript-memory.yml`: testes, verificação opcional do provedor, injeção de configuração e diagnósticos sanitizados.
+- `Frontend/scripts/test-development-places.mjs`, `verify-places-provider.mjs`: testes de contrato e consulta opcional ao Google real.
+- `Frontend/scripts/test-original-home.py`, `inspect-original-webview.py`, `test-original-passenger.sh`: navegação/campos originais, diagnóstico somente de leitura e sanitização de logs.
+- Este relatório, JSON em `Frontend/build-reports/passageiro-enderecos/`, `PROJECT_STATUS.md` e `ROADMAP.md`: resultados e pendências.
+
+## Pendências para o aceite real
+
+Disponibilizar um backend **exclusivo da Yatri** em rede privada acessível ao dispositivo, com PostgreSQL e provisionamento de desenvolvimento já existentes, habilitar Google Places New no servidor e fornecer `GOOGLE_MAPS_SERVER_KEY`. Definir URL e credencial do passageiro no build. Depois executar a seleção de origem e destino contra esse servidor real e conferir as coordenadas no mapa. O teste Android está preparado para exigir sugestões/seleção quando o backend estiver configurado; sem configuração ele registra explicitamente `not_validated`, mesmo que a navegação e o tratamento de erro passem.
+
+Não foram implementadas corridas, rotas, normalização de componentes postais ou persistência de endereços após encerrar o processo. As seleções são preservadas durante a navegação da sessão. O cache evita a recompilação dos módulos históricos, mas um build frio continua com as limitações de memória documentadas em PURESCRIPT-MEMORIA.md.
+
+## Teste Android final e evidências
+
+**Run 39868182216: aprovado** no emulador Android 29 / google_apis / Pixel 2. A instalação Android validou o APK e o processo permaneceu vivo, sem FATAL EXCEPTION. Foram verificados abertura direta sem token/OTP offline e online, digitação integral de destino **Avenida Paulista, Sao Paulo**, digitação integral de origem **Praca da Se, Sao Paulo**, erro explícito de backend não configurado e retorno à home. As imagens `home-places-source-typed.png` e `home-places-return-1.png` foram inspecionadas: mostram campos originais, toast real de configuração ausente, logotipo fornecido e mapa com tiles.
+
+Capturas/XML/logs: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39868182216/artifacts/12465587491 . `places-acceptance.json` registra **acceptance: not_validated**, motivo **Backend Yatri/credencial não configurados no APK**. Esse resultado não foi convertido em aprovação de pesquisa real. Sugestões, seleção e reposicionamento após uma resposta real do backend ainda precisam do ambiente configurado; os testes de contrato não substituem essa prova.
+
+Permanecem avisos legados não bloqueantes de configuração e Firebase-Installations (`API_KEY_INVALID` do projeto offline de teste). Eles não são falhas de autorização do Maps SDK e não impediram a home/mapa neste run. A remoção completa desses SDKs/serviços não foi realizada nesta etapa.
+
+**Critério de conclusão da pesquisa real: NÃO ATINGIDO nesta execução**, por ausência do backend Yatri acessível e das configurações de servidor. Implementação, compilação, navegação, campos e tratamento do bloqueio foram entregues e verificados sem simular respostas.

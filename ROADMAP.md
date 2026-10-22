@@ -35,4 +35,7 @@ Executar Fase 1 em paralelo ao diagnóstico de build da Fase 2. Concentrar inter
 
 ## Incremento atual — endereços reais antes de corridas
 
-Prioridade imediata: conectar os campos/lista originais ao contrato brasileiro de autocomplete/detalhes, manter origem GPS/manual, persistir seleção durante a navegação e mover mapa/marcadores. Adaptador implementado, em compilação incremental e validação Android. Sem backend Yatri acessível informado, o aceite de pesquisa real permanece pendente; testes de contrato não substituem o fluxo com Google e servidor reais. Corridas e motorista ficam fora deste incremento. Identidade aprovada no run 39852288044 deve ser preservada.
+Prioridade imediata: conectar os campos/lista originais ao contrato brasileiro de autocomplete/detalhes, manter origem GPS/manual, persistir seleção durante a navegação e mover mapa/marcadores. Adaptador implementado e compilado; testes de navegação/campos/erro de configuração no Android aprovados no run 39868182216. Onze testes de contrato passaram; a pesquisa real não foi aprovada. Sem backend Yatri acessível informado, o aceite de pesquisa real permanece pendente; testes de contrato não substituem o fluxo com Google e servidor reais. Corridas e motorista ficam fora deste incremento. Identidade aprovada no run 39852288044 deve ser preservada.
+
+
+Próximo aceite obrigatório: servidor exclusivo Yatri acessível com sessão de Fagner e Google Places New configurados → sugestões reais no componente original → seleção de origem e destino → texto/coordenadas preservados → mapa correspondente. `places-acceptance.json` permanece `not_validated` até esse fluxo ocorrer; o build verde atual cobre navegação e bloqueio explícito, sem simulações. Não avançar para corridas com base somente neste APK.

@@ -42,4 +42,14 @@ Obter uma versão reproduzível do APK passageiro com HomeScreen original e nave
 
 ## Pesquisa de origem/destino BR — implementação em verificação
 
-Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirmou ausência de backend Yatri acessível. Endpoints compatíveis de autocomplete/detalhes e sessão de desenvolvimento foram encontrados no backend Node e preservados. Adaptador BR implementado usando campos/listas/câmera/marcadores originais; 11 testes de contrato/FFI passaram localmente (fixtures explícitas, sem alegação de Google real). PureScript graph validou sintaxe/imports; compilação incremental e teste Android pendentes. Pesquisa real de ponta a ponta: **NÃO VALIDADA**, depende de backend exclusivo configurado e credenciais Places. Nenhuma corrida ou alteração no motorista.
+Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirmou ausência de backend Yatri acessível. Endpoints compatíveis de autocomplete/detalhes e sessão de desenvolvimento foram encontrados no backend Node e preservados. Adaptador BR implementado usando campos/listas/câmera/marcadores originais; 11 testes de contrato/FFI passaram localmente (fixtures explícitas, sem alegação de Google real). PureScript graph e compilação aprovados no run 39866367286: 3 módulos recompilados, 374,62 s, pico 7,96 GiB. APK e teste Android aprovados no run 39868182216: home sem login offline/online, origem e destino digitados integralmente, mapa com tiles, retorno e erro explícito de backend ausente. Código do APK 76a6a0dd26. Pesquisa real de ponta a ponta: **NÃO VALIDADA**, depende de backend exclusivo configurado e credenciais Places. Nenhuma corrida ou alteração no motorista.
+
+
+## Entrega de pesquisa BR verificada — 2026-10-22
+
+- IMPLEMENTADO/COMPILADO: adaptador para endpoints brasileiros existentes, detalhes, armazenamento da seleção nos campos originais e comandos de câmera/marcadores; sem alterar as views originais, backend, motorista, dependências ou autenticação de produção.
+- TESTADO EM ANDROID: run 39868182216, APK artefato 12465491616; captura/diagnóstico artefato 12465587491. Onze testes de contrato/FFI aprovados; não são prova de Google real.
+- CONFIGURAÇÃO CONFIRMADA: chave Android da secret `Google_Maps_API_Key` presente no build; URL do backend e credencial passageiro ausentes. Google Places de servidor não configurado no CI.
+- PONTA A PONTA: **NÃO VALIDADO / critério não atingido**. `places-acceptance.json` registra explicitamente a falta do backend/credencial. Não houve sugestões, seleção de endereço ou viagem simuladas.
+- Relatório e métricas: `Frontend/PASSAGEIRO-ENDERECOS-BR.md`, `Frontend/build-reports/passageiro-enderecos/39868182216.json`. Cache completo reaproveitável do job PureScript bem-sucedido do run 39866367286; a execução geral foi cancelada depois desse job para compilar somente o Android atualizado.
+- Pendências: backend Yatri privado acessível, provisionamento/sessão real, Google Places New e GOOGLE_MAPS_SERVER_KEY; depois executar a seleção real no emulador/celular. Avisos não bloqueantes de SDKs legados/Firebase continuam documentados.
