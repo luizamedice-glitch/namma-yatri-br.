@@ -314,6 +314,23 @@ jobs:
           path: Frontend/android-native/app/build/outputs/apk/**/*.apk
           if-no-files-found: error
           retention-days: 14
+      - name: Sanitizar diagnosticos Android
+        if: always()
+        run: |
+          python3 - <<'PYREDACT'
+          from pathlib import Path
+          import re
+          root = Path('Frontend/android-native')
+          files = [root / 'android-build.log']
+          files += list((root / 'app/build/reports').rglob('*'))
+          for path in files:
+              if not path.is_file() or path.suffix.lower() not in {'.txt', '.html', '.json', '.xml', '.log'}:
+                  continue
+              text = path.read_text(errors='replace')
+              text = re.sub(r'AIza[0-9A-Za-z_-]{20,}', '[REDACTED_GOOGLE_KEY]', text)
+              text = re.sub(r'\b[a-fA-F0-9]{64}\b', '[REDACTED_SESSION_OR_HASH]', text)
+              path.write_text(text)
+          PYREDACT
       - name: Publicar diagnostico Android
         if: always()
         uses: actions/upload-artifact@v4
