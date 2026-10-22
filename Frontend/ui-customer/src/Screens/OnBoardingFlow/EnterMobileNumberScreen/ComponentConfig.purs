@@ -128,7 +128,7 @@ mobileNumberEditTextConfig state = let
       , margin = MarginTop 30
       , showErrorLabel = (not state.props.isValidMobileNumber) || ServiceConfig.getBaseUrl "" == ""
       , errorLabel
-        { text = if ServiceConfig.getBaseUrl "" == "" then "Backend de desenvolvimento não configurado. Autenticação indisponível nesta versão." else (getString INVALID_MOBILE_NUMBER)
+        { text = if ServiceConfig.getBaseUrl "" == "" then "Backend de testes não configurado." else (getString INVALID_MOBILE_NUMBER)
         , margin = MarginBottom 1
         }
       , showCountryCodeField= true

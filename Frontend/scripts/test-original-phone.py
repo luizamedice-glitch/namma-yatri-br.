@@ -57,7 +57,7 @@ try:
     assert any(n.get('text') == '11987654321' for n in fields), 'O campo nao preservou os 11 digitos brasileiros.'
     assert any(n.get('text') == '+55' for n in nodes), 'O codigo do Brasil nao esta selecionado.'
     assert any(n.get('content-desc') == 'Continue : Button' for n in nodes), 'O controlador nao habilitou Continuar.'
-    message = 'Backend de desenvolvimento não configurado.'
+    message = 'Backend de testes não configurado.'
     assert any(message in (n.get('text') or '') for n in nodes), 'Diagnostico de backend ausente nao foi exibido.'
     # Only this explicitly unconfigured build may be clicked: no OTP can be sent.
     target = next(n for n in nodes if n.get('content-desc') == 'Continue : Button')
