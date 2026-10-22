@@ -106,8 +106,12 @@ jobs:
       - name: Medir compilacao original e retomada por cache
         timeout-minutes: 80
         run: |
-          python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode "$MODE" --heap "$HEAP" --label measured --timeout-seconds 4200
-          python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode full --heap "$HEAP" --label incremental
+          # Compile in resumable dependency-closure batches: one monolithic purs call may stall.
+          # Keep MODE=full for the existing bundle/APK publishing conditions.
+          BUILD_MODE="$MODE"
+          if [[ "$APP" == "passageiro" && "$MODE" == "full" ]]; then BUILD_MODE=staged; fi
+          python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode "$BUILD_MODE" --batch-size 150 --heap "$HEAP" --label measured --timeout-seconds 1500
+          python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode full --heap "$HEAP" --label incremental --timeout-seconds 900
       - name: Verificar comando npm original com PSA
         shell: bash
         run: |
