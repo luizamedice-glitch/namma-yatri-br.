@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="BrBrandTheme" parent="AppTheme">
+        <item name="android:windowBackground">@color/br_brand_pink</item>
+        <item name="android:statusBarColor">@color/br_brand_pink</item>
+        <item name="android:navigationBarColor">@color/br_brand_pink</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowSplashScreenBackground">@color/br_brand_pink</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+    </style>
+</resources>

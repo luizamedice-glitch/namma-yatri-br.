@@ -3,9 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
     <!-- Private LAN backend, exclusively for nyUserProdDebug with BR mode enabled. -->
     <application android:usesCleartextTraffic="true" tools:replace="android:usesCleartextTraffic">
-        <activity android:name="in.juspay.mobility.MainActivity"
-            android:theme="@style/BrBrandTheme" />
         <meta-data android:name="com.google.android.geo.API_KEY"
             android:value="${brPassengerMapsApiKey}" tools:replace="android:value" />
+        <activity android:name="in.juspay.mobility.MainActivity"
+            android:theme="@style/BrBrandTheme" />
     </application>
 </manifest>

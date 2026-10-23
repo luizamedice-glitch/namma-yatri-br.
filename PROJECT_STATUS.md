@@ -200,3 +200,10 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - CI aprovado: backend run 39974516114 e integração run 39974511131. Dez testes unitários, três suítes PostgreSQL, inicialização CLI, build Docker Node 22, atualização e rollback em Compose descartável aprovados. Banco/registro preservados no rollback; guard de migrations testado com recusa antes de recriar API.
 - REMOTO: **NÃO IMPLANTADO nesta execução**. Acesso SSH/identidade AWS ainda indisponíveis; conexão AWS solicita reautenticação. Proprietário configurará acesso no ambiente. Nenhum segredo, Caddy, firewall, banco remoto ou endpoint público foi alterado.
 - APK conectado/Places reais: **NÃO VALIDADO**. Evidência estruturada: `brasil/backend/reports/lightsail-2026-10-23.json`. Detalhes e próximo passo em `AWS-DESENVOLVIMENTO.md`.
+
+## Abertura rosa e marca AY — 2026-10-23
+
+- Autorizado pelo proprietário: animação fornecida com os **2,5 segundos originais**, fundo rosa sólido em toda a tela, sem moldura/degradê; novo ícone AY/BR e conjunto ícone/texto transparente no cabeçalho da Home original.
+- Implementação: sequência do MP4 convertida para GIF local com fundo uniformizado `#FF00BE`, desenhada por `android.graphics.Movie` sobre Canvas da mesma cor, sem player/surface retangular. MP4 e PNGs recebidos preservados em `brasil/branding/abertura-rosa-2026-10-23/`; conversão reproduzível em `Frontend/scripts/build-br-pink-opening.py`.
+- Somente recursos `nyUserProdDebug` + `brTestMode`; ícones legados nas cinco densidades e foreground adaptativo com margem de segurança. Aliases originais do cabeçalho resolvem para o novo PNG transparente. Nenhuma dependência adicionada, nenhum fonte PureScript ou servidor AWS alterado.
+- Validação local: GIF com duração total de 2500 ms, cantos uniformes `#FF00BE` em todos os quadros; recursos XML verificados. Build e reprodução real em Android pendentes nesta etapa; não presumir aceite visual antes do emulador.
