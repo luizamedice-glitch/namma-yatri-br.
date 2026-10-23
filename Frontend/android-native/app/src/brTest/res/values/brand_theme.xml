@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Removes the white launch window before the local animation is decoded. -->
+    <style name="BrBrandTheme" parent="AppTheme">
+        <item name="android:windowBackground">#FD00BB</item>
+    </style>
+</resources>

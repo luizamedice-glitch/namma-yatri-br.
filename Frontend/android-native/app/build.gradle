@@ -262,6 +262,7 @@ android {
             debug.manifest.srcFile 'src/brTest/AndroidManifest.xml'
             debug.assets.srcDir 'src/brTest/assets'
             maybeCreate('nyUserProdDebug').assets.srcDir layout.buildDirectory.dir('generated/brPlacesAssets')
+            maybeCreate('nyUserProdDebug').assets.srcDir 'src/brTest/passenger/assets'
             maybeCreate('nyUserProdDebug').manifest.srcFile 'src/brTest/passenger/AndroidManifest.xml'
             maybeCreate('nyUserProdDebug').res.srcDir 'src/brTest/res'
         }

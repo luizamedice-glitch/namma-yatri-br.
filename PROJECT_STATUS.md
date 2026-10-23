@@ -1,5 +1,13 @@
 # Yatri Brasil — situação do projeto
 
+## Abertura animada AlceYatri — implementação em validação
+
+- MP4 original do ZIP `AlceYatri_projeto_Android_animacao_original.zip` incorporado byte a byte, SHA256 `bf1ff534bcf0acc7aa9bb83a8a01c31ce3fa0d721ab8bf08666e45a7978c022c`, H.264 1280×720, 2,5 s, sem áudio. Asset exclusivo do passageiro BR debug.
+- Reprodução local no layout nativo de abertura existente, com proporção integral, fundo rosa e espera pela HomeScreen PureScript original. Falha de vídeo libera o fluxo original; prazo máximo de 6 s evita bloqueio do decoder. Sem nova Activity, serviços remotos ou dependências.
+- Teste Android ampliado: vídeo de 15 s, capturas durante a animação, verificação de SHA dentro do APK e evento real de reprodução concluída. COMPILADO/TESTADO EM ANDROID: pendentes neste registro.
+- Ícone e logo rosa: pendentes dos PNGs originais em arquivo/ZIP. As imagens exibidas no chat não estão disponíveis como arquivos no executor. Não reconstruídos nem substituídos por aproximações; artes azuis anteriores ainda presentes neste incremento parcial.
+- Não alterados backend, autenticação, mapas, motorista ou fontes PureScript. Bundle aprovado do run 40005145677 será reutilizado, com modo de mapas de teste preservado.
+
 ## Motor de mapas sem login — validado em Android
 
 - Proprietário autorizou contornar autenticação nesta versão de teste, para

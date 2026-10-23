@@ -36,6 +36,28 @@ text = re.sub(r'\b[a-fA-F0-9]{64}\b', '[REDACTED_SESSION_OR_HASH]', text)
 (out / 'logcat.txt').write_text(text)
 raw.unlink()
 PY
+# Verify actual playback, not merely that an MP4 was packaged.
+python3 - "$OUT" "${APKS[0]}" <<'PYVIDEO'
+import hashlib, json, sys
+from pathlib import Path
+from zipfile import ZipFile
+out = Path(sys.argv[1])
+asset = 'assets/branding/alceyatri_abertura_original.mp4'
+with ZipFile(sys.argv[2]) as apk:
+    if asset in apk.namelist():
+        expected = 'bf1ff534bcf0acc7aa9bb83a8a01c31ce3fa0d721ab8bf08666e45a7978c022c'
+        actual = hashlib.sha256(apk.read(asset)).hexdigest()
+        log = (out / 'logcat.txt').read_text()
+        completed = 'YatriBrandSplash: video_completed' in log
+        errors = any('YatriBrandSplash: video_' + reason in log for reason in
+                     ('timeout', 'asset_error', 'decoder_error', 'lifecycle_error'))
+        result = {'original_video_sha256': actual, 'original_bytes_preserved': actual == expected,
+                  'playback_completed': completed, 'playback_error': errors,
+                  'evidence': 'branding-start.mp4', 'visual_review_required': True}
+        (out / 'branding-video.json').write_text(json.dumps(result, indent=2) + '\n')
+        if actual != expected or not completed or errors:
+            raise SystemExit('FALHA: vídeo original não foi reproduzido integralmente; consultar branding-video.json')
+PYVIDEO
 if ! adb shell pidof in.juspay.nammayatri.debug > "$OUT/process.txt"; then
   echo 'FALHA: processo do passageiro encerrou durante o teste' | tee "$OUT/result.txt"
   exit 1

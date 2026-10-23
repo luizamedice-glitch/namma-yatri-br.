@@ -47,10 +47,10 @@ screenshot('branding-launcher.png')
 }, indent=2) + '\n')
 adb('shell', 'am', 'force-stop', 'in.juspay.nammayatri.debug')
 # Record the cold start, including frames too brief for a synchronous screenshot.
-record = subprocess.Popen(['adb', 'shell', 'screenrecord', '--time-limit', '8', '/sdcard/branding-start.mp4'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+record = subprocess.Popen(['adb', 'shell', 'screenrecord', '--time-limit', '15', '/sdcard/branding-start.mp4'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(.4)
 launch = subprocess.Popen(['adb', 'shell', 'am', 'start', '-W', '-n', 'in.juspay.nammayatri.debug/in.juspay.mobility.MainActivity'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-for index, delay in enumerate([.2, .3, .5, 1, 2]):
+for index, delay in enumerate([.2, .3, .5, .5, .5, .5, .5, 1, 1, 2]):
     time.sleep(delay)
     screenshot(f'branding-start-{index}.png')
 output, _ = launch.communicate(timeout=60)

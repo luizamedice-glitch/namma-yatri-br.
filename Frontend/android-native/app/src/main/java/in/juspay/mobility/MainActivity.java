@@ -703,6 +703,11 @@ public class MainActivity extends AppCompatActivity {
     private void handleSplashScreen() {
         try {
             setContentView(R.layout.activity_main);
+            // Only the Brazilian passenger overlay contains this local video view.
+            if (findViewById(R.id.splash) instanceof BrandVideoSplash) {
+                findViewById(R.id.splash).setVisibility(View.VISIBLE);
+                return;
+            }
             boolean skipDefaultSplash = false;
             String city = "__failed";
             if (sharedPref != null) {
@@ -1193,6 +1198,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void hideSplash() {
+        View splash = findViewById(R.id.splash);
+        if (splash instanceof BrandVideoSplash) {
+            ((BrandVideoSplash) splash).finishWhenReady(this::hideSplashNow);
+            return;
+        }
+        hideSplashNow();
+    }
+
+    private void hideSplashNow() {
         View v = findViewById(in.juspay.mobility.app.R.id.cl_dui_container);
         if (v != null) {
             findViewById(in.juspay.mobility.app.R.id.cl_dui_container).setVisibility(View.VISIBLE);
