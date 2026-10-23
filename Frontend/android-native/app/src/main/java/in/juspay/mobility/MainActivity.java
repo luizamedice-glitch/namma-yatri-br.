@@ -642,7 +642,8 @@ public class MainActivity extends AppCompatActivity {
         Window window = this.getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        window.setStatusBarColor(this.getResources().getColor(R.color.colorPrimaryDark, getTheme()));
+        window.setStatusBarColor(findViewById(R.id.splash) instanceof BrandVideoSplash
+                ? 0xFFFF00BE : this.getResources().getColor(R.color.colorPrimaryDark, getTheme()));
         countAppUsageDays();
         startForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> handleGlResp(result, MainActivity.this));
     }
@@ -1207,6 +1208,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void hideSplashNow() {
+        if (findViewById(R.id.splash) instanceof BrandVideoSplash) {
+            getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark, getTheme()));
+        }
         View v = findViewById(in.juspay.mobility.app.R.id.cl_dui_container);
         if (v != null) {
             findViewById(in.juspay.mobility.app.R.id.cl_dui_container).setVisibility(View.VISIBLE);

@@ -19,7 +19,7 @@ for start in range(0,len(raw),size):
  rgb=Image.frombytes('RGB',(640,360),raw[start:start+size])
  frame=Image.frombytes('P',(640,360),rgb.getchannel('G').tobytes()); frame.putpalette(palette); frames.append(frame)
 assets=dest/'passenger/assets/branding'; assets.mkdir(parents=True,exist_ok=True)
-# GIF supports centiseconds: 33/33/34 ms gives exactly 2.5 seconds for 75 frames.
+# GIF supports centiseconds: 30/30/40 ms gives exactly 2.5 seconds for 75 frames.
 frames[0].save(assets/'br_abertura.gif',save_all=True,append_images=frames[1:],duration=[30,30,40]*25,optimize=False,disposal=1)
 res=dest/'res'
 logo=Image.open(src/'15803.png').convert('RGBA'); logo=logo.crop(logo.getchannel('A').getbbox()); logo.save(res/'drawable-nodpi/br_logo_transparent.png')
