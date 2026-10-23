@@ -1,5 +1,13 @@
 # Yatri Brasil — situação do projeto
 
+## Teste SSH via GitHub Actions — 2026-10-23
+
+- IMPLEMENTADO: `.github/workflows/br-lightsail-ssh.yml`, commit `c25f8146d4`, usa `AWS_SSH_KEY`, `AWS_HOST` e `AWS_USER` para executar somente `whoami && hostname` na porta 22. Chave temporária fora do checkout, permissão 600, remoção ao sair, sem impressão do conteúdo; sem checkout ou permissões de token GitHub. Timeout SSH 45 s / job 3 min.
+- Validação local: YAML, sintaxe Bash e recusa de secret ausente aprovados. Execução real [39981618638](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39981618638) interrompida antes do SSH: `AWS_SSH_KEY` disponível, `AWS_HOST` e `AWS_USER` vazios. A validade da chave e a conexão remota NÃO foram verificadas.
+- Tentativa de cadastrar o host informado recusada pela integração GitHub (HTTP 403 ao obter chave pública de criptografia de secrets); nenhum secret alterado. Proprietário precisa disponibilizar Repository secrets `AWS_HOST=52.67.246.31` e `AWS_USER=ubuntu`, depois repetir o job falho.
+- Primeira conexão usa OpenSSH `accept-new` (TOFU por runner efêmero). Secret opcional `AWS_SSH_KNOWN_HOSTS`, com linha conferida por canal independente, ativa verificação estrita. Não foi obtida nem inventada a identidade SSH do servidor.
+- Workflow manual e push limitado ao próprio arquivo na branch de trabalho, permitindo a primeira execução sem modificar `main`. Nenhuma implantação, banco, firewall ou aplicativo alterado.
+
 Atualizado em: 2026-10-22. Este documento registra o histórico reportado durante o desenvolvimento; os itens assinalados como pendentes requerem auditoria do estado atual.
 
 ## Diretrizes confirmadas
