@@ -1,0 +1,203 @@
+{
+  "run_id": 39881766117,
+  "source_commit": "38fc51ef40105640cd42b0f096d6768e1bcc36d5",
+  "apk_sha256": "44628e0e38d54c758fbe25aef2a25ac1b892b32a4661e0dc33f73ad7375f823a",
+  "apk_bytes": 128289399,
+  "png_resources": [
+    {
+      "resource": "res/drawable-nodpi-v4/br_logo.png",
+      "size": [
+        1536,
+        1380
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/originais/02_logo_completo_fundo_azul.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/drawable-nodpi-v4/br_splash.png",
+      "size": [
+        1536,
+        1380
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/originais/02_logo_completo_fundo_azul.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/drawable-nodpi-v4/br_logo_transparent.png",
+      "size": [
+        2172,
+        724
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/originais/01_logo_texto_transparente.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-mdpi-v4/ic_launcher_debug.png",
+      "size": [
+        48,
+        48
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/android/mipmap-mdpi/ic_launcher.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-mdpi-v4/ic_launcher_debug_round.png",
+      "size": [
+        48,
+        48
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/android/mipmap-mdpi/ic_launcher.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-mdpi-v4/br_launcher_foreground.png",
+      "size": [
+        108,
+        108
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/android/mipmap-mdpi/ic_launcher_foreground.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-hdpi-v4/ic_launcher_debug.png",
+      "size": [
+        72,
+        72
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/android/mipmap-hdpi/ic_launcher.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-hdpi-v4/ic_launcher_debug_round.png",
+      "size": [
+        72,
+        72
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/android/mipmap-hdpi/ic_launcher.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-hdpi-v4/br_launcher_foreground.png",
+      "size": [
+        162,
+        162
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/android/mipmap-hdpi/ic_launcher_foreground.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xhdpi-v4/ic_launcher_debug.png",
+      "size": [
+        96,
+        96
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/android/mipmap-xhdpi/ic_launcher.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xhdpi-v4/ic_launcher_debug_round.png",
+      "size": [
+        96,
+        96
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/android/mipmap-xhdpi/ic_launcher.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xhdpi-v4/br_launcher_foreground.png",
+      "size": [
+        216,
+        216
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/android/mipmap-xhdpi/ic_launcher_foreground.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xxhdpi-v4/ic_launcher_debug.png",
+      "size": [
+        144,
+        144
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/android/mipmap-xxhdpi/ic_launcher.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xxhdpi-v4/ic_launcher_debug_round.png",
+      "size": [
+        144,
+        144
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/android/mipmap-xxhdpi/ic_launcher.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xxhdpi-v4/br_launcher_foreground.png",
+      "size": [
+        324,
+        324
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/android/mipmap-xxhdpi/ic_launcher_foreground.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xxxhdpi-v4/ic_launcher_debug.png",
+      "size": [
+        192,
+        192
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/android/mipmap-xxxhdpi/ic_launcher.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xxxhdpi-v4/ic_launcher_debug_round.png",
+      "size": [
+        192,
+        192
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/android/mipmap-xxxhdpi/ic_launcher.png",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xxxhdpi-v4/br_launcher_foreground.png",
+      "size": [
+        432,
+        432
+      ],
+      "original": "brasil/branding/oficiais-2026-10-23/android/mipmap-xxxhdpi/ic_launcher_foreground.png",
+      "identical_pixels": true
+    }
+  ],
+  "purescript_modules_recompiled": 0,
+  "bundle_run_id": 39866367286,
+  "native_build_seconds": 201.76,
+  "apk_artifact_id": 12470628951,
+  "native_job_conclusion": "success",
+  "first_emulator_conclusion": "failure",
+  "first_emulator_failure": "Capture helper did not open the actual Pixel Launcher app drawer; APK was not launched by that helper.",
+  "emulator_retry_run_id": 39882870977,
+  "emulator_retry_conclusion": "success",
+  "android_visual_acceptance": "passed_manual_review",
+  "previous_emulator_retry_run_id": 39882486837,
+  "previous_emulator_retry_conclusion": "failure",
+  "previous_emulator_retry_failure": "Pixel Launcher app drawer requires a vertical gesture; accessibility indicator tap did not open it.",
+  "apk_signer_certificate_sha256": "ead5e01050283b009d70942295af135defc3e8725b4f0461cfc91939b34419ef",
+  "emulator_test_commit": "bb0f091743",
+  "android_api_level": 29,
+  "emulator_profile": "pixel_2",
+  "screenshots_artifact_id": 12471133107,
+  "launcher_icon_found": true,
+  "home_navigation_result": "PASS: HomeScreen original sem token, offline/online, busca editavel e retorno; nenhuma corrida ou sessao simulada.",
+  "fatal_exceptions": 0,
+  "screenshots": {
+    "branding-launcher.png": "22d79fca83b97f0aed8f7b785c74c3250b2f5fba1a305c4631cf532e2cca98c6",
+    "branding-start-4.png": "eb73def35d4b9428c8fcc3033815bbb3d24804e04d5a10ce9aa9100e611476a4",
+    "home-online-1.png": "703d16d887098d29c6bb97c96caaa33778d086756f03925595f71eee06e13c42"
+  },
+  "limitations": [
+    "Android 12+ system splash and alternate launcher masks not tested in this execution.",
+    "Original home logo allocation remains 93x32dp; complete blue artwork fits proportionally in that area.",
+    "Real Places and rides acceptance unchanged; no backend credentials configured in this APK.",
+    "Android initial system window is briefly white before native blue splash.",
+    "APK debug signing certificate differs from the previous delivered build; uninstall that build before installing this APK."
+  ]
+}

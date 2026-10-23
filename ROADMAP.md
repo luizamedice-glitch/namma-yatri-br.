@@ -39,3 +39,5 @@ Prioridade imediata: conectar os campos/lista originais ao contrato brasileiro d
 
 
 Próximo aceite obrigatório: servidor exclusivo Yatri acessível com sessão de Fagner e Google Places New configurados → sugestões reais no componente original → seleção de origem e destino → texto/coordenadas preservados → mapa correspondente. `places-acceptance.json` permanece `not_validated` até esse fluxo ocorrer; o build verde atual cobre navegação e bloqueio explícito, sem simulações. Não avançar para corridas com base somente neste APK.
+
+Identidade atualizada por solicitação do proprietário (2026-10-23): novo pacote oficial aplicado exclusivamente ao passageiro debug, sem alterar prioridades de integração. APK do run 39881766117, validação visual/funcional Android aprovada no run 39882870977; relatório `Frontend/PASSAGEIRO-IDENTIDADE-OFICIAL.md`. Preservar estas artes (ícone estrada/pino, splash completa azul, Home com logo completo azul sem moldura). Próximo aceite de Places continua pendente, independente desta validação de identidade.

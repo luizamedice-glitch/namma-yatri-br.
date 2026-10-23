@@ -1,5 +1,7 @@
 # Identidade Alce Yatri Brasil
 
+## Pacote anterior (histórico)
+
 Recursos recebidos em `yatri-identidade-android.zip`. Os oito PNGs são preservados sem recorte, recompressão ou recriação. `sha256.json` permite verificar a integridade.
 
 Aplicação no Android original: `Frontend/android-native/app/src/brTest/res`, carregado somente com `-PbrTestMode=true` e build `debug`. Os ícones de 48/72/96/144/192 pixels correspondem a mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi. Android 8+ usa ícone adaptativo com margem de segurança e a imagem fornecida de 512 pixels. O logotipo substitui os recursos locais usados pelo cabeçalho original; a imagem vertical é exibida na abertura com `fitCenter`, sem deformação. IDs de splash e callback Lottie são preservados.
@@ -10,7 +12,7 @@ Para compilar apenas o Android, reutilizando o bundle PureScript já validado:
 
 ```sh
 gh workflow run br-purescript-memory.yml --ref codex/issue-1-purescript-memory \
-  -f aplicativo=passageiro -f modo=full -f bundle_run_id=39835346434
+  -f aplicativo=passageiro -f modo=full -f bundle_run_id=39866367286
 ```
 
 O workflow confere igualdade dos fontes PureScript antes de reutilizar o bundle. Build e teste Android aprovados no run 39852288044 (commit bb13872b40). Captura `home-online-1.png` confirma a nova marca no cabeçalho original. APK: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39852288044/artifacts/12458705677 . Os três PNGs principais e os cinco ícones dentro do APK foram comparados por pixels com os arquivos fornecidos, sem diferenças.
@@ -24,3 +26,5 @@ O overlay passa a ser exclusivo de **nyUserProdDebug + brTestMode**, sem efeito 
 Splash e fallback exibem a arte completa azul com `fitCenter`, preservando proporção, IDs e callbacks existentes. A HomeScreen original resolve os aliases `ny_ic_logo_dark` e `ny_ic_logo_dark_my` para a mesma arte completa azul, sem moldura adicionada. O cabeçalho original de 93×32 dp permanece intacto; a imagem inteira aparece proporcionalmente pequena nesse espaço. `ny_ic_logo_light` e `ic_logo_name` usam o logotipo de texto transparente fornecido.
 
 Não há alterações em PureScript/PrestoDOM, navegação, autenticação, backend, configuração Maps ou corridas. Bundle reutilizável atualizado: `39866367286` (substitui o exemplo histórico acima). O teste Android captura o ícone instalado no launcher, vídeo/frames da abertura real e mantém os testes existentes da HomeScreen offline/online e campos originais. Resultados desta nova versão serão registrados após a execução; presença de recursos não é aprovação visual.
+
+Resultado do novo pacote: Android compilado em 201,76 s no job do run 39881766117; inspeção dos 18 PNGs empacotados sem diferenças. Validação Android e inspeção visual aprovadas no run 39882870977. Relatório completo em `Frontend/PASSAGEIRO-IDENTIDADE-OFICIAL.md`, incluindo capturas, APK e as falhas de automação corrigidas.

@@ -58,3 +58,12 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - Servidor de testes em São Paulo, backend Node.js 22 + PostgreSQL 16 via Docker, Caddy HTTPS; endereço `https://52-67-246-31.sslip.io`.
 - `/health` respondendo HTTP 200 por HTTPS e demais rotas 403 segundo testes comunicados pelo proprietário. **APK ainda não conectado e fluxos operacionais externos não validados.**
 - Especificações, caminhos, medidas de segurança e plano de integração em `AWS-DESENVOLVIMENTO.md`; segredos permanecem somente no servidor.
+
+## Identidade oficial do passageiro — 2026-10-23
+
+- IMPLEMENTADO: novo pacote `alce_yatri_brasil_android_imagens.zip` preservado integralmente; ícone estrada/pino nas cinco densidades, camadas adaptativas com margem oficial; splash e logo da Home completos com fundo azul, sem moldura adicionada; texto transparente nos demais aliases apropriados. Overlay exclusivo de `nyUserProdDebug` com `brTestMode=true`; nenhum fonte PureScript, backend, autenticação, corridas ou motorista alterado.
+- COMPILADO: commit do APK `38fc51ef40`, implementação `444a30247b`, job Android do run 39881766117 aprovado, Gradle 201,76 s, zero recompilações PureScript. Os 18 PNGs do APK são idênticos por pixels aos oficiais.
+- TESTADO EM ANDROID: run 39882870977 **aprovado**, Pixel 2/API 29; ícone no launcher, splash inteira proporcional, Home com logo azul sem borda, mapa/navegação offline/online preservados. Capturas inspecionadas visualmente; artefato 12471133107. As duas primeiras tentativas falharam na automação de abertura da gaveta, corrigida sem reconstruir o APK.
+- APK: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39881766117/artifacts/12470628951 ; SHA256 `44628e0e38d54c758fbe25aef2a25ac1b892b32a4661e0dc33f73ad7375f823a`.
+- Limites: outras máscaras/Android 12+ não testados, logo proporcionalmente pequeno no cabeçalho original; breve janela inicial do sistema branca antes da splash nativa. Assinatura debug diferente da entrega anterior exige desinstalar a anterior. Pesquisa Places/corridas não foram aprovadas por esta tarefa; configuração do backend permanece ausente neste APK.
+- Relatório: `Frontend/PASSAGEIRO-IDENTIDADE-OFICIAL.md` e `Frontend/build-reports/passageiro-identidade/39881766117.json`.
