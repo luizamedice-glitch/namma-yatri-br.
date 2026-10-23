@@ -120,6 +120,8 @@ def real_places_or_explicit_block(nodes):
     if evidence.get('source') and evidence.get('destination'):
         evidence['acceptance'] = 'passed'
     (out / 'places-acceptance.json').write_text(json.dumps(evidence, ensure_ascii=False, indent=2))
+    if os.environ.get('YATRI_REQUIRE_PLACES') == 'true':
+        assert evidence['acceptance'] == 'passed', 'Esta entrega exige pesquisa/seleção real; configuração ausente não é aceite.'
     for attempt in range(3):
         adb('shell', 'input', 'keyevent', 'KEYCODE_BACK')
         time.sleep(2)

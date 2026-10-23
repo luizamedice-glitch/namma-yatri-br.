@@ -567,13 +567,17 @@ if (brTestMode) {
     def placesConfigTask = tasks.register('generateBrPlacesConfig') {
         def backendUrl = providers.environmentVariable('YATRI_BACKEND_URL').orElse('')
         def passengerKey = providers.environmentVariable('YATRI_PASSENGER_DEV_KEY').orElse('')
+        def mapsTestMode = providers.environmentVariable('YATRI_MAPS_TEST_MODE').orElse('false')
         inputs.property('backendUrl', backendUrl)
+        inputs.property('mapsTestMode', mapsTestMode)
         // Disable caching/up-to-date reuse of credential-bearing assets.
         outputs.upToDateWhen { false }
         doLast {
             def target = layout.buildDirectory.file('generated/brPlacesAssets/juspay/yatri_places_config.json').get().asFile
             target.parentFile.mkdirs()
-            target.text = groovy.json.JsonOutput.toJson([backendUrl: backendUrl.get(), passengerCredential: passengerKey.get()])
+            def anonymousMaps = mapsTestMode.get() == 'true'
+            target.text = groovy.json.JsonOutput.toJson([backendUrl: backendUrl.get(), mapsTestMode: anonymousMaps,
+                passengerCredential: anonymousMaps ? '' : passengerKey.get()])
         }
     }
     tasks.configureEach { task ->

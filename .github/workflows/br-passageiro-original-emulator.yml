@@ -3,11 +3,18 @@ name: BR - Abertura do passageiro original
 on:
   workflow_call:
     inputs:
+      require_places:
+        type: boolean
+        default: false
       run_id:
         required: true
         type: string
   workflow_dispatch:
     inputs:
+      require_places:
+        description: 'Exigir pesquisa real e seleção de origem/destino'
+        type: boolean
+        default: false
       run_id:
         description: 'Run bem-sucedido de br-purescript-memory.yml que publicou o APK'
         required: true
@@ -19,6 +26,8 @@ permissions:
 
 jobs:
   abertura-original:
+    env:
+      YATRI_REQUIRE_PLACES: ${{ inputs.require_places && 'true' || 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

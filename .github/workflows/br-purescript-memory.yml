@@ -26,6 +26,14 @@ on:
       - 'Frontend/packages.dhall'
   workflow_dispatch:
     inputs:
+      maps_test_mode:
+        description: 'APK debug sem login para o motor de mapas de teste na AWS'
+        type: boolean
+        default: false
+      ffi_only:
+        description: 'Reusar output PureScript validado quando somente JavaScript/configuração Android mudou'
+        type: boolean
+        default: false
       bundle_run_id:
         description: 'Opcional: reutilizar bundle de run anterior com os mesmos fontes PureScript, compilando apenas Android'
         required: false
@@ -77,12 +85,16 @@ jobs:
         with:
           node-version: '18.20.8'
       - name: Instalar ferramentas com versoes fixas
+        env:
+          FFI_ONLY: ${{ inputs.ffi_only && 'true' || 'false' }}
         run: |
-          npm install --global --ignore-scripts=false "purescript@$PURS_VERSION" spago@0.21.0
-          sudo apt-get update -qq
-          sudo apt-get install -y time
-          purs --version
-          spago --version
+          if [[ "$FFI_ONLY" != true ]]; then
+            npm install --global --ignore-scripts=false "purescript@$PURS_VERSION" spago@0.21.0
+            sudo apt-get update -qq
+            sudo apt-get install -y time
+            purs --version
+            spago --version
+          fi
           free -h
           if [[ "$APP" == motorista ]]; then DIR=ui-driver; else DIR=ui-customer; fi
           echo "APP_DIR=Frontend/$DIR" >> "$GITHUB_ENV"
@@ -95,6 +107,7 @@ jobs:
         run: node Frontend/scripts/verify-places-provider.mjs
       - name: Validar compilacao de referencia do cache
         if: inputs.cache_run_id
+        id: cache_reference
         uses: actions/github-script@v7
         env:
           CACHE_RUN_ID: ${{ inputs.cache_run_id }}
@@ -110,6 +123,17 @@ jobs:
             if (!data.jobs.some(j => j.name === 'passageiro-original' && j.conclusion === 'success')) {
               throw new Error('Cache de referencia nao possui compilacao PureScript validada');
             }
+            core.setOutput('sha', run.head_sha);
+      - name: Exigir fontes PureScript e contratos FFI idênticos para reuso sem compilador
+        if: inputs.ffi_only
+        env:
+          SOURCE_SHA: ${{ steps.cache_reference.outputs.sha }}
+        run: |
+          test -n "$SOURCE_SHA" || { echo 'ffi_only exige cache_run_id validado'; exit 1; }
+          git cat-file -e "$SOURCE_SHA^{commit}" || git fetch --depth 1 origin "$SOURCE_SHA"
+          git diff --exit-code "$SOURCE_SHA" HEAD -- 'Frontend/**/*.purs' 'Frontend/**/spago.dhall' Frontend/packages.dhall \
+            'Frontend/ui-customer/src/**/*.js' 'Frontend/ui-common/src/**/*.js' \
+            Frontend/ui-customer/package.json 'Frontend/ui-customer/webpack*.js' 'Frontend/ui-customer/webpack*.cjs'
       - uses: actions/cache/restore@v4
         id: cache
         with:
@@ -129,21 +153,31 @@ jobs:
         run: |
           [[ "$MATCHED_KEY" == *-"$CACHE_RUN_ID"-* ]] || { echo 'Cache solicitado indisponivel; interrompendo para evitar compilacao fria inesperada'; exit 1; }
       - name: Instalar dependencias sem atualizar manifestos
+        env:
+          FFI_ONLY: ${{ inputs.ffi_only && 'true' || 'false' }}
         run: |
           mkdir -p purescript-diagnostics
           set -o pipefail
           cd "$APP_DIR"
           npm install --legacy-peer-deps --ignore-scripts=false 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/npm-install.log"
-          spago -j 2 install 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/spago-install.log"
+          if [[ "$FFI_ONLY" != true ]]; then
+            spago -j 2 install 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/spago-install.log"
+          else
+            test -s output/Main/index.js
+            cmp src/Development/Places.js output/Development.Places/foreign.js
+          fi
       - name: Validar planejamento dos lotes
+        if: ${{ !inputs.ffi_only }}
         run: python3 Frontend/scripts/test-purescript-batches.py
       - name: Testar isolamento do modo de desenvolvimento
         run: node Frontend/scripts/test-development-mode.mjs
       - name: Testar diagnosticos do FFI real em desenvolvimento e release
         run: node Frontend/scripts/test-development-config-diagnostics.mjs
       - name: Testar validacao brasileira compilada em PureScript
+        if: ${{ !inputs.ffi_only }}
         run: python3 Frontend/scripts/test-brazilian-mobile-number.py
       - name: Medir compilacao original e retomada por cache
+        if: ${{ !inputs.ffi_only }}
         timeout-minutes: 80
         run: |
           # Compile in resumable dependency-closure batches: one monolithic purs call may stall.
@@ -153,6 +187,7 @@ jobs:
           python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode "$BUILD_MODE" --batch-size 25 --heap "$HEAP" --label measured --timeout-seconds 600 --stall-seconds 300 --rss-limit-mib 12288
           python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode full --heap "$HEAP" --label incremental --timeout-seconds 120 --stall-seconds 60 --rss-limit-mib 12288 --require-cache
       - name: Verificar comando npm original com PSA
+        if: ${{ !inputs.ffi_only }}
         shell: bash
         run: |
           set -o pipefail
@@ -186,7 +221,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
       - name: Preservar cache inclusive em caso de falha
-        if: always() && steps.cache.outcome == 'success'
+        if: always() && steps.cache.outcome == 'success' && !inputs.ffi_only
         uses: actions/cache/save@v4
         with:
           path: |
@@ -262,7 +297,8 @@ jobs:
         working-directory: Frontend/android-native
         env:
           GOOGLE_MAPS_API_KEY: ${{ secrets.Google_Maps_API_Key }}
-          YATRI_BACKEND_URL: ${{ vars.YATRI_BACKEND_URL }}
+          YATRI_BACKEND_URL: ${{ vars.YATRI_BACKEND_URL || (inputs.maps_test_mode && 'https://52-67-246-31.sslip.io') || '' }}
+          YATRI_MAPS_TEST_MODE: ${{ inputs.maps_test_mode && 'true' || 'false' }}
           YATRI_PASSENGER_DEV_KEY: ${{ secrets.YATRI_PASSENGER_DEV_KEY }}
         run: |
           set -o pipefail
@@ -276,6 +312,8 @@ jobs:
           PYCONFIG
           /usr/bin/time -v -o android-build.time bash gradlew :app:assembleNyUserProdDebug -PbrTestMode=true --no-daemon --max-workers=2 --stacktrace 2>&1 | tee android-build.log
       - name: Confirmar bundle recompilado dentro do APK
+        env:
+          MAPS_TEST_MODE: ${{ inputs.maps_test_mode && 'true' || 'false' }}
         run: |
           python3 - <<'PYTHON'
           from pathlib import Path
@@ -288,6 +326,12 @@ jobs:
           with ZipFile(apks[0]) as apk:
               embedded = apk.read('assets/juspay/index_bundle.js')
               entry = apk.read('assets/juspay/becknbase.html')
+              if __import__('os').environ['MAPS_TEST_MODE'] == 'true':
+                  config = __import__('json').loads(apk.read('assets/juspay/yatri_places_config.json'))
+                  if config.get('mapsTestMode') is not True or config.get('passengerCredential'):
+                      raise SystemExit('APK de mapas deve dispensar sessão e credencial embutida')
+                  if not config.get('backendUrl', '').startswith('https://'):
+                      raise SystemExit('APK de mapas exige backend HTTPS')
           if entry != Path('Frontend/android-native/app/src/brTest/assets/juspay/becknbase.html').read_bytes():
               raise SystemExit('APK nao contem o entrypoint local do modo BR')
           if embedded != bundle:
@@ -350,3 +394,4 @@ jobs:
     uses: ./.github/workflows/br-passageiro-original-emulator.yml
     with:
       run_id: ${{ format('{0}', github.run_id) }}
+      require_places: ${{ inputs.maps_test_mode || false }}

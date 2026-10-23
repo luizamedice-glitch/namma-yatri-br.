@@ -8,13 +8,14 @@ export function validateConfig(config) {
   if (url.username || url.password || url.search || url.hash ||
       (url.protocol !== 'https:' && !(url.protocol === 'http:' && local)) ||
       /alce-mobilidade/i.test(url.pathname)) throw new Error('Use a URL exclusiva do backend Yatri; HTTPS ou rede local de testes.');
-  if (!/^[a-f0-9]{64}$/.test(config.passengerCredential || '')) throw new Error('Credencial de desenvolvimento do passageiro não configurada.');
-  return {base: url.href.replace(/\/$/, ''), credential: config.passengerCredential};
+  const mapsTestMode = config.mapsTestMode === true;
+  if (!mapsTestMode && !/^[a-f0-9]{64}$/.test(config.passengerCredential || '')) throw new Error('Credencial de desenvolvimento do passageiro não configurada.');
+  return {base: url.href.replace(/\/$/, ''), credential: mapsTestMode ? '' : config.passengerCredential, mapsTestMode};
 }
 export const validPosition = p => p && Number.isFinite(p.lat) && Number.isFinite(p.lng) &&
   p.lat >= -90 && p.lat <= 90 && p.lng >= -180 && p.lng <= 180 && (p.lat !== 0 || p.lng !== 0);
 export function createPlacesClient(config, transport) {
-  const {base, credential} = validateConfig(config);
+  const {base, credential, mapsTestMode} = validateConfig(config);
   let token = '', sessionPromise;
   async function session() {
     if (token) return token;
@@ -28,6 +29,7 @@ export function createPlacesClient(config, transport) {
     return sessionPromise;
   }
   async function post(path, payload, retry = true) {
+    if (mapsTestMode) return transport(base + path.replace('/v1/', '/v1/test/'), payload, '');
     const bearer = await session();
     try { return await transport(base + path, payload, bearer); }
     catch (error) {

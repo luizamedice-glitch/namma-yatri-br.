@@ -1,5 +1,27 @@
 # Yatri Brasil — situação do projeto
 
+## Motor de mapas sem login — preparação da versão de teste
+
+- Proprietário autorizou contornar autenticação nesta versão de teste, para
+  validar o motor antes das demais funções. Escopo deste incremento: HomeScreen
+  original do passageiro, autocomplete, seleção de origem/destino e rotas reais.
+- Serviço de teste separado, sem banco/usuários/sessões. Somente POST
+  `/v1/test/places/autocomplete`, `/v1/test/places/details` e `/v1/test/routes`.
+  Reutiliza imagem da API existente, sem build e sem recriar a API principal.
+  Caddy mantém as demais rotas operacionais bloqueadas. Janela de sete dias,
+  limites compartilhados de 30 chamadas/minuto e 1000/dia (contadores em memória).
+- APK BR debug recebe `mapsTestMode=true` e URL HTTPS; não incorpora credencial
+  de passageiro e não chama endpoint de sessão. Release continua bloqueado pelo
+  guard nativo/FFI existente. Views, PureScript, marca e motorista preservados.
+- Build `ffi_only` exige cache de compilação aprovado e mesmos fontes PureScript,
+  contratos FFI e manifestos. Atualiza bundle JavaScript sem chamar o compilador.
+  Aceite no emulador agora pode exigir seleção real dos dois campos, recusando
+  `not_validated` como sucesso quando o modo de teste é solicitado.
+- Validação local: 25 testes passaram, incluindo ausência de sessão/Bearer,
+  isolamento de rotas, bloqueio em produção, expiração, limites, contratos e
+  autorização original. Caddy: inserção idempotente e recusa de host ambíguo.
+- Implantação, compilação do novo APK e aceite Android ainda pendentes nesta revisão.
+
 ## Google configurado e validado no servidor — 2026-10-23
 
 - `GOOGLE_MAPS_SERVER_KEY` configurada no arquivo de ambiente existente do

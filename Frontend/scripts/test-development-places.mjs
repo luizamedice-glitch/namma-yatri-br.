@@ -11,6 +11,19 @@ const suggestion = {placeId:'fixture_place',address:'Endereço de fixture, Cidad
 const place = {placeId:suggestion.placeId,address:suggestion.address,location:{lat:-23.5,lng:-46.6}};
 const tick = () => new Promise(resolve => setTimeout(resolve,10));
 
+test('modo de mapas de teste dispensa credencial e nunca chama sessão ou envia Bearer', async () => {
+  const calls=[];
+  const client=createPlacesClient({backendUrl:'https://yatri.example.test',mapsTestMode:true},async(url,payload,bearer)=>{
+    calls.push({url,bearer});
+    assert.ok(!url.includes('/session'));assert.equal(bearer,'');
+    return url.endsWith('/autocomplete') ? {suggestions:[suggestion]} : place;
+  });
+  assert.equal((await client.autocomplete('fixture'))[0].placeId,suggestion.placeId);
+  assert.equal((await client.details(suggestion.placeId)).lat,place.location.lat);
+  assert.deepEqual(calls.map(c=>c.url),['https://yatri.example.test/v1/test/places/autocomplete','https://yatri.example.test/v1/test/places/details']);
+  assert.throws(()=>validateConfig({backendUrl:'https://yatri.example.test',mapsTestMode:'true'}));
+});
+
 test('configuração aceita somente HTTPS/rede privada e rejeita serviço Alce/credenciais ausentes', () => {
   for (const backendUrl of ['', 'file:///tmp/a','http://public.example','https://u:p@example.test','https://example.test?token=abc','https://example.test/functions/v1/alce-mobilidade'])
     assert.throws(() => validateConfig({...config,backendUrl}));
@@ -107,6 +120,7 @@ test('FFI configurações ausentes/503/release não travam e não inventam resul
   const events=[];const stop=module.subscribe(_=>_=>()=>assert.fail('Não deve haver sugestões'))(_=>_=>()=>assert.fail('Não deve haver seleção'))(e=>()=>events.push(e))();
   module.inputChanged('fixture')(false)();module.autocomplete('fixture')(false)(0)(0)();await tick();assert.match(events[0],/configure/);stop();
   const release=await runtime(async()=>{assert.fail('Release não deve chamar servidor');},'in.juspay.nammayatri');
+  window.JBridge.loadFileInDUI=()=>JSON.stringify({backendUrl:'https://yatri.example.test',mapsTestMode:true});
   release.subscribe(_=>_=>()=>{})(_=>_=>()=>{})(_=>()=>{})();release.inputChanged('fixture')(false)();release.autocomplete('fixture')(false)(0)(0)();await tick();
   assert.equal(calls,2);
 });

@@ -1,0 +1,45 @@
+name: BR - Motor de mapas sem login
+on:
+  push:
+    branches: [codex/issue-1-purescript-memory]
+    paths: ['brasil/backend/maps-test-server.mjs', 'brasil/backend/ops/deploy-maps-test.py', '.github/workflows/br-motor-mapas-teste.yml']
+permissions:
+  contents: read
+concurrency:
+  group: lightsail-ssh-test
+  cancel-in-progress: false
+jobs:
+  implantar:
+    if: github.ref == 'refs/heads/codex/issue-1-purescript-memory'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Testar limites e isolamento do modo sem login
+        run: node --test brasil/backend/test/maps-test.test.mjs Frontend/scripts/test-development-places.mjs
+      - name: Instalar serviço separado e permitir somente operações de mapas de teste
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          umask 077
+          work=$(mktemp -d "$RUNNER_TEMP/yatri-engine.XXXXXX")
+          trap 'rm -rf -- "$work"' EXIT
+          printf '%s\n' "$AWS_SSH_KEY" > "$work/key"
+          unset AWS_SSH_KEY
+          touch "$work/known_hosts"
+          host_check=accept-new
+          if [[ -n "$AWS_SSH_KNOWN_HOSTS" ]]; then
+            printf '%s\n' "$AWS_SSH_KNOWN_HOSTS" > "$work/known_hosts"
+            host_check=yes
+          fi
+          args=(-i "$work/key" -o IdentitiesOnly=yes -o BatchMode=yes -o ForwardAgent=no -o ConnectTimeout=15 -o "StrictHostKeyChecking=$host_check" -o "UserKnownHostsFile=$work/known_hosts")
+          target=ubuntu@52.67.246.31
+          remote_dir=$(ssh "${args[@]}" "$target" 'mktemp -d /tmp/yatri-engine.XXXXXX')
+          [[ "$remote_dir" =~ ^/tmp/yatri-engine\.[a-zA-Z0-9]+$ ]]
+          scp "${args[@]}" brasil/backend/maps-test-server.mjs brasil/backend/ops/deploy-maps-test.py "$target:$remote_dir/"
+          ssh "${args[@]}" "$target" "sudo -n python3 '$remote_dir/deploy-maps-test.py' '$remote_dir/maps-test-server.mjs'"
+          ssh "${args[@]}" "$target" "rm -rf -- '$remote_dir'"

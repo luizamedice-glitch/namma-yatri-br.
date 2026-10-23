@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env server.mjs",
     "migrate": "node --env-file-if-exists=.env src/migrate.mjs",
-    "test": "node --test test/unit.test.mjs",
+    "test": "node --test test/unit.test.mjs test/maps-test.test.mjs",
     "test:integration": "node --test test/integration.test.mjs test/development.test.mjs test/deployment.test.mjs",
     "check": "node --check server.mjs"
   },
