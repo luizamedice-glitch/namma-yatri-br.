@@ -9,10 +9,14 @@
 - SSH como `ubuntu` confirmado no run 39988466255, job 120559029577, aprovado.
   Conexão via runner de Actions dispensa alterar as configurações de rede do
   aplicativo mobile. Workflows/envelope de transferência temporários removidos.
-- Workflow SSH estendido com inspeção somente leitura do commit remoto,
-  contêineres, Caddy, health local e estados booleanos de configuração Google,
-  banco/convite e contas automáticas. Resultado de inspeção ainda pendente;
-  não houve implantação de imagem nem liberação de endpoints.
+- Inspeção somente leitura aprovada no run 39996011605: checkout remoto
+  `113121de63dcfe7c5754e5af495e9711aca32d1d`; API ativa e health local OK;
+  PostgreSQL saudável, sem porta publicada; Caddy ativo. API publicada somente
+  em `127.0.0.1:8080`. Banco/convite configurados, contas automáticas desabilitadas.
+- `GOOGLE_MAPS_SERVER_KEY` ausente na API em execução. Esse é um bloqueio
+  confirmado para Places/Routes reais. A conexão Android ainda depende do desenho
+  de sessão e da liberação revisada de endpoints descritos em
+  `AWS-DESENVOLVIMENTO.md`. Nenhuma imagem ou rota pública foi alterada.
 
 ## Retomada do acesso ao servidor existente — 2026-10-23
 

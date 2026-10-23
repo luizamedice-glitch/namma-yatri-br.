@@ -1,5 +1,21 @@
 # Ambiente AWS de desenvolvimento — Alce Yatri Brasil
 
+## Inspeção remota confirmada — 2026-10-23
+
+Acesso SSH como `ubuntu` confirmado via Actions após configurar `AWS_SSH_KEY`
+com o PEM original fornecido pelo proprietário (run 39988466255, job
+120559029577). Atualização criptografada do secret aprovada no run 39995775818;
+não houve exposição de chave privada em código/logs. O workflow temporário de
+transferência e seu envelope selado foram removidos da árvore atual.
+
+Inspeção somente leitura no run 39996011605 confirmou: checkout remoto
+`113121de63dcfe7c5754e5af495e9711aca32d1d`, API ativa com health OK, PostgreSQL
+saudável e Caddy ativo. Banco e convite configurados; contas automáticas
+desabilitadas. `GOOGLE_MAPS_SERVER_KEY` ausente na API em execução. Nenhuma
+imagem, porta, regra de firewall, arquivo de secrets do servidor ou rota foi alterado.
+Próximos passos: configurar a chave Google de servidor e concluir sessão segura
+e liberação revisada de endpoints antes de conectar o APK original.
+
 Atualizado em 2026-10-22/23 (horário do Brasil). Registro da implantação conduzida manualmente pelo proprietário; não contém segredos.
 
 ## Identificadores públicos
