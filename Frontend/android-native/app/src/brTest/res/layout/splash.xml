@@ -4,7 +4,7 @@
     android:layout_height="match_parent" android:visibility="gone"
     android:background="@color/br_brand_blue">
     <ImageView android:layout_width="match_parent" android:layout_height="match_parent"
-        android:src="@drawable/br_splash" android:scaleType="fitCenter"
+        android:src="@drawable/br_splash" android:scaleType="centerCrop"
         android:contentDescription="Alce Yatri Brasil" />
     <!-- ID mantido para os callbacks existentes, sem animação da marca indiana. -->
     <com.airbnb.lottie.LottieAnimationView android:id="@+id/splash_lottie"
