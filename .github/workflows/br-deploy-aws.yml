@@ -1,0 +1,50 @@
+name: BR - Implantar API na AWS por SSH
+on:
+  workflow_dispatch:
+    inputs:
+      ssh_key_secret:
+        description: Nome do secret existente que contém a chave SSH
+        required: true
+        default: AWS_SSH_KEY
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: yatri-br-aws
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SSH_HOST: ${{ vars.AWS_SSH_HOST }}
+      SSH_USER: ${{ vars.AWS_SSH_USER }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preparar acesso SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets[inputs.ssh_key_secret] }}
+          SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          [[ "$SSH_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]] || { echo 'Configure vars.AWS_SSH_HOST'; exit 1; }
+          [[ "$SSH_USER" =~ ^[a-z_][a-z0-9_-]*$ ]] || { echo 'Configure vars.AWS_SSH_USER'; exit 1; }
+          [[ -n "$SSH_PRIVATE_KEY" ]] || { echo 'O secret informado para a chave SSH está vazio ou indisponível'; exit 1; }
+          [[ -n "$SSH_KNOWN_HOSTS" ]] || { echo 'Configure secrets.AWS_SSH_KNOWN_HOSTS com a chave pública verificada do servidor'; exit 1; }
+          install -d -m 700 "$HOME/.ssh"
+          umask 077
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/yatri_aws"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+      - name: Enviar somente a API e atualizar os serviços
+        run: |
+          set -euo pipefail
+          SSH_ARGS=(-i "$HOME/.ssh/yatri_aws" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15)
+          TARGET="$SSH_USER@$SSH_HOST"
+          ssh "${SSH_ARGS[@]}" "$TARGET" 'test -f "$HOME/yatri-br/brasil/.env" || { echo "Configure ~/yatri-br/brasil/.env no servidor antes do deploy" >&2; exit 1; }'
+          tar --exclude=node_modules --exclude=.env --exclude='*.log' \
+            -czf "$RUNNER_TEMP/yatri-api.tgz" brasil/backend brasil/compose.yaml brasil/aws
+          scp "${SSH_ARGS[@]}" "$RUNNER_TEMP/yatri-api.tgz" "$TARGET:yatri-api.tgz"
+          ssh "${SSH_ARGS[@]}" "$TARGET" 'set -eu; cd "$HOME/yatri-br"; tar -xzf "$HOME/yatri-api.tgz"; rm "$HOME/yatri-api.tgz"; bash brasil/aws/deploy.sh'
+      - name: Remover chave temporária
+        if: always()
+        run: rm -f "$HOME/.ssh/yatri_aws"

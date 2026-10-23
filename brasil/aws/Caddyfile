@@ -1,0 +1,17 @@
+{
+    email {$ACME_EMAIL}
+    # Validação HTTP na porta 80; 443 pode ficar restrita aos IPs de teste.
+    acme_ca https://acme-v02.api.letsencrypt.org/directory
+}
+
+{$AWS_API_DOMAIN} {
+    tls {
+        issuer acme {
+            disable_tlsalpn_challenge
+        }
+    }
+    reverse_proxy api:8080 {
+        # Entregar eventos SSE sem aguardar buffers do proxy.
+        flush_interval -1
+    }
+}

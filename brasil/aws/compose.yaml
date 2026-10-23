@@ -1,0 +1,45 @@
+# Complemento de brasil/compose.yaml para uma instância EC2 de testes privados.
+services:
+  api:
+    init: true
+    healthcheck:
+      test: [CMD, node, --input-type=module, -e, "const r = await fetch('http://127.0.0.1:8080/health', {signal: AbortSignal.timeout(4000)}); if (!r.ok) process.exit(1)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+  db:
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+  https:
+    image: caddy:2-alpine
+    environment:
+      AWS_API_DOMAIN: ${AWS_API_DOMAIN:?Configure o domínio DNS da API}
+      ACME_EMAIL: ${ACME_EMAIL:?Configure o email para o certificado TLS}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./aws/Caddyfile:/etc/caddy/Caddyfile:ro
+      - yatri-caddy-data:/data
+      - yatri-caddy-config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+volumes:
+  yatri-caddy-data:
+  yatri-caddy-config:
