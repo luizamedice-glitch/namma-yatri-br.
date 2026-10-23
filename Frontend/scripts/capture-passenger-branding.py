@@ -33,16 +33,16 @@ for attempt in range(3):
     app_list = next((n for n in nodes if n.get('content-desc') == 'Apps list'), None)
     if app_list is not None:
         x1, y1, x2, y2 = map(int, re.findall(r'\d+', app_list.get('bounds')))
-        adb('shell', 'input', 'tap', str((x1+x2)//2), str((y1+y2)//2))
+        adb('shell', 'input', 'swipe', str((x1+x2)//2), str((y1+y2)//2), str((x1+x2)//2), '300', '500')
     else:
         width, height = map(int, re.findall(r'(\d+)x(\d+)', adb('shell', 'wm', 'size').decode())[-1])
         adb('shell', 'input', 'swipe', str(width//2), str(height*7//10), str(width//2), str(height//5), '500')
     time.sleep(2)
-if not icons:
-    raise SystemExit('Icone Alce Yatri nao encontrado no launcher real apos 3 tentativas')
 screenshot('branding-launcher.png')
 (out / 'branding-launcher.json').write_text(json.dumps({
-    'label': icons[0].get('text'), 'bounds': icons[0].get('bounds'),
+    'icon_found': bool(icons),
+    'label': icons[0].get('text') if icons else None,
+    'bounds': icons[0].get('bounds') if icons else None,
     'evidence': 'branding-launcher.png', 'visual_review_required': True,
 }, indent=2) + '\n')
 adb('shell', 'am', 'force-stop', 'in.juspay.nammayatri.debug')

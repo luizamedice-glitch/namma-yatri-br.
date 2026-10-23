@@ -75,3 +75,13 @@ echo 'Abertura da interface original validada por 120 segundos. Capturas exigem 
 
 # BR test builds must enter the actual original home. A fallback to onboarding is a failure.
 python3 Frontend/scripts/test-original-home.py "$OUT"
+
+# Preserve cold-start/home evidence even if launcher navigation fails; still fail acceptance.
+python3 - "$OUT" <<'PYBRAND'
+import json, sys
+from pathlib import Path
+d = json.loads((Path(sys.argv[1]) / 'branding-launcher.json').read_text())
+if not d['icon_found']:
+    raise SystemExit('FALHA: icone nao localizado no launcher real; capturas preservadas')
+print('Icone instalado encontrado no launcher; capturas de abertura e HomeScreen preservadas.')
+PYBRAND
