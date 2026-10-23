@@ -1,5 +1,19 @@
 # Yatri Brasil — situação do projeto
 
+## Acesso SSH confirmado com arquivo original — 2026-10-23
+
+- Arquivo PEM original fornecido pelo proprietário validado localmente sem
+  imprimir seu conteúdo. Atualização de `AWS_SSH_KEY` concluída via Actions
+  usando `IMPORT_GH_PAT` e envelope sealed-box para a chave pública do GitHub;
+  run 39995775818 aprovado. Nenhuma chave privada foi incluída no Git/logs.
+- SSH como `ubuntu` confirmado no run 39988466255, job 120559029577, aprovado.
+  Conexão via runner de Actions dispensa alterar as configurações de rede do
+  aplicativo mobile. Workflows/envelope de transferência temporários removidos.
+- Workflow SSH estendido com inspeção somente leitura do commit remoto,
+  contêineres, Caddy, health local e estados booleanos de configuração Google,
+  banco/convite e contas automáticas. Resultado de inspeção ainda pendente;
+  não houve implantação de imagem nem liberação de endpoints.
+
 ## Retomada do acesso ao servidor existente — 2026-10-23
 
 - Documentação localizada na branch `codex/issue-1-purescript-memory`:

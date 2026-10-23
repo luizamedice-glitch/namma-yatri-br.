@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
-      - name: Testar identidade remota sem alterar o servidor
+      - name: Confirmar acesso e inspecionar backend sem alterar o servidor
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
@@ -101,5 +101,24 @@ jobs:
             -o "StrictHostKeyChecking=$host_check" \
             -o "UserKnownHostsFile=$ssh_dir/known_hosts" \
             -o GlobalKnownHostsFile=/dev/null \
-            "$AWS_USER@$AWS_HOST" 'whoami && hostname'
-          echo 'SSH confirmado: whoami e hostname executados com sucesso.' >> "$GITHUB_STEP_SUMMARY"
+            "$AWS_USER@$AWS_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          whoami
+          hostname
+          sudo -n git -C /opt/yatri-brasil/projeto rev-parse HEAD
+          cd /opt/yatri-brasil
+          sudo -n docker compose -f compose.yaml ps --format json
+          sudo -n systemctl is-active caddy
+          curl --fail --silent --show-error --max-time 10 http://127.0.0.1:8080/health
+          printf '\n'
+          # Somente estados booleanos; nenhum valor sensível sai do contêiner.
+          sudo -n docker compose -f compose.yaml exec -T api node --input-type=module -e '
+            console.log(JSON.stringify({
+              googleMapsConfigured: Boolean(process.env.GOOGLE_MAPS_SERVER_KEY),
+              automaticDevelopmentAccounts: process.env.YATRI_DEVELOPMENT_MODE === "true",
+              inviteConfigured: Boolean(process.env.TEST_INVITE_CODE),
+              databaseConfigured: Boolean(process.env.DATABASE_URL)
+            }));
+          '
+          REMOTE
+          echo 'SSH e inspeção de leitura concluídos; nenhum serviço ou secret remoto alterado.' >> "$GITHUB_STEP_SUMMARY"
