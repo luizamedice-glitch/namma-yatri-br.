@@ -1,0 +1,84 @@
+name: BR - Teste SSH Lightsail
+
+on:
+  workflow_dispatch:
+  # Permite a primeira execução sem alterar a branch padrão main.
+  push:
+    branches: [codex/issue-1-purescript-memory]
+    paths: ['.github/workflows/br-lightsail-ssh.yml']
+
+permissions: {}
+
+concurrency:
+  group: lightsail-ssh-test
+  cancel-in-progress: false
+
+jobs:
+  connection:
+    if: github.ref == 'refs/heads/codex/issue-1-purescript-memory'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Testar identidade remota sem alterar o servidor
+        shell: bash
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_HOST: ${{ secrets.AWS_HOST }}
+          AWS_USER: ${{ secrets.AWS_USER }}
+          # Opcional: linha known_hosts conferida pelo proprietário fora desta conexão.
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          set +x
+          for name in AWS_SSH_KEY AWS_HOST AWS_USER; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Secret obrigatória ausente: $name"
+              exit 1
+            fi
+          done
+          if [[ ! "$AWS_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]] ||
+             [[ ! "$AWS_USER" =~ ^[a-zA-Z_][a-zA-Z0-9_-]*$ ]]; then
+            echo '::error::Formato de AWS_HOST ou AWS_USER inválido.'
+            exit 1
+          fi
+          umask 077
+          ssh_dir=$(mktemp -d "$RUNNER_TEMP/yatri-ssh.XXXXXX")
+          trap 'rm -rf -- "$ssh_dir"' EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+          printf '%s\n' "$AWS_SSH_KEY" | tr -d '\r' > "$ssh_dir/key"
+          unset AWS_SSH_KEY
+          chmod 600 "$ssh_dir/key"
+          # Recusa chaves inválidas ou com senha, sem imprimir conteúdo nem pedir entrada.
+          if ! ssh-keygen -y -P '' -f "$ssh_dir/key" > /dev/null 2>&1; then
+            echo '::error::AWS_SSH_KEY deve conter uma chave privada SSH válida sem senha.'
+            exit 1
+          fi
+          host_check=accept-new
+          if [[ -n "$AWS_SSH_KNOWN_HOSTS" ]]; then
+            printf '%s\n' "$AWS_SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+            host_check=yes
+          else
+            echo '::notice::Primeira conexão: identidade do host aceita por TOFU. Configure AWS_SSH_KNOWN_HOSTS para verificação prévia.'
+            touch "$ssh_dir/known_hosts"
+          fi
+          unset AWS_SSH_KNOWN_HOSTS
+          timeout 45s ssh -F /dev/null -T -p 22 \
+            -i "$ssh_dir/key" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o IdentityAgent=none \
+            -o PreferredAuthentications=publickey \
+            -o PasswordAuthentication=no \
+            -o KbdInteractiveAuthentication=no \
+            -o ForwardAgent=no \
+            -o ClearAllForwardings=yes \
+            -o ConnectTimeout=15 \
+            -o ConnectionAttempts=1 \
+            -o ServerAliveInterval=10 \
+            -o ServerAliveCountMax=2 \
+            -o "StrictHostKeyChecking=$host_check" \
+            -o "UserKnownHostsFile=$ssh_dir/known_hosts" \
+            -o GlobalKnownHostsFile=/dev/null \
+            "$AWS_USER@$AWS_HOST" 'whoami && hostname'
+          echo 'SSH confirmado: whoami e hostname executados com sucesso.' >> "$GITHUB_STEP_SUMMARY"
