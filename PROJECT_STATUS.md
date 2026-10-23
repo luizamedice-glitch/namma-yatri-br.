@@ -12,8 +12,15 @@
   `ubuntu` como fallback dos secrets opcionais `AWS_HOST`/`AWS_USER`.
   `AWS_SSH_KEY` continua somente em Actions. Isso remove o bloqueio anterior
   sem cadastrar novos secrets nem alterar a instalação do servidor.
-- A alteração dispara somente `whoami && hostname`. Resultado remoto pendente
-  da execução de Actions; nenhuma implantação ou liberação de rotas realizada.
+- A alteração disparou somente `whoami && hostname`. Run
+  https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39984936982
+  alcançou o servidor na porta 22, mas falhou com `Permission denied (publickey)`.
+  A chave em `AWS_SSH_KEY` foi aceita pelo parser OpenSSH, porém o servidor
+  recusou sua autenticação como `ubuntu`. Nenhum comando remoto foi executado.
+  Próximo passo: configurar no secret a chave privada correspondente a uma chave
+  pública autorizada para `ubuntu` nessa instância, ou autorizar a chave pública
+  correspondente via console administrativo do Lightsail. Nenhuma implantação,
+  alteração de secrets ou liberação de rotas realizada.
 
 ## Teste SSH via GitHub Actions — 2026-10-23
 
