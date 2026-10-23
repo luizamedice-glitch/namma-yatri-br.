@@ -1,5 +1,21 @@
 # Ambiente AWS de desenvolvimento — Alce Yatri Brasil
 
+## Motor de mapas sem autenticação para testes — 2026-10-23
+
+Autorização explícita do proprietário nesta sessão para contornar autenticação
+na versão de teste. Serviço `maps-test` separado implantado e validado no run
+40002766100: chamadas HTTPS sem Bearer a autocomplete, detalhes e rotas reais
+aprovadas. API principal não foi recriada; banco/usuários/sessões preservados.
+Caddy agora permite também os três POST `/v1/test/places/autocomplete`,
+`/v1/test/places/details` e `/v1/test/routes`; rotas operacionais continuam 403.
+
+Expiração automática em 2026-10-30T18:22:42.727971+00:00. Controles e operação em
+`brasil/backend/ops/MAPS-TEST.md`. APK sem sessão compilado no run 40005145677,
+fontes `3155e66`; teste Android API 29 aprovado com `places-acceptance.json=passed`:
+origem Praça da Sé e destino Av. Paulista reais, coordenadas preservadas e mapa
+recentralizado, sem login/OTP/token. Capturas conferidas visualmente com tiles
+reais. Evidências 12523888694; APK 12524197861. Corrida completa não foi validada.
+
 ## Chave Google aplicada e verificada — 2026-10-23
 
 `GOOGLE_MAPS_SERVER_KEY` configurada no arquivo existente

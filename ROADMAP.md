@@ -2,6 +2,17 @@
 
 Cada fase deve entregar resultado verificável. O trabalho pode ser organizado em incrementos curtos, mas não se considera uma fase concluída sem os critérios abaixo.
 
+## Incremento autorizado em 2026-10-23 — motor sem login no APK de teste
+
+Infraestrutura e Google reais disponíveis. Proprietário autorizou contornar
+autenticação na versão de teste: motor isolado de mapas sem banco/sessão, três
+rotas POST temporárias e APK passageiro BR debug sem credencial embutida.
+Implantação validada no run 40002766100; APK compilado no run 40005145677,
+reutilizando output PureScript validado. Aceite Android de busca/seleção real
+APROVADO em API 29: origem Praça da Sé e destino Av. Paulista, mapa correspondente
+e endereços preservados ao reabrir a busca, sem login/OTP. Evidências no artefato
+12523888694. Esse marco precede corridas, motorista e autenticação definitiva.
+
 ## Fase 1 — Auditoria e baseline
 **Entregas:** inventário de módulos, dependências externas, backend brasileiro e CI; matriz de funcionalidades com estados comprovados; APK baseline identificado por commit.
 **Aceite:** documentação aponta o SHA exato, como reproduzir o build, o que funciona em Android e o que falta.

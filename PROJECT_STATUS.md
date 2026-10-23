@@ -1,6 +1,6 @@
 # Yatri Brasil — situação do projeto
 
-## Motor de mapas sem login — preparação da versão de teste
+## Motor de mapas sem login — validado em Android
 
 - Proprietário autorizou contornar autenticação nesta versão de teste, para
   validar o motor antes das demais funções. Escopo deste incremento: HomeScreen
@@ -17,10 +17,28 @@
   contratos FFI e manifestos. Atualiza bundle JavaScript sem chamar o compilador.
   Aceite no emulador agora pode exigir seleção real dos dois campos, recusando
   `not_validated` como sucesso quando o modo de teste é solicitado.
-- Validação local: 25 testes passaram, incluindo ausência de sessão/Bearer,
+- Validação local: 26 testes passaram nas suítes de backend e adaptador, incluindo ausência de sessão/Bearer,
   isolamento de rotas, bloqueio em produção, expiração, limites, contratos e
   autorização original. Caddy: inserção idempotente e recusa de host ambíguo.
-- Implantação, compilação do novo APK e aceite Android ainda pendentes nesta revisão.
+- Implantação APROVADA no run 40002766100: Google real por HTTPS sem Bearer,
+  rotas operacionais 403 e ID do contêiner da API principal preservado.
+- Bug encontrado no primeiro teste real: Google Details pode normalizar o ID da
+  sugestão. Cliente corrigido em `3155e66` para aceitar ID canônico válido,
+  preservando validação de coordenadas e descarte de respostas antigas.
+- APK COMPILADO no run 40005145677, fontes `3155e664ceddeb5979ee1601c85e8233eda817c3`,
+  zero recompilações PureScript, Gradle 3min35s. Asset BR debug confirmado com URL
+  HTTPS, modo de mapas ativo e credencial vazia. SHA256 do APK:
+  `ec9ada60615126b4efb68943895ee936c733fa7b343aad0ee3002e202ddeca05`.
+- TESTADO EM ANDROID e VALIDADO DE PONTA A PONTA no emulador API 29:
+  run 40005145677 aprovado, `places-acceptance.json` com `passed`. Destino
+  Av. Paulista e origem Praça da Sé selecionados via Google real, coordenadas
+  válidas e textos preservados ao reabrir a busca. Home sem login/OTP/token,
+  offline/online e retorno aprovados. Capturas conferidas: tiles reais e câmera
+  nas duas regiões de São Paulo, mantendo a marca e a interface original.
+- APK 12524197861; capturas/aceite 12523888694. Relatório estruturado:
+  `brasil/backend/reports/maps-test-2026-10-23.json`.
+- Este aceite cobre mapas/endereços; fluxo completo de corrida e motorista
+  permanece pendente. Janela do motor de teste até 2026-10-30T18:22:42.727971Z.
 
 ## Google configurado e validado no servidor — 2026-10-23
 
