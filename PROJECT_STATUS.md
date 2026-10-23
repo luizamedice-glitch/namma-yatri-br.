@@ -1,5 +1,25 @@
 # Yatri Brasil — situação do projeto
 
+## Google configurado e validado no servidor — 2026-10-23
+
+- `GOOGLE_MAPS_SERVER_KEY` configurada no arquivo de ambiente existente do
+  Lightsail com a chave fornecida pelo proprietário. Transferência via envelope
+  RSA-OAEP/SHA-256, decifrado somente no runner com a chave SSH já autorizada;
+  nenhuma chave Google em texto foi incluída no Git/logs. Workflow e envelope
+  temporários removidos após a aplicação.
+- Run 40000022140 aprovado: somente API recriada, sem build; health saudável e
+  chave presente no processo. Banco, imagem da API, Caddy e portas preservados.
+- Consultas REAIS a partir do servidor: Places autocomplete HTTP 200, Places
+  details HTTP 200 com coordenadas e Routes HTTP 200 com distância positiva.
+  Coordenadas usadas são um cenário de teste explícito em São Paulo.
+- Script `brasil/backend/ops/configure-google-key.py`: atualização atômica,
+  backup protegido, rollback se a API não voltar saudável e logs sem credenciais.
+  Verificações locais com fixtures cobriram preservação do arquivo, permissões,
+  rollback e recusa de chave malformada antes de executar no servidor.
+- Integração no APK original ainda NÃO VALIDADA: continuam pendentes sessão
+  segura e liberação revisada dos endpoints. Sucesso Google no servidor não
+  comprova seleção de origem/destino no Android nem corrida completa.
+
 ## Acesso SSH confirmado com arquivo original — 2026-10-23
 
 - Arquivo PEM original fornecido pelo proprietário validado localmente sem

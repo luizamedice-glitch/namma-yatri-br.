@@ -1,5 +1,23 @@
 # Ambiente AWS de desenvolvimento — Alce Yatri Brasil
 
+## Chave Google aplicada e verificada — 2026-10-23
+
+`GOOGLE_MAPS_SERVER_KEY` configurada no arquivo existente
+`/opt/yatri-brasil/secrets/backend.env`, sem exibir o valor. Somente API recriada
+para carregar a variável; imagem, banco/volumes, Caddy e portas preservados.
+Backup com permissão 600 mantido no diretório de secrets. O procedimento restaura
+a configuração anterior e recria a API se a verificação de saúde falhar.
+
+Run https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40000022140
+aprovado: API saudável, chave carregada, Places autocomplete 200, Places details
+200 com coordenadas e Routes 200 com distância positiva, em consultas reais a
+partir do servidor. Envelope RSA-OAEP/SHA-256 e workflow de transferência
+removidos após aplicação; nenhuma chave em texto foi registrada em Git/logs.
+
+O bloqueio de chave Google ausente está resolvido. O APK original permanece
+pendente de sessão segura, liberação revisada de endpoints e teste Android
+de seleção real de origem/destino. Nenhuma rota pública foi liberada nesta etapa.
+
 ## Inspeção remota confirmada — 2026-10-23
 
 Acesso SSH como `ubuntu` confirmado via Actions após configurar `AWS_SSH_KEY`
