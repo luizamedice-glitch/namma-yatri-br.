@@ -1210,6 +1210,9 @@ public class MainActivity extends AppCompatActivity {
     private void hideSplashNow() {
         if (findViewById(R.id.splash) instanceof BrandVideoSplash) {
             getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark, getTheme()));
+            // Presto screens contain transparent regions: the launch pink must not leak into Home.
+            getWindow().setBackgroundDrawableResource(android.R.color.white);
+            getWindow().setNavigationBarColor(0xFF000000);
         }
         View v = findViewById(in.juspay.mobility.app.R.id.cl_dui_container);
         if (v != null) {

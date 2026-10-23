@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Movie;
+import android.graphics.Paint;
 import android.os.SystemClock;
 import android.view.View;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.io.InputStream;
 final class BrOpeningView extends View {
     private final Movie movie;
     private final Runnable onComplete;
+    private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
     private long startedAt = -1;
     private boolean completed;
 
@@ -41,7 +43,7 @@ final class BrOpeningView extends View {
         canvas.translate((getWidth() - movie.width() * scale) / 2f,
                 (getHeight() - movie.height() * scale) / 2f);
         canvas.scale(scale, scale);
-        movie.draw(canvas, 0, 0);
+        movie.draw(canvas, 0, 0, paint);
         canvas.restore();
         if (elapsed < duration) {
             postInvalidateOnAnimation();
