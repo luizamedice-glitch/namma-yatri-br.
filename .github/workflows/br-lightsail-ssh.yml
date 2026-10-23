@@ -47,7 +47,27 @@ jobs:
           trap 'rm -rf -- "$ssh_dir"' EXIT
           trap 'exit 130' INT
           trap 'exit 143' TERM
-          printf '%s\n' "$AWS_SSH_KEY" | tr -d '\r' > "$ssh_dir/key"
+          # Copiar no celular pode adicionar texto do terminal e mudar as quebras.
+          # Normaliza apenas a formatação; não tenta adivinhar caracteres da chave.
+          python3 - "$ssh_dir/key" <<'PY'
+          import base64, os, re, sys
+          from pathlib import Path
+          text = os.environ['AWS_SSH_KEY'].replace('\\r\\n', '\n').replace('\\n', '\n')
+          pattern = r'-----BEGIN ((?:OPENSSH|RSA|EC) PRIVATE KEY)-----([\s\S]*?)-----END \1-----'
+          blocks = list(re.finditer(pattern, text))
+          if len(blocks) != 1:
+              sys.exit('::error::Cole exatamente um bloco de chave privada, incluindo BEGIN e END, no secret AWS_SSH_KEY.')
+          label, body = blocks[0].groups()
+          body = re.sub(r'\s+', '', body)
+          try:
+              decoded = base64.b64decode(body, validate=True)
+          except Exception:
+              sys.exit('::error::O bloco da chave contém caracteres inválidos ou está incompleto. Copie novamente o arquivo original.')
+          if not decoded:
+              sys.exit('::error::O bloco da chave está vazio.')
+          lines = '\n'.join(body[i:i+70] for i in range(0, len(body), 70))
+          Path(sys.argv[1]).write_text(f'-----BEGIN {label}-----\n{lines}\n-----END {label}-----\n')
+          PY
           unset AWS_SSH_KEY
           chmod 600 "$ssh_dir/key"
           # Recusa chaves inválidas ou com senha, sem imprimir conteúdo nem pedir entrada.
