@@ -3,9 +3,9 @@
     <color name="br_brand_blue">#0732B6</color>
     <color name="br_icon_blue">#0732B6</color>
     <!-- Nomes usados pelos componentes originais; resolução local sem CDN. -->
-    <item type="drawable" name="ny_ic_logo_dark">@drawable/br_logo</item>
-    <item type="drawable" name="ny_ic_logo_dark_my">@drawable/br_logo</item>
+    <item type="drawable" name="ny_ic_logo_dark">@drawable/br_logo_transparent</item>
+    <item type="drawable" name="ny_ic_logo_dark_my">@drawable/br_logo_transparent</item>
     <item type="drawable" name="ny_ic_logo_light">@drawable/br_logo_transparent</item>
-    <item type="drawable" name="ny_splash_scn_logo_with_text">@drawable/br_logo</item>
+    <item type="drawable" name="ny_splash_scn_logo_with_text">@drawable/br_logo_transparent</item>
     <item type="drawable" name="ic_logo_name">@drawable/br_logo_transparent</item>
 </resources>
