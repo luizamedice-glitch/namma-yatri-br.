@@ -53,3 +53,8 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - PONTA A PONTA: **NÃO VALIDADO / critério não atingido**. `places-acceptance.json` registra explicitamente a falta do backend/credencial. Não houve sugestões, seleção de endereço ou viagem simuladas.
 - Relatório e métricas: `Frontend/PASSAGEIRO-ENDERECOS-BR.md`, `Frontend/build-reports/passageiro-enderecos/39868182216.json`. Cache completo reaproveitável do job PureScript bem-sucedido do run 39866367286; a execução geral foi cancelada depois desse job para compilar somente o Android atualizado.
 - Pendências: backend Yatri privado acessível, provisionamento/sessão real, Google Places New e GOOGLE_MAPS_SERVER_KEY; depois executar a seleção real no emulador/celular. Avisos não bloqueantes de SDKs legados/Firebase continuam documentados.
+
+## AWS Lightsail — backend de desenvolvimento implantado
+- Servidor de testes em São Paulo, backend Node.js 22 + PostgreSQL 16 via Docker, Caddy HTTPS; endereço `https://52-67-246-31.sslip.io`.
+- `/health` respondendo HTTP 200 por HTTPS e demais rotas 403 segundo testes comunicados pelo proprietário. **APK ainda não conectado e fluxos operacionais externos não validados.**
+- Especificações, caminhos, medidas de segurança e plano de integração em `AWS-DESENVOLVIMENTO.md`; segredos permanecem somente no servidor.
