@@ -28,7 +28,7 @@ icon=Image.open(src/'15695.png').convert('RGB'); alpha=icon.getchannel('G').poin
 icon.putalpha(alpha); icon=icon.crop(alpha.point(lambda p:255 if p>25 else 0).getbbox())
 for density,px,adaptive in [('mdpi',48,108),('hdpi',72,162),('xhdpi',96,216),('xxhdpi',144,324),('xxxhdpi',192,432)]:
  folder=res/('mipmap-'+density)
- fg=Image.new('RGBA',(adaptive,adaptive)); art=ImageOps.contain(icon,(round(adaptive*.60),round(adaptive*.60)),Image.Resampling.LANCZOS); fg.alpha_composite(art,((adaptive-art.width)//2,(adaptive-art.height)//2)); fg.save(folder/'br_launcher_foreground.png')
+ fg=Image.new('RGBA',(adaptive,adaptive)); art=ImageOps.contain(icon,(round(adaptive*.53),round(adaptive*.53)),Image.Resampling.LANCZOS); fg.alpha_composite(art,((adaptive-art.width)//2,(adaptive-art.height)//2)); fg.save(folder/'br_launcher_foreground.png')
  legacy=Image.new('RGBA',(px,px),'#FF00BE'); art=ImageOps.contain(icon,(round(px*.80),round(px*.80)),Image.Resampling.LANCZOS); legacy.alpha_composite(art,((px-art.width)//2,(px-art.height)//2))
  for name in ['ic_launcher_debug.png','ic_launcher_debug_round.png']:legacy.save(folder/name)
 print('Prepared',len(frames),'frames; duration',sum([30,30,40]*25),'ms')
