@@ -24,6 +24,17 @@ test('modo de mapas de teste dispensa credencial e nunca chama sessão ou envia 
   assert.throws(()=>validateConfig({backendUrl:'https://yatri.example.test',mapsTestMode:'true'}));
 });
 
+test('detalhes aceitam ID canônico do Google diferente da sugestão e recusam ID malformado',async()=>{
+  const cfg={backendUrl:'https://yatri.example.test',mapsTestMode:true};
+  const client=createPlacesClient(cfg,async()=>({...place,placeId:'canonical_fixture'}));
+  const selected=await client.details('autocomplete_fixture');
+  assert.equal(selected.placeId,'canonical_fixture');assert.equal(selected.lat,place.location.lat);
+  for(const placeId of ['',null,'../../invalid']) {
+    const bad=createPlacesClient(cfg,async()=>({...place,placeId}));
+    await assert.rejects(bad.details('autocomplete_fixture'),/coordenadas/);
+  }
+});
+
 test('configuração aceita somente HTTPS/rede privada e rejeita serviço Alce/credenciais ausentes', () => {
   for (const backendUrl of ['', 'file:///tmp/a','http://public.example','https://u:p@example.test','https://example.test?token=abc','https://example.test/functions/v1/alce-mobilidade'])
     assert.throws(() => validateConfig({...config,backendUrl}));

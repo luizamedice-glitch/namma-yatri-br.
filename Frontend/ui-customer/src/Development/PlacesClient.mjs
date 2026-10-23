@@ -54,7 +54,10 @@ export function createPlacesClient(config, transport) {
     async details(placeId) {
       if (typeof placeId !== 'string' || !/^[\w:-]{3,255}$/.test(placeId)) throw new Error('Selecione um endereço válido.');
       const p = await post('/v1/places/details', {placeId});
-      if (!p || p.placeId !== placeId || typeof p.address !== 'string' || !p.address.trim() || p.address.length > 1000 || !validPosition(p.location)) throw new Error('Endereço sem coordenadas válidas.');
+      // Google may canonicalize an autocomplete address ID in Place Details.
+      // FFI revisions already correlate the response with the active selection.
+      if (!p || typeof p.placeId !== 'string' || !/^[\w:-]{3,255}$/.test(p.placeId) ||
+          typeof p.address !== 'string' || !p.address.trim() || p.address.length > 1000 || !validPosition(p.location)) throw new Error('Endereço sem coordenadas válidas.');
       return {placeId:p.placeId, address:p.address, lat:p.location.lat, lng:p.location.lng};
     }
   };

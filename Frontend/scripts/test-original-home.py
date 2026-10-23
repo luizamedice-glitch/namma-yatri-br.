@@ -75,8 +75,13 @@ def real_places_or_explicit_block(nodes):
         nodes = capture('places-' + field + '-input')
         fields = [n for n in nodes if n.get('class') == 'android.widget.EditText']
         assert len(fields) >= 2
-        tap(fields[-1] if field == 'destination' else fields[0])
+        target = fields[-1] if field == 'destination' else fields[0]
+        tap(target)
         time.sleep(0.7)
+        # GPS can prefill the source; replace it as a user editing the field would.
+        if target.get('text'):
+            adb('shell', 'input', 'keyevent', 'KEYCODE_MOVE_END')
+            adb('shell', 'input', 'keyevent', *(['KEYCODE_DEL'] * len(target.get('text'))))
         adb('shell', 'input', 'text', query.replace(' ', '%s'))
         time.sleep(3)
         nodes = capture('places-' + field + '-typed')
