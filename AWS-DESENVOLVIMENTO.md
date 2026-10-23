@@ -60,3 +60,18 @@ curl -s -o /dev/null -w '%{http_code}\n' https://52-67-246-31.sslip.io/v1/rides
 ```
 
 **Não executar comandos que imprimam `backend.env`, `postgres_password` ou outros segredos.** A exposição do backend ao app dependerá de liberar rotas autenticadas e configurar a URL na variante brasileira de teste; a URL publicada no GitHub por si só não efetua essa conexão.
+
+## Preparação verificada pelo Codex — 2026-10-23
+
+A consulta externa nesta execução confirmou `/health` 200 e rotas operacionais 403. O estado interno do host e seu commit implantado ainda não foram inspecionados: o ambiente não tem chave SSH/vínculo AWS configurados nem concessão TCP para o host; a conexão do aplicativo AWS exige reautenticação. O proprietário informou que configurará o acesso no ambiente. **Nenhuma atualização remota foi executada.**
+
+Commit preparado: `45f32bdf3a185c2a889ba0bc7f4f8c0d4c2e20e3`. Instruções completas em `brasil/backend/ops/README.md`.
+
+- `ops/deploy-lightsail.sh`: atualiza apenas a imagem `api` no Compose existente, por SHA fixo, sem substituir o checkout do operador. Preserva volumes, arquivos de segredos, portas e Caddy. Migrations precisam ser idênticas às da imagem em execução; caso contrário, interrompe antes da alteração. Inspeciona o banco sem modificar usuários e exige contas automáticas desabilitadas. Em falha, restaura a imagem anterior.
+- `src/deployment-check.mjs`: diagnóstico sem valores de credenciais, consulta somente leitura do esquema/migrations e estado de configuração de Google.
+- Imagem Docker com etiqueta do commit e `HEALTHCHECK`. CA opcional de proxy de desenvolvimento é montada apenas durante o build, sem desativar TLS.
+- Usar `compose.api-image.json` junto ao Compose existente após sucesso; não executar o Compose local de testes no servidor.
+
+Testes: 10 unitários, 3 suítes com PostgreSQL real, inicialização CLI, build Node 22 e troca de imagem em Compose isolado aprovados. Falha intencional de startup provocou rollback; API anterior voltou saudável, contêiner PostgreSQL e dado de teste preservados. Mudança de migration foi rejeitada antes de recriar API. Workflows [backend](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39974516114) e [integração](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39974511131) aprovados. Evidências resumidas: `brasil/backend/reports/lightsail-2026-10-23.json`.
+
+Próximo passo após disponibilizar acesso: inspecionar o host, projeto Compose e bindings sem imprimir segredos; conferir commit/migrations e aplicar a atualização revisada em janela sem viagens. A conexão do APK e eventual liberação externa de endpoints exigem o desenho de sessões e revisão previstos acima; não são consequência automática da atualização da imagem.

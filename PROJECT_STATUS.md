@@ -76,3 +76,11 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - APK: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39890948539/artifacts/12474108786 . SHA256 `3eccf4987964f52ef082678cfd591c358e85ae45cf87c9d0b09aafd21f2740df`.
 - Evidências: artefato 12474822465 do mesmo run. Relatório estruturado: `Frontend/build-reports/passageiro-identidade/39890948539.json`. A nova assinatura debug difere da anterior; desinstalar o APK anterior para instalar este.
 - Esta versão substitui visualmente a entrega 39881766117. Backend, autenticação, lógica de corridas, fontes PureScript e motorista permanecem sem alterações nesta execução. Pesquisa real/Android 12+ continuam fora da validação.
+
+## Integração com o Lightsail — preparação e testes em 2026-10-23
+
+- Servidor existente confirmado por HTTPS: `/health` 200, rotas operacionais 403.
+- IMPLEMENTADO/TESTADO: implantação por commit com imagem identificável, checagem PostgreSQL somente leitura, bloqueio de migrations diferentes e retorno à imagem anterior. Commit `45f32bdf3a`; procedimentos em `brasil/backend/ops/README.md`.
+- CI aprovado: backend run 39974516114 e integração run 39974511131. Dez testes unitários, três suítes PostgreSQL, inicialização CLI, build Docker Node 22, atualização e rollback em Compose descartável aprovados. Banco/registro preservados no rollback; guard de migrations testado com recusa antes de recriar API.
+- REMOTO: **NÃO IMPLANTADO nesta execução**. Acesso SSH/identidade AWS ainda indisponíveis; conexão AWS solicita reautenticação. Proprietário configurará acesso no ambiente. Nenhum segredo, Caddy, firewall, banco remoto ou endpoint público foi alterado.
+- APK conectado/Places reais: **NÃO VALIDADO**. Evidência estruturada: `brasil/backend/reports/lightsail-2026-10-23.json`. Detalhes e próximo passo em `AWS-DESENVOLVIMENTO.md`.
