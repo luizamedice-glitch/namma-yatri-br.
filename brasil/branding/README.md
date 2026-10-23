@@ -28,3 +28,9 @@ Splash e fallback exibem a arte completa azul com `fitCenter`, preservando propo
 Não há alterações em PureScript/PrestoDOM, navegação, autenticação, backend, configuração Maps ou corridas. Bundle reutilizável atualizado: `39866367286` (substitui o exemplo histórico acima). O teste Android captura o ícone instalado no launcher, vídeo/frames da abertura real e mantém os testes existentes da HomeScreen offline/online e campos originais. Resultados desta nova versão serão registrados após a execução; presença de recursos não é aprovação visual.
 
 Resultado do novo pacote: Android compilado em 201,76 s no job do run 39881766117; inspeção dos 18 PNGs empacotados sem diferenças. Validação Android e inspeção visual aprovadas no run 39882870977. Relatório completo em `Frontend/PASSAGEIRO-IDENTIDADE-OFICIAL.md`, incluindo capturas, APK e as falhas de automação corrigidas.
+
+## Atualização posterior no repositório — APK atual
+
+Os commits até `87ac794971` substituíram os PNGs Android e os aliases: splash vertical com `centerCrop` para eliminar o retângulo/faixas, texto transparente no cabeçalho e ícones corrigidos. O run **39890948539** compilou diretamente esses arquivos, sem executar novamente o gerador e sem recompilar PureScript. Compilação e teste Android API 29 aprovados; captura visual confirma a nova splash sem retângulo e o cabeçalho transparente. Os 18 PNGs do APK correspondem aos recursos desse commit, não aos PNGs iniciais do ZIP.
+
+APK: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39890948539/artifacts/12474108786 . Evidências: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39890948539/artifacts/12474822465 . Relatório: `Frontend/build-reports/passageiro-identidade/39890948539.json`. Os registros anteriores neste documento são históricos.

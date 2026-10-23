@@ -67,3 +67,12 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - APK: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39881766117/artifacts/12470628951 ; SHA256 `44628e0e38d54c758fbe25aef2a25ac1b892b32a4661e0dc33f73ad7375f823a`.
 - Limites: outras máscaras/Android 12+ não testados, logo proporcionalmente pequeno no cabeçalho original; breve janela inicial do sistema branca antes da splash nativa. Assinatura debug diferente da entrega anterior exige desinstalar a anterior. Pesquisa Places/corridas não foram aprovadas por esta tarefa; configuração do backend permanece ausente neste APK.
 - Relatório: `Frontend/PASSAGEIRO-IDENTIDADE-OFICIAL.md` e `Frontend/build-reports/passageiro-identidade/39881766117.json`.
+
+## Novo APK com imagens corrigidas no repositório — 2026-10-23
+
+- Fontes do APK: `87ac794971`, incluindo as correções de identidade publicadas pelo proprietário: splash vertical com `centerCrop`, cabeçalho com texto transparente e ícones atualizados. Nenhuma imagem foi gerada ou modificada nesta execução; usados os PNGs já commitados.
+- COMPILADO/TESTADO EM ANDROID: workflow 39890948539 **success**, Gradle 195,68 s, PureScript reutilizado do run 39866367286 sem recompilação. Pixel 2/API 29: abertura/Home offline e online, campos editáveis e retorno aprovados.
+- Conferência visual: splash cobre a área do aplicativo sem o retângulo anterior; logo/pino visíveis, texto transparente no cabeçalho original, ícone corrigido no launcher. Os 18 PNGs dentro do APK correspondem por pixels aos recursos atuais da branch. A captura revisada da Home tem área de mapa branca: tiles não confirmados nesta execução; mapas e integrações não foram alterados ou aprovados por este incremento.
+- APK: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39890948539/artifacts/12474108786 . SHA256 `3eccf4987964f52ef082678cfd591c358e85ae45cf87c9d0b09aafd21f2740df`.
+- Evidências: artefato 12474822465 do mesmo run. Relatório estruturado: `Frontend/build-reports/passageiro-identidade/39890948539.json`. A nova assinatura debug difere da anterior; desinstalar o APK anterior para instalar este.
+- Esta versão substitui visualmente a entrega 39881766117. Backend, autenticação, lógica de corridas, fontes PureScript e motorista permanecem sem alterações nesta execução. Pesquisa real/Android 12+ continuam fora da validação.
