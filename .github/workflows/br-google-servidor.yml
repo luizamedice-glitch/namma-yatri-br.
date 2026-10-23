@@ -1,0 +1,57 @@
+name: BR - Configurar Google no servidor
+on:
+  push:
+    branches: [codex/issue-1-purescript-memory]
+    paths: ['brasil/backend/ops/google-server-key.enc']
+permissions:
+  contents: read
+concurrency:
+  group: lightsail-ssh-test
+  cancel-in-progress: false
+jobs:
+  configurar:
+    if: github.ref == 'refs/heads/codex/issue-1-purescript-memory'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Aplicar chave cifrada e verificar Google a partir do servidor
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_HOST: ${{ secrets.AWS_HOST || '52.67.246.31' }}
+          AWS_USER: ${{ secrets.AWS_USER || 'ubuntu' }}
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          [[ "$AWS_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          [[ "$AWS_USER" =~ ^[a-zA-Z_][a-zA-Z0-9_-]*$ ]]
+          umask 077
+          work=$(mktemp -d "$RUNNER_TEMP/yatri-google.XXXXXX")
+          trap 'rm -rf -- "$work"' EXIT
+          printf '%s\n' "$AWS_SSH_KEY" > "$work/key"
+          unset AWS_SSH_KEY
+          openssl pkeyutl -decrypt -inkey "$work/key" \
+            -in brasil/backend/ops/google-server-key.enc -out "$work/google-key" \
+            -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256
+          host_check=accept-new
+          touch "$work/known_hosts"
+          if [[ -n "$AWS_SSH_KNOWN_HOSTS" ]]; then
+            printf '%s\n' "$AWS_SSH_KNOWN_HOSTS" > "$work/known_hosts"
+            host_check=yes
+          fi
+          unset AWS_SSH_KNOWN_HOSTS
+          remote_command=$(python3 - <<'PY'
+          import shlex
+          from pathlib import Path
+          code = Path('brasil/backend/ops/configure-google-key.py').read_text()
+          print('sudo -n python3 -c ' + shlex.quote(code))
+          PY
+          )
+          timeout 200s ssh -F /dev/null -T -i "$work/key" \
+            -o IdentitiesOnly=yes -o BatchMode=yes -o ForwardAgent=no \
+            -o ConnectTimeout=15 -o ConnectionAttempts=1 \
+            -o ServerAliveInterval=10 -o ServerAliveCountMax=2 \
+            -o "StrictHostKeyChecking=$host_check" -o "UserKnownHostsFile=$work/known_hosts" \
+            "$AWS_USER@$AWS_HOST" "$remote_command" < "$work/google-key"
