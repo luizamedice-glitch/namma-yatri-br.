@@ -18,16 +18,28 @@ def screenshot(name):
 
 adb('shell', 'input', 'keyevent', 'KEYCODE_HOME')
 time.sleep(2)
-# Pixel 2 / Launcher3: open the actual installed-app drawer.
-adb('shell', 'input', 'swipe', '540', '1650', '540', '350', '500')
-time.sleep(2)
-adb('shell', 'uiautomator', 'dump', '/sdcard/branding-launcher.xml')
-xml = adb('shell', 'cat', '/sdcard/branding-launcher.xml')
-(out / 'branding-launcher.xml').write_bytes(xml)
-nodes = list(ET.fromstring(xml).iter('node'))
-icons = [n for n in nodes if 'Alce Yatri' in (n.get('text', '') + n.get('content-desc', ''))]
+# Use the launcher's actual accessibility control rather than screen-size guesses.
+icons = []
+for attempt in range(3):
+    adb('shell', 'uiautomator', 'dump', '/sdcard/branding-launcher.xml')
+    xml = adb('shell', 'cat', '/sdcard/branding-launcher.xml')
+    (out / f'branding-launcher-{attempt}.xml').write_bytes(xml)
+    screenshot(f'branding-launcher-{attempt}.png')
+    nodes = list(ET.fromstring(xml).iter('node'))
+    icons = [n for n in nodes if 'Alce Yatri' in (n.get('text', '') + n.get('content-desc', ''))]
+    if icons:
+        (out / 'branding-launcher.xml').write_bytes(xml)
+        break
+    app_list = next((n for n in nodes if n.get('content-desc') == 'Apps list'), None)
+    if app_list is not None:
+        x1, y1, x2, y2 = map(int, re.findall(r'\d+', app_list.get('bounds')))
+        adb('shell', 'input', 'tap', str((x1+x2)//2), str((y1+y2)//2))
+    else:
+        width, height = map(int, re.findall(r'(\d+)x(\d+)', adb('shell', 'wm', 'size').decode())[-1])
+        adb('shell', 'input', 'swipe', str(width//2), str(height*7//10), str(width//2), str(height//5), '500')
+    time.sleep(2)
 if not icons:
-    raise SystemExit('Icone Alce Yatri nao encontrado no launcher real')
+    raise SystemExit('Icone Alce Yatri nao encontrado no launcher real apos 3 tentativas')
 screenshot('branding-launcher.png')
 (out / 'branding-launcher.json').write_text(json.dumps({
     'label': icons[0].get('text'), 'bounds': icons[0].get('bounds'),
