@@ -9,6 +9,7 @@ adb install -g "${APKS[0]}"
 adb shell svc wifi disable
 adb shell svc data disable
 adb logcat -c
+python3 Frontend/scripts/capture-passenger-branding.py "$OUT"
 timeout 60s adb shell am start -W -n in.juspay.nammayatri.debug/in.juspay.mobility.MainActivity > "$OUT/launch.txt"
 # Captures distinguish a live splash from an interface that actually rendered.
 ELAPSED=0

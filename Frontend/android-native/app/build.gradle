@@ -263,7 +263,7 @@ android {
             debug.assets.srcDir 'src/brTest/assets'
             maybeCreate('nyUserProdDebug').assets.srcDir layout.buildDirectory.dir('generated/brPlacesAssets')
             maybeCreate('nyUserProdDebug').manifest.srcFile 'src/brTest/passenger/AndroidManifest.xml'
-            debug.res.srcDir 'src/brTest/res'
+            maybeCreate('nyUserProdDebug').res.srcDir 'src/brTest/res'
         }
         nyUser.setRoot('src/user/nammaYatri')
         myUser.setRoot('src/user/manaYatri')

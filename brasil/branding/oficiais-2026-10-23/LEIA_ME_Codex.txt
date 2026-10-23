@@ -1,0 +1,18 @@
+ALCE YATRI BRASIL — Pacote de identidade visual Android
+
+Arquivos originais:
+1. originais/01_logo_texto_transparente.png — nome isolado com transparência, para interface.
+2. originais/02_logo_completo_fundo_azul.png — arte integral, para tela de abertura.
+3. originais/03_icone_original.png — ícone aprovado, original 1536x1536.
+
+Recursos preparados:
+- android/mipmap-mdpi/ic_launcher.png 48x48
+- android/mipmap-hdpi/ic_launcher.png 72x72
+- android/mipmap-xhdpi/ic_launcher.png 96x96
+- android/mipmap-xxhdpi/ic_launcher.png 144x144
+- android/mipmap-xxxhdpi/ic_launcher.png 192x192
+- android/mipmap-*/ic_launcher_foreground.png em 108/162/216/324/432px (camada adaptativa com margem de segurança).
+- android/mipmap-anydpi-v26/ic_launcher.xml e android/values/branding_colors.xml, exemplos para ícone adaptativo.
+- android/play_store_icon_512.png: referência de 512x512; antes de publicar, revisar os requisitos atuais do Google Play e a opção gráfica final.
+
+ATENÇÃO AO CODEX: aplicar somente no flavor/build de desenvolvimento brasileiro (brTest) do APK passageiro; conferir conflitos com mipmaps/manifest existentes, recursos debug/round, ícone do sistema Android 12+ e splash original. O ícone adaptativo será recortado pelo launcher; validar em emulador/dispositivo. Usar arte completa no splash com centerInside/fitCenter, mantendo proporção. Não alterar o controlador PureScript, backend ou app motorista. Não assumir que os XML podem simplesmente substituir arquivos existentes com outros nomes; adaptar nomes conforme manifest/Gradle.

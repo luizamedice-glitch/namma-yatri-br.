@@ -14,3 +14,13 @@ gh workflow run br-purescript-memory.yml --ref codex/issue-1-purescript-memory \
 ```
 
 O workflow confere igualdade dos fontes PureScript antes de reutilizar o bundle. Build e teste Android aprovados no run 39852288044 (commit bb13872b40). Captura `home-online-1.png` confirma a nova marca no cabeçalho original. APK: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39852288044/artifacts/12458705677 . Os três PNGs principais e os cinco ícones dentro do APK foram comparados por pixels com os arquivos fornecidos, sem diferenças.
+
+## Artes oficiais recebidas em 2026-10-23
+
+`oficiais-2026-10-23/` preserva integralmente o novo ZIP `alce_yatri_brasil_android_imagens.zip`: três originais, ícones preparados e instruções. Seu `sha256.json` registra os bytes recebidos. Os arquivos anteriores permanecem como referência histórica.
+
+O overlay passa a ser exclusivo de **nyUserProdDebug + brTestMode**, sem efeito no motorista ou em produção. Os ícones debug/round legados usam as cinco densidades fornecidas; Android 8+ usa a camada foreground de 108 dp já preparada por densidade, sem um segundo inset. Fundo adaptativo: `#0732B6` conforme pacote. As máscaras circular e demais formatos ficam a cargo do launcher.
+
+Splash e fallback exibem a arte completa azul com `fitCenter`, preservando proporção, IDs e callbacks existentes. A HomeScreen original resolve os aliases `ny_ic_logo_dark` e `ny_ic_logo_dark_my` para a mesma arte completa azul, sem moldura adicionada. O cabeçalho original de 93×32 dp permanece intacto; a imagem inteira aparece proporcionalmente pequena nesse espaço. `ny_ic_logo_light` e `ic_logo_name` usam o logotipo de texto transparente fornecido.
+
+Não há alterações em PureScript/PrestoDOM, navegação, autenticação, backend, configuração Maps ou corridas. Bundle reutilizável atualizado: `39866367286` (substitui o exemplo histórico acima). O teste Android captura o ícone instalado no launcher, vídeo/frames da abertura real e mantém os testes existentes da HomeScreen offline/online e campos originais. Resultados desta nova versão serão registrados após a execução; presença de recursos não é aprovação visual.
