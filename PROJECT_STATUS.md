@@ -1,5 +1,20 @@
 # Yatri Brasil — situação do projeto
 
+## Retomada do acesso ao servidor existente — 2026-10-23
+
+- Documentação localizada na branch `codex/issue-1-purescript-memory`:
+  `AWS-DESENVOLVIMENTO.md` informa `https://52-67-246-31.sslip.io`,
+  `/opt/yatri-brasil` e Caddy instalado no host. Consulta HTTPS nesta execução
+  confirmou `/health` com `status=ok` e `service=namma-yatri-br`.
+- PR #4 fechado sem merge: a implantação paralela proposta sobre a branch antiga
+  `passageiro-pt-br` não deve ser usada para substituir o ambiente existente.
+- Workflow SSH existente passa a usar IP público `52.67.246.31` e usuário
+  `ubuntu` como fallback dos secrets opcionais `AWS_HOST`/`AWS_USER`.
+  `AWS_SSH_KEY` continua somente em Actions. Isso remove o bloqueio anterior
+  sem cadastrar novos secrets nem alterar a instalação do servidor.
+- A alteração dispara somente `whoami && hostname`. Resultado remoto pendente
+  da execução de Actions; nenhuma implantação ou liberação de rotas realizada.
+
 ## Teste SSH via GitHub Actions — 2026-10-23
 
 - IMPLEMENTADO: `.github/workflows/br-lightsail-ssh.yml`, commit `c25f8146d4`, usa `AWS_SSH_KEY`, `AWS_HOST` e `AWS_USER` para executar somente `whoami && hostname` na porta 22. Chave temporária fora do checkout, permissão 600, remoção ao sair, sem impressão do conteúdo; sem checkout ou permissões de token GitHub. Timeout SSH 45 s / job 3 min.

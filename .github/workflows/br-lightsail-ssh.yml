@@ -23,8 +23,9 @@ jobs:
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
-          AWS_HOST: ${{ secrets.AWS_HOST }}
-          AWS_USER: ${{ secrets.AWS_USER }}
+          # Identificadores públicos já confirmados pelo proprietário.
+          AWS_HOST: ${{ secrets.AWS_HOST || '52.67.246.31' }}
+          AWS_USER: ${{ secrets.AWS_USER || 'ubuntu' }}
           # Opcional: linha known_hosts conferida pelo proprietário fora desta conexão.
           AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
         run: |
