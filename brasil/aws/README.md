@@ -1,6 +1,6 @@
 # AWS — integração dos celulares no ambiente de testes
 
-Configuração para EC2 com Docker Engine e Compose v2 com suporte a `--wait`.
+Configuração para Ubuntu em EC2/Lightsail com Docker Engine e Compose v2 com suporte a `--wait`.
 Usa a API e o PostgreSQL existentes; Caddy fornece HTTPS e preserva os eventos SSE.
 O banco não publica porta, e a API permanece publicada somente em 127.0.0.1:8080.
 Esta configuração mantém as contas de desenvolvimento: destina-se a testes privados.
@@ -68,8 +68,11 @@ Isso atende ao piloto restrito, mas precisa ser revisto antes de ampliar o uso.
 
 O workflow **BR - Implantar API na AWS por SSH** usa o nome do secret existente
 como parâmetro `ssh_key_secret`, sem ler nem imprimir seu conteúdo.
-Configure `vars.AWS_SSH_HOST` e `vars.AWS_SSH_USER` e o secret
-`AWS_SSH_KNOWN_HOSTS` com a chave pública SSH do servidor, verificada por um
+Servidor informado: Lightsail `yatri-brasil-dev`, São Paulo (`sa-east-1`),
+IP estático `52.67.246.31`, usuário `ubuntu`. O workflow já usa esses valores;
+`vars.AWS_SSH_HOST` e `vars.AWS_SSH_USER` podem substituí-los.
+O secret existente da chave de acesso é `AWS_SSH_KEY`.
+Configure o secret `AWS_SSH_KNOWN_HOSTS` com a chave pública SSH do servidor, verificada por um
 canal administrativo confiável. A instância deve permitir SSH da origem do runner;
 se isso não for possível, use um runner próprio na rede autorizada.
 

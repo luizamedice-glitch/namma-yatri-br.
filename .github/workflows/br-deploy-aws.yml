@@ -17,8 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      SSH_HOST: ${{ vars.AWS_SSH_HOST }}
-      SSH_USER: ${{ vars.AWS_SSH_USER }}
+      SSH_HOST: ${{ vars.AWS_SSH_HOST || '52.67.246.31' }}
+      SSH_USER: ${{ vars.AWS_SSH_USER || 'ubuntu' }}
     steps:
       - uses: actions/checkout@v4
       - name: Preparar acesso SSH
