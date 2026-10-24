@@ -187,3 +187,5 @@ stdin do comando remoto. A entrega da ativação usa chave RSA pública de opera
 o código de ativação, sessão, dados pessoais ou chave privada em commits/logs.
 Se o operador não tiver mais a chave privada de entrega, gerar novo par e
 substituir somente a pública antes de emitir uma nova ativação.
+
+Continuação do piloto existente: as ações `arrive`, `start` e `complete` estão preparadas nas allowlists de API/Caddy, com autorização e máquina de estados existentes. A atualização recusa viagens ativas e preserva `YATRI_DRIVER_PILOT_UNTIL` (não renova a janela implicitamente). Sem mudanças de migrations, contas ou portas. O marco `40121323902` validou pedido/aceite/cancelamento; implantação e aceite Android do ciclo completo ainda precisam ser registrados após a execução correspondente.

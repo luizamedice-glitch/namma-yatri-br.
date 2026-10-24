@@ -31,6 +31,9 @@ start origin destination = do
           "requesting" -> "Solicitando viagem…"
           "searching" -> "Procurando motorista"
           "accepted" -> "Motorista a caminho"
+          "arrived" -> "Motorista no embarque"
+          "in_progress" -> "Viagem em andamento"
+          "completed" -> "Viagem concluída"
           "cancelled" -> "Viagem cancelada"
           "error" -> "Não foi possível calcular a viagem"
           _ -> "Calculando estimativa…")
@@ -39,7 +42,7 @@ start origin destination = do
        ,textView [text trip.vehicle,textSize 16,padding (Padding 20 0 20 12),color "#666666"]
        ,linearLayout [width MATCH_PARENT,height WRAP_CONTENT,visibility (if trip.phase=="quoted" then VISIBLE else GONE)]
           [Trip.button (push <<< RequestRide) "Solicitar viagem" true]
-       ,linearLayout [width MATCH_PARENT,height WRAP_CONTENT,visibility (if trip.phase=="searching" || trip.phase=="accepted" then VISIBLE else GONE)]
+       ,linearLayout [width MATCH_PARENT,height WRAP_CONTENT,visibility (if trip.phase=="searching" || trip.phase=="accepted" || trip.phase=="arrived" then VISIBLE else GONE)]
           [Trip.button (push <<< CancelRide) "Cancelar viagem" true]
        ,Trip.button (push <<< ReturnBooking) "Voltar ao início" (trip.phase/="requesting")]
     ,eval: \action trip -> case action of
@@ -53,7 +56,9 @@ start origin destination = do
        CancelRide PrimaryButton.OnClick -> do
          _ <- pure $ unsafePerformEffect Rides.cancel
          continue trip
-       ReturnBooking PrimaryButton.OnClick -> exit unit
+       ReturnBooking PrimaryButton.OnClick -> do
+         _ <- pure $ unsafePerformEffect $ when (trip.phase=="completed" || trip.phase=="cancelled") Rides.dismiss
+         exit unit
        _ -> continue trip
     }
   pure unit

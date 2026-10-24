@@ -84,3 +84,5 @@ contra Lightsail 40117202534 aprovado: tela nativa de ativação, GPS do emulado
 e disponibilidade confirmados na API/PostgreSQL reais. A Fase 5 permanece
 aberta para ofertas e ações de viagem nas views originais, solicitação pelo
 passageiro e sincronização dos dois APKs.
+
+Marco confirmado `40121323902` (fontes `f0bfa4f447`): chamada real entre os dois APKs aprovada até aceite e cancelamento, com Google e Lightsail. Continuação imediata: chegada → início → conclusão, recuperação após recriar os processos e confirmação dos mesmos estados nas duas interfaces. Implementação e contratos locais preparados; falta aprovar os novos APKs no Android e a fronteira HTTPS atualizada. Sem pagamentos e sem ampliação de funcionalidades paralelas.

@@ -4,6 +4,18 @@ import {createNativeFetch} from '../../src/Development/NativeTransport.mjs';
 import {callbackMapper} from 'presto-ui';
 import {tripView} from '../../../ui-common/src/Development/PilotTrip.mjs';
 let online, failure, timer, position, lastError, changed, lastAvailable, lastTrip, actionBusy=false;
+let snapshotRevision=0,lastRide=null,lastPhase='idle';
+const rideKey='YATRI_DRIVER_ACTIVE_RIDE';
+const emptyTrip=()=>({id:'',phase:'idle',origin:'',destination:'',fare:'',distance:'',passenger:'',driver:'',vehicle:''});
+function rememberRide(id){lastRide=id;window.JBridge.setInSharedPrefs(rideKey,id||'');}
+function publishTrip(trip){
+  const serialized=JSON.stringify(trip);
+  if(changed&&serialized!==lastTrip){
+    lastTrip=serialized;lastPhase=trip.phase;changed(trip)();
+    window.__YATRI_DRIVER_RIDE__={id:trip.id,phase:trip.phase};
+    if(trip.phase==='offer')try{navigator.vibrate(300);}catch(_){}
+  }
+}
 export const enabled = () => {
   try { return window.__OS === 'ANDROID' && window.__YATRI_BR_DEVELOPMENT__ === true &&
     JSON.parse(window.JBridge.getDeviceInfo()).package_name === 'in.juspay.nammayatripartner.debug';
@@ -41,37 +53,44 @@ function failed(error) {
   lastError = message;
 }
 async function snapshot() {
+  const owner=changed,revision=++snapshotRevision;
   try {
-    const data = await client().snapshot();
+    const api=client(),data = await api.snapshot();
+    if(owner!==changed||revision!==snapshotRevision)return;
+    let ride=data.rides[0]||data.offers[0],phase=data.rides.length?ride.status:'offer';
+    if(data.rides.length&&lastRide!==ride.id)rememberRide(ride.id);
+    // Active-only snapshots omit terminal trips. Read the actual persisted trip
+    // before dismissing its UI, including after Activity/process recreation.
+    if(!ride&&lastRide){ride=await api.ride(lastRide);phase=ride.status;}
+    if(owner!==changed||revision!==snapshotRevision)return;
     if (online && lastAvailable!==data.available){lastAvailable=data.available;online(data.available === true)();}
-    const ride=data.rides[0]||data.offers[0];
-    const trip=ride?tripView(ride,data.rides.length?ride.status:'offer'):
-      {id:'',phase:'idle',origin:'',destination:'',fare:'',distance:'',passenger:'',driver:'',vehicle:''};
-    const serialized=JSON.stringify(trip);
-    if(changed&&serialized!==lastTrip){lastTrip=serialized;changed(trip)();
-      window.__YATRI_DRIVER_RIDE__={id:trip.id,phase:trip.phase};
-      if(trip.phase==='offer')try{navigator.vibrate(300);}catch(_){}
-    }
+    publishTrip(ride?tripView(ride,phase):emptyTrip());
     lastError = null;
     window.__YATRI_DRIVER_OPERATIONS__ = {connected:true, offers:data.offers.length, rides:data.rides.length};
-  } catch (error) { failed(error); }
+  } catch (error) { if(owner===changed&&revision===snapshotRevision)failed(error); }
 }
 export const subscribe = ok => fail => gps => updates => () => {
   online = ok; failure = fail;changed=updates;lastAvailable=undefined;lastTrip=undefined;
+  const saved=window.JBridge.getFromSharedPrefs(rideKey);
+  lastRide=/^[a-f0-9-]{36}$/.test(saved||'')?saved:null;
   if (timer) clearInterval(timer);
   snapshot();
   let busy = false;
   timer = setInterval(async () => {
-    if (busy) return;
+    if (busy||actionBusy) return;
     busy = true;
     try { gps(); await snapshot(); } finally { busy = false; }
   }, 5000);
-  return () => { clearInterval(timer); timer = null; online = failure = changed = null; };
+  return () => { clearInterval(timer); timer = null; online = failure = changed = null;snapshotRevision++; };
 };
 export const act = action => id => () => {
-  if(!enabled()||actionBusy||!['accept','reject','cancel'].includes(action))return;
+  if(!enabled()||actionBusy||!['accept','reject','arrive','start','complete','cancel'].includes(action))return;
   actionBusy=true;
   (async()=>{try{await client().rideAction(id,action);await snapshot();}catch(error){failed(error);}finally{actionBusy=false;}})();
+};
+export const dismissTrip=()=>{
+  if(!enabled()||!['completed','cancelled'].includes(lastPhase))return;
+  rememberRide(null);snapshotRevision++;publishTrip(emptyTrip());snapshot();
 };
 export const location = lat => lng => () => {
   if (!enabled()) return;
@@ -87,6 +106,7 @@ export const availability = available => ok => fail => () => {
         await api.location(position.lat,position.lng);
       }
       const data = await api.availability(available);
+      snapshotRevision++;lastAvailable=data.available;
       ok(data.available)();
       if (online) online(data.available)();
       lastError = null;

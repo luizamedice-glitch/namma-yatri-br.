@@ -4,6 +4,8 @@ import {createOperationsClient} from '../../../ui-driver/src/Development/Operati
 import {createNativeFetch} from '../../../ui-driver/src/Development/NativeTransport.mjs';
 import {tripView} from '../../../ui-common/src/Development/PilotTrip.mjs';
 let listener,timer,quote,rideId,busy=false;
+const rideKey='YATRI_PASSENGER_ACTIVE_RIDE';
+function rememberRide(id){rideId=id;window.JBridge.setInSharedPrefs(rideKey,id||'');}
 export const enabled=()=>{
   try{return window.__OS==='ANDROID'&&window.__YATRI_BR_DEVELOPMENT__===true&&
     JSON.parse(window.JBridge.getDeviceInfo()).package_name==='in.juspay.nammayatri.debug'&&
@@ -22,16 +24,19 @@ function fail(error,owner=listener){if(listener&&owner===listener)listener.error
 async function refresh(owner=listener){
   const api=client(),data=await api.snapshot();
   if(owner!==listener)return;
-  if(data.rides.length){rideId=data.rides[0].id;emit(tripView(data.rides[0]),owner);}
+  if(data.rides.length){if(rideId!==data.rides[0].id)rememberRide(data.rides[0].id);emit(tripView(data.rides[0]),owner);}
   else if(rideId)emit(tripView(await api.ride(rideId)),owner);
 }
 export const subscribe=origin=>destination=>changed=>error=>()=>{
-  const owner={changed,error};listener=owner;quote=null;rideId=null;busy=false;
+  const owner={changed,error};listener=owner;quote=null;busy=false;
+  const saved=window.JBridge.getFromSharedPrefs(rideKey);
+  rideId=/^[a-f0-9-]{36}$/.test(saved||'')?saved:null;
   (async()=>{
     try{
       const api=client(),data=await api.snapshot();
       if(owner!==listener)return;
-      if(data.rides.length){rideId=data.rides[0].id;emit(tripView(data.rides[0]),owner);}
+      if(data.rides.length){rememberRide(data.rides[0].id);emit(tripView(data.rides[0]),owner);}
+      else if(rideId){emit(tripView(await api.ride(rideId)),owner);}
       else{const value=await api.quote(origin,destination);if(owner!==listener)return;quote=value;emit(tripView(value,'quoted'),owner);}
     }catch(e){fail(e,owner);}
   })();
@@ -43,9 +48,10 @@ export const subscribe=origin=>destination=>changed=>error=>()=>{
 export const request=()=>{
   if(busy||!quote||rideId)return;
   const owner=listener;busy=true;emit(tripView(quote,'requesting'),owner);
-  (async()=>{try{const created=await client().requestRide(quote.id);rideId=created.id;await refresh(owner);}
+  (async()=>{try{const created=await client().requestRide(quote.id);rememberRide(created.id);await refresh(owner);}
     catch(e){fail(e,owner);if(quote)emit(tripView(quote,'quoted'),owner);}finally{busy=false;}})();
 };
+export const dismiss=()=>{rememberRide(null);};
 export const cancel=()=>{
   if(busy||!rideId)return;
   const owner=listener;busy=true;

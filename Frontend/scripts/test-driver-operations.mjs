@@ -3,6 +3,43 @@ import {test} from 'node:test';
 import {readFile} from 'node:fs/promises';
 import {createOperationsClient} from '../ui-driver/src/Development/OperationsClient.mjs';
 import {createNativeFetch} from '../ui-driver/src/Development/NativeTransport.mjs';
+import {tripView} from '../ui-common/src/Development/PilotTrip.mjs';
+test('driver discards stale snapshots and retains the persisted completed trip until dismissed',async()=>{
+  const id='12345678-1234-4234-8234-123456789abc';
+  const ride={id,status:'accepted',fare_cents:1234,route:{distanceMeters:1000},origin:{address:'Embarque do teste'},destination:{address:'Destino do teste'}};
+  let current=()=>({available:true,rides:ride.status==='completed'?[]:[{...ride}],offers:[]}),poll,resolveOld,slow=false;
+  const prefs={},phases=[],errors=[];
+  const api={snapshot:()=>slow?new Promise(resolve=>{resolveOld=resolve;}):Promise.resolve(current()),
+    ride:async()=>({...ride}),rideAction:async(_id,action)=>{ride.status={arrive:'arrived',start:'in_progress',complete:'completed'}[action];}};
+  globalThis.driverStateHarness={createOperationsClient:()=>api,createNativeFetch:()=>{},callbackMapper:{},tripView};
+  globalThis.window={__OS:'ANDROID',__YATRI_BR_DEVELOPMENT__:true,JBridge:{getDeviceInfo:()=>JSON.stringify({package_name:'in.juspay.nammayatripartner.debug'}),
+    getFromSharedPrefs:key=>prefs[key]||'',setInSharedPrefs:(key,value)=>{prefs[key]=value;}}};
+  const interval=globalThis.setInterval,clear=globalThis.clearInterval;
+  globalThis.setInterval=fn=>{poll=fn;return 1;};globalThis.clearInterval=()=>{};
+  const source=(await readFile(new URL('../ui-driver/src/Development/Driver.js',import.meta.url),'utf8')).replace(/^import .*;$/gm,'');
+  const url='data:text/javascript;base64,'+Buffer.from('const {createOperationsClient,createNativeFetch,callbackMapper,tripView}=globalThis.driverStateHarness;'+source).toString('base64');
+  const tick=()=>new Promise(resolve=>setImmediate(resolve));
+  let cleanup;
+  try{
+    let ffi=await import(url);
+    const subscribe=module=>module.subscribe(()=>()=>{})(error=>()=>errors.push(error))(()=>{})(trip=>()=>phases.push(trip.phase))();
+    cleanup=subscribe(ffi);await tick();assert.equal(phases.at(-1),'accepted');
+    slow=true;const older=poll();slow=false;
+    ffi.act('arrive')(id)();await tick();assert.equal(phases.at(-1),'arrived');
+    resolveOld({available:true,rides:[{...ride,status:'accepted'}],offers:[]});await older;
+    assert.equal(phases.at(-1),'arrived','Older HTTP result must not roll back the confirmed state');
+    ffi.act('start')(id)();await tick();assert.equal(phases.at(-1),'in_progress');
+    ffi.act('complete')(id)();await tick();assert.equal(phases.at(-1),'completed');
+    assert.equal(prefs.YATRI_DRIVER_ACTIVE_RIDE,id);
+    cleanup();ffi=await import(url+'#recreated');cleanup=subscribe(ffi);await tick();
+    assert.equal(phases.at(-1),'completed');
+    ffi.dismissTrip();await tick();assert.equal(phases.at(-1),'idle');assert.equal(prefs.YATRI_DRIVER_ACTIVE_RIDE,'');
+    assert.deepEqual(errors,[]);
+  }finally{
+    if(cleanup)cleanup();globalThis.setInterval=interval;globalThis.clearInterval=clear;
+    delete globalThis.window;delete globalThis.driverStateHarness;
+  }
+});
 test('native HTTP transport preserves request and handles real bridge response formats, errors and late cancellation',async()=>{
   let callback,request,removed=[];
   const bridge={callAPI:(...args)=>{request=args;}};

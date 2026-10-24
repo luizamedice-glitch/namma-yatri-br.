@@ -84,12 +84,13 @@ def select_place(query,match,source):
 try:
     adb('shell','settings','put','secure','location_mode','3')
     adb('emu','geo','fix','-46.63','-23.55')
-    pair('passenger');home()
+    pair('passenger');assert not call('passenger','/snapshot')['rides'],'Há uma viagem ativa; aceite não deve interferir nela';home()
     select_place('Avenida Paulista Sao Paulo','paulista',False)
     select_place('Praca da Se Sao Paulo','praca da se',True)
     tap(wait_label('Ver estimativa'));wait_label('Solicitar viagem')
     capture('passageiro-estimativa')
     pair('driver')
+    assert not call('driver','/snapshot')['rides'],'Há uma viagem ativa do motorista'
     call('driver','/driver/availability',{'available':False})
     tap(wait_label('Ativar'))
     for _ in range(12):
@@ -126,17 +127,49 @@ try:
     tap(wait_label('Cancelar viagem'));wait_label('Viagem cancelada')
     assert call('passenger','/rides/'+ride_id)['status']=='cancelled'
     tap(wait_label('Voltar ao início'));home();capture('passageiro-home-final')
+    start('driver');wait_label('Viagem cancelada');tap(wait_label('Voltar ao painel'))
+    # A second real request exercises the full trip, preserving cancellation regression.
+    start('passenger');home();tap(wait_label('Ver estimativa'));wait_label('Solicitar viagem')
+    tap(wait_label('Solicitar viagem'));wait_label('Procurando motorista')
+    active=call('passenger','/snapshot')['rides'];assert len(active)==1
+    ride_id=active[0]['id'];assert active[0]['status']=='searching'
+    start('driver');wait_label('Nova solicitação');tap(wait_label('Aceitar viagem'))
+    wait_label('Cheguei ao embarque');assert call('driver','/rides/'+ride_id)['status']=='accepted'
+    tap(wait_label('Cheguei ao embarque'));wait_label('No local de embarque')
+    assert call('driver','/rides/'+ride_id)['status']=='arrived'
+    start('passenger');wait_label('Motorista no embarque')
+    assert call('passenger','/rides/'+ride_id)['status']=='arrived'
+    start('driver');tap(wait_label('Iniciar viagem'));wait_label('Viagem em andamento')
+    assert call('driver','/rides/'+ride_id)['status']=='in_progress'
+    assert label(nodes(),'Cancelar viagem') is None,'Não deve oferecer cancelamento de uma viagem iniciada'
+    start('passenger');wait_label('Viagem em andamento')
+    assert call('passenger','/rides/'+ride_id)['status']=='in_progress'
+    assert label(nodes(),'Cancelar viagem') is None
+    # Recreate each process: backend state and private ride IDs must restore the UI.
+    adb('shell','am','force-stop',packages['driver']);start('driver');wait_label('Viagem em andamento')
+    tap(wait_label('Concluir viagem'));wait_label('Viagem concluída')
+    assert call('driver','/rides/'+ride_id)['status']=='completed'
+    start('passenger');wait_label('Viagem concluída')
+    assert call('passenger','/rides/'+ride_id)['status']=='completed'
+    adb('shell','am','force-stop',packages['driver']);start('driver');wait_label('Viagem concluída')
+    tap(wait_label('Voltar ao painel'))
+    adb('shell','am','force-stop',packages['passenger']);start('passenger');home()
+    tap(wait_label('Ver estimativa'));wait_label('Viagem concluída');tap(wait_label('Voltar ao início'));home()
+    assert not call('passenger','/snapshot')['rides'] and not call('driver','/snapshot')['rides']
     call('driver','/driver/availability',{'available':False})
     result={'acceptance':'passed','backend':'lightsail_https','two_original_apks':True,'foreground_switching':True,
       'native_pairing_both_roles':True,'google_places_and_routes_real':True,'request_persisted':True,
       'offer_same_ride':True,'driver_accept_persisted':True,'passenger_received_driver_and_vehicle':True,
-      'ride_id':ride_id,'cleanup_cancelled':True,'driver_offline_after_test':True}
+      'ride_id':ride_id,'initial_cancel_scenario_passed':True,'arrive_persisted':True,'start_persisted':True,
+      'complete_persisted':True,'both_apps_display_all_trip_states':True,'process_recreation_restores_trip':True,
+      'driver_offline_after_test':True}
     (out/'acceptance.json').write_text(json.dumps(result,indent=2))
 finally:
     if ride_id and 'passenger' in sessions:
         try:
             current=call('passenger','/rides/'+ride_id)
             if current['status'] in ['searching','accepted','arrived']:call('passenger','/rides/'+ride_id+'/cancel',{})
+            elif current['status']=='in_progress' and 'driver' in sessions:call('driver','/rides/'+ride_id+'/complete',{})
         except Exception:pass
     if 'driver' in sessions:
         try:call('driver','/driver/availability',{'available':False})

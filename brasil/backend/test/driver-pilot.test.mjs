@@ -1,12 +1,21 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createDriverPilot,driverPilotId} from '../src/driver-pilot.mjs';
+import {createDriverPilot,driverPilotId,pilotRouteAllowed} from '../src/driver-pilot.mjs';
+test('pilot allows only the six exact ride actions with a UUID and POST',()=>{
+  const path='/v1/rides/12345678-1234-4234-8234-123456789abc/';
+  for(const action of ['accept','reject','arrive','start','complete','cancel']){
+    assert.equal(pilotRouteAllowed('POST',path+action),true);
+    assert.equal(pilotRouteAllowed('GET',path+action),false);
+    assert.equal(pilotRouteAllowed('POST','/v1/rides/not-a-uuid/'+action),false);
+  }
+  for(const action of ['refund','delete','complete/extra','start?other'])assert.equal(pilotRouteAllowed('POST',path+action),false);
+});
 test('driver pilot rejects production, invalid windows and missing explicit enablement',()=>{
   for(const config of [{enabled:false},{nodeEnv:'production'},{until:'invalid'},{until:new Date(Date.now()+8*86400000).toISOString()}]){
     assert.throws(()=>createDriverPilot({enabled:true,nodeEnv:'development',until:new Date(Date.now()+3600000).toISOString(),...config}));
   }
 });
-test('pilot exposes only three authenticated operations and only the assigned driver',async t=>{
+test('pilot preserves its restricted routes, profile IDs and expiration',async t=>{
   let role='driver',id=driverPilotId,clock=Date.now(),queries=0;
   const pool={async query(sql){queries++;
     if(sql==='SELECT 1')return {rows:[{}]};

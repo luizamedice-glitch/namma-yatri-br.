@@ -55,7 +55,7 @@ def caddy_config(original):
     }
     @yatriPilotRideAction {
         method POST
-        path_regexp pilotRideAction ^/v1/rides/[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}/(accept|reject|cancel)$
+        path_regexp pilotRideAction ^/v1/rides/[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}/(accept|reject|arrive|start|complete|cancel)$
     }
     handle @yatriPilotRideAction {
         reverse_proxy 127.0.0.1:8082
@@ -69,6 +69,15 @@ def status(url,method='GET'):
     try:
         with urlopen(Request(url,method=method,data=b'{}' if method=='POST' else None),timeout=10) as r:return r.status
     except HTTPError as e:return e.code
+
+def pilot_expiration(previous=None,now=None):
+    now=now or datetime.now(timezone.utc)
+    if previous is None:return (now+timedelta(days=7)-timedelta(minutes=1)).isoformat()
+    value=previous.get('services',{}).get('driver-pilot',{}).get('environment',{}).get('YATRI_DRIVER_PILOT_UNTIL')
+    try:until=datetime.fromisoformat(value.replace('Z','+00:00'))
+    except (ValueError,TypeError,AttributeError):raise RuntimeError('EXISTING_PILOT_WINDOW_INVALID')
+    if until.tzinfo is None or not now<until<=now+timedelta(days=7):raise RuntimeError('EXISTING_PILOT_WINDOW_EXPIRED_OR_INVALID')
+    return value
 
 def main(source,sha):
     if not re.fullmatch('[a-f0-9]{40}',sha):raise RuntimeError('INVALID_REVISION')
@@ -86,6 +95,12 @@ def main(source,sha):
         return run(['docker','ps','-q','--filter','label=com.docker.compose.project='+project,
             '--filter','label=com.docker.compose.service='+name])
     before={name:service_id(name) for name in ['api','postgres','maps-test']}
+    def require_idle():
+        count=run(['docker','exec',api,'node','-e',
+            'const {Pool}=require("pg");const p=new Pool({connectionString:process.env.DATABASE_URL});'
+            '(async()=>{try{const r=await p.query("SELECT count(*)::int AS n FROM rides WHERE status IN (\'searching\',\'accepted\',\'arrived\',\'in_progress\')");console.log(r.rows[0].n);}finally{await p.end();}})().catch(()=>process.exit(1));'])
+        if count!='0':raise RuntimeError('ACTIVE_RIDES_BLOCK_DEPLOY')
+    require_idle()
     # No migration command is run. Require byte-identical SQL first.
     hashes=json.loads(run(['docker','exec',api,'node','-e',
         'const fs=require("fs"),c=require("crypto");console.log(JSON.stringify(Object.fromEntries(fs.readdirSync("/app/migrations").filter(n=>n.endsWith(".sql")).sort().map(n=>[n,c.createHash("sha256").update(fs.readFileSync("/app/migrations/"+n)).digest("hex")]))));']))
@@ -115,7 +130,7 @@ def main(source,sha):
         run(['docker','build','--build-arg','YATRI_REVISION='+sha,'-t',image,str(source)],timeout=240)
     env=ROOT/'secrets/driver-pilot.env';override=ROOT/'compose.driver-pilot.json'
     work=ROOT/'driver-pilot';work.mkdir(mode=0o700,exist_ok=True)
-    until=(datetime.now(timezone.utc)+timedelta(days=7)-timedelta(minutes=1)).isoformat()
+    until=pilot_expiration(json.loads(override.read_text()) if override.exists() else None)
     config={'services':{'driver-pilot':{
         'image':image,'entrypoint':['node','src/driver-pilot-server.mjs'],'command':[],
         'env_file':[str(env)],'environment':{'NODE_ENV':'development','HOST':'0.0.0.0','PORT':'8082',
@@ -129,6 +144,7 @@ def main(source,sha):
     original=CADDY.read_text();mode=CADDY.stat().st_mode&0o777
     previous={p:p.read_text() if p.exists() else None for p in [env,override]}
     candidate=caddy_config(original)
+    require_idle()
     try:
         allowed=['DATABASE_URL','GOOGLE_MAPS_SERVER_KEY','BASE_FARE_CENTS','PER_KM_CENTS','DRIVER_RADIUS_METERS']
         write(env,''.join(k+'='+json.dumps(current_env[k])+'\n' for k in allowed if current_env.get(k)))
