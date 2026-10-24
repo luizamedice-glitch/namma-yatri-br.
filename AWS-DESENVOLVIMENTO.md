@@ -125,3 +125,34 @@ Commit preparado: `45f32bdf3a185c2a889ba0bc7f4f8c0d4c2e20e3`. Instruções compl
 Testes: 10 unitários, 3 suítes com PostgreSQL real, inicialização CLI, build Node 22 e troca de imagem em Compose isolado aprovados. Falha intencional de startup provocou rollback; API anterior voltou saudável, contêiner PostgreSQL e dado de teste preservados. Mudança de migration foi rejeitada antes de recriar API. Workflows [backend](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39974516114) e [integração](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/39974511131) aprovados. Evidências resumidas: `brasil/backend/reports/lightsail-2026-10-23.json`.
 
 Próximo passo após disponibilizar acesso: inspecionar o host, projeto Compose e bindings sem imprimir segredos; conferir commit/migrations e aplicar a atualização revisada em janela sem viagens. A conexão do APK e eventual liberação externa de endpoints exigem o desenho de sessões e revisão previstos acima; não são consequência automática da atualização da imagem.
+
+
+## Piloto remoto do motorista — implantado em 2026-10-24
+
+Run **40113362115 aprovado**, fontes `9afffb8eb3bf354e51652b89d1f8a591aa5b2b4e`.
+Serviço separado `driver-pilot` em `127.0.0.1:8082`, janela até
+**2026-10-31T16:50:03.171005+00:00**. `compose.driver-pilot.json` complementa o
+Compose existente; recebe somente DATABASE_URL em arquivo privado, sem chave
+Google nem credencial bootstrap. O runtime Node 22 já instalado é reutilizado
+somente quando as dependências conferem com o lockfile; fontes atuais em imagem
+separada identificada por commit. SQL das migrations precisa ser idêntico;
+nenhuma migration ou criação automática de conta é executada na implantação.
+
+Caddy encaminha somente GET `/v1/snapshot` e POST `/v1/driver/location` e
+`/v1/driver/availability` ao piloto. Os três retornam 401 sem sessão. A sessão
+precisa pertencer ao UUID de Giselo e ao papel driver; outro perfil recebe 403.
+Cadastro, login de desenvolvimento e POST de corridas continuam 403 na borda.
+Health 200 e IDs dos contêineres API/PostgreSQL/maps-test preservados, confirmados
+no servidor; respostas HTTPS também conferidas de fora. Nenhuma porta de firewall
+foi alterada. Rollback automático restaura arquivos e Caddy em falha.
+
+**Pendente para operar no APK:** inspeção confirmou Giselo e veículo ausentes,
+variáveis do veículo ausentes e zero corridas ativas. Foram solicitados placa,
+modelo/cor reais e método de acesso ao Android. Não criar veículo fictício.
+`src/provision-driver-pilot.mjs` recebe um arquivo privado com `plate`, `model`,
+`color`, cadastra somente Giselo/veículo e rejeita divergência com cadastro já
+existente; não cria passageiro nem substitui veículo existente. Após receber
+os dados, emitir sessão privada e provisionar o dispositivo; nunca publicar
+o arquivo de sessão, incorporar token ao APK ou imprimir os valores.
+Aceite Android autenticado contra Lightsail: **NÃO VALIDADO**, aguarda cadastro
+e provisionamento. Relatório: `brasil/backend/reports/driver-lightsail-2026-10-24.json`.

@@ -33,9 +33,12 @@ Localização e snapshot são atualizados a cada cinco segundos durante o painel
 4. Abra o APK, conceda localização e aguarde GPS válido. Alterne disponibilidade
    e confira os estados no banco/API. Nunca compartilhe o arquivo de sessão.
 
-O Lightsail atual NÃO libera essas rotas operacionais: somente health e testes
-de mapas estão publicados. Nenhuma regra Caddy/firewall ou sessão remota foi
-alterada nesta etapa. Não use a função compartilhada do Alce.
+Atualização de 24/10/2026: o Lightsail libera as três operações do painel por
+HTTPS autenticado via serviço driver-pilot separado; cadastro e corridas
+continuam bloqueados. Giselo/veículo ainda precisam ser cadastrados com os
+dados reais solicitados ao operador. O aceite Android remoto aguarda a sessão
+privada e o provisionamento. Consulte AWS-DESENVOLVIMENTO.md; não use a função
+compartilhada do Alce.
 
 ## Verificações e limites
 

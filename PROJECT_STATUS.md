@@ -277,3 +277,12 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - Primeiro ajuste de tradução deixou o indicador de localização longo; corrigido para “Sem atualização” e repetido o aceite Android antes da entrega. O indicador legado de horário ainda não reflete a confirmação do novo cliente operacional.
 - APK (ZIP): https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40111273590/artifacts/12566278284 . Evidências: **12567042032**. Relatório: `Frontend/build-reports/motorista-original/40111273590.json`; o hash registrado é do ZIP do artefato, não do APK interno.
 - Limites: teste com API/PostgreSQL locais descartáveis; Lightsail e passageiro preservados. Uso operacional no celular exige backend acessível com rotas de motorista e sessão privada provisionada fora do APK, conforme `Frontend/ui-driver/DRIVER-BR-TEST.md`. Ofertas e ações de corrida ainda não ligadas às views originais; não se declara integração entre os dois APKs. Menus secundários, tradução integral do motorista e Android 12+ permanecem sem aceite.
+
+
+### Motorista no Lightsail — fronteira HTTPS configurada, 2026-10-24
+
+- IMPLEMENTADO/IMPLANTADO: serviço separado e restrito `driver-pilot`, run **40113362115 success**, fontes `9afffb8eb3`. API principal, PostgreSQL e maps-test mantiveram seus IDs; sem migration, alteração de firewall ou conta automática. Janela de sete dias até 31/10/2026 16:50 UTC.
+- TESTADO: regressão backend/API/PostgreSQL, guard do piloto por perfil/UUID/expiração e configuração Caddy aprovados no workflow. Verificação externa: health 200; snapshot, GPS e disponibilidade 401 sem sessão; cadastro, desenvolvimento/session e POST de corridas 403. Valores de credenciais não publicados.
+- BLOQUEIO DE DADOS: Giselo e veículo não existem no servidor; solicitados placa, modelo/cor reais e método de provisionamento do Android. Comando privado de cadastro preparado, sem preencher veículo fictício.
+- APK no servidor: **NÃO VALIDADO**; falta cadastrar motorista/veículo, emitir/provisionar sessão privada e repetir GPS/disponibilidade no Android por HTTPS. O APK anterior continua aprovado somente contra API local. Ofertas/corridas e integração passageiro-motorista seguem pendentes.
+- Operação em `AWS-DESENVOLVIMENTO.md`; evidência estruturada `brasil/backend/reports/driver-lightsail-2026-10-24.json`.
