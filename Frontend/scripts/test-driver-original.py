@@ -62,7 +62,7 @@ if remote:
         x1,y1,x2,y2=map(int,re.findall(r'\d+',node.get('bounds','')))
         adb('shell','input','tap',str((x1+x2)//2),str((y1+y2)//2))
     field=next(n for n in setup if n.get('class')=='android.widget.EditText')
-    connect=next(n for n in setup if n.get('text')=='Conectar ao servidor')
+    connect=next(n for n in setup if n.get('text','').casefold()=='conectar ao servidor')
     tap(field)
     activation=json.loads(Path(os.environ['DRIVER_REMOTE_ACTIVATION_FILE']).read_text())
     entered=subprocess.run(['adb','shell','input','text',activation['code']],capture_output=True,timeout=30)
