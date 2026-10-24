@@ -1,6 +1,10 @@
 // Real PostgreSQL + HTTP, with an explicitly marked Google route fixture only.
 import { test } from 'node:test';
 import { createRequire } from 'node:module';
+import {spawnSync} from 'node:child_process';
+import {mkdtemp,readFile,stat,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import assert from 'node:assert/strict';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { connectDatabase } from '../../brasil/backend/src/db.mjs';
@@ -52,6 +56,23 @@ test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo po
   assert.equal(newSession.user.id, passenger.user.id);
   assert.notEqual(newSession.token, passenger.token);
   assert.equal((await service.authenticate(passenger.token)).id, passenger.user.id);
+  const privateDir = await mkdtemp(join(tmpdir(), 'driver-session-test-'));
+  t.after(() => rm(privateDir,{recursive:true,force:true}));
+  const sessionFile = join(privateDir,'session.json');
+  const scoped = new URL(process.env.DATABASE_URL);
+  scoped.searchParams.set('options','-c search_path='+schema);
+  const cliPath = new URL('../../brasil/backend/src/issue-driver-session.mjs',import.meta.url);
+  const provision = spawnSync(process.execPath,[cliPath.pathname,sessionFile],{encoding:'utf8',
+    env:{...process.env,DATABASE_URL:scoped.toString(),YATRI_DEVELOPMENT_MODE:'true',NODE_ENV:'development'}});
+  assert.equal(provision.status,0,provision.stderr);
+  const deviceSession=JSON.parse(await readFile(sessionFile,'utf8'));
+  assert.equal((await stat(sessionFile)).mode & 0o777,0o600);
+  assert.ok(!provision.stdout.includes(deviceSession.token));
+  assert.equal((await service.authenticate(deviceSession.token)).id,driver.user.id);
+  const denied=spawnSync(process.execPath,[cliPath.pathname,join(privateDir,'denied.json')],{encoding:'utf8',
+    env:{...process.env,DATABASE_URL:scoped.toString(),YATRI_DEVELOPMENT_MODE:'true',NODE_ENV:'production'}});
+  assert.notEqual(denied.status,0);
+
   const stored = await pool.query('SELECT token_hash FROM sessions');
   assert.ok(stored.rows.every(x => x.token_hash !== passenger.token && x.token_hash !== driver.token));
   await call('/driver/location', passenger.token, { lat: -23.55, lng: -46.63 }, 403);
