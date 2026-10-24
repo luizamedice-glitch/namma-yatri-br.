@@ -241,3 +241,14 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - Perfil reutiliza a view original sem registrar seus eventos globais de autenticação/API. Nome local de teste já existente; edição sinalizada como indisponível.
 - Carteira sem serviço financeiro: informa indisponibilidade, sem saldo ou movimentações simuladas.
 - Compilação e aceite Android pendentes; alteração concentrada em Development.Passenger para evitar recompilar HomeScreen.View/Flow, cujo pico de memória já foi documentado.
+
+
+## Navegação inferior — aceite Android em 2026-10-24
+
+- IMPLEMENTADO/COMPILADO/TESTADO EM ANDROID: APK fontes `22d096a03e`, run **40063516106** aprovado, API 29. Barra fixa de 64 dp, três colunas com ícones e rótulos Início/Carteira/Perfil; indicação de aba ativa. Oculta durante pesquisa. Menu superior retirado por adaptação restrita ao cabeçalho BR existente, preservando margem da marca.
+- HomeScreen e Perfil reutilizam views PureScript/PrestoDOM originais. Navegação restrita ao controlador de desenvolvimento; nenhum template Java, backend, autenticação de produção ou motorista alterado. Perfil mostra nome local Fagner, sem buscar perfil indiano; edição exibe indisponibilidade. Carteira informa ausência de serviço financeiro, sem saldo/transações simulados.
+- Aceite real: pesquisa Google, seleção de origem/destino, troca das três abas, retorno pelo botão Voltar e preservação integral dos endereços aprovados. Capturas de Home, Carteira e Perfil conferidas visualmente; tiles visíveis na captura de retorno à Home.
+- Regressão detectada no run 40062130214: pesquisa não abriu após trocar a raiz da árvore ao esconder o rodapé. Corrigida mantendo a raiz PrestoDOM estável e alterando somente a visibilidade do rodapé; teste completo repetido com sucesso.
+- Compilação em lotes/cache do run 40062877489: apenas Development.Passenger e Main recompilados, 242,98 s e pico RSS 8,32 GiB. HomeScreen.View/Flow preservados. Build final reutiliza esse bundle sem repetir PureScript.
+- APK: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40063516106/artifacts/12548038010 . SHA256 `8f45bc57acad0738a048b8e241b197236775753bafe9e9d544ec3751913d3e38`. Evidências **12547754406**. Relatório `Frontend/build-reports/passageiro-navegacao/40063516106.json`.
+- Limites: navegação nova exclusiva de BR debug; carteira financeira, persistência/edição de perfil e validação Android 12 desta alteração permanecem pendentes. APK debug pode exigir desinstalar a versão anterior por diferença de assinatura.

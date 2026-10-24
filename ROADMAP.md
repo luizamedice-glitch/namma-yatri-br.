@@ -57,3 +57,6 @@ Preparação do servidor (2026-10-23): atualização e rollback da API implement
 
 
 Português do passageiro (2026-10-24): catálogo e interface BR empacotados sem recompilar PureScript; Home, busca e seleção real aprovadas em Android API 29 no run 40057802186. Revisar traduções secundárias ao habilitar seus fluxos; preservar identidade e isolamento das variantes de produção. Relatório em `Frontend/build-reports/passageiro-portugues/40057802186.json`.
+
+
+Navegação inferior do passageiro (2026-10-24): Início/Carteira/Perfil, views originais e estado preservado, aprovados em Android API 29 no run 40063516106. Carteira permanece explicitamente indisponível e perfil usa dados locais de teste. Integrar serviços reais e edição somente após desenho de sessão; validar Android 12 e navegação de produção em incremento próprio. Relatório `Frontend/build-reports/passageiro-navegacao/40063516106.json`.

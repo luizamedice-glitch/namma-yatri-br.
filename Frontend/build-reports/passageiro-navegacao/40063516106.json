@@ -1,0 +1,48 @@
+{
+  "source_commit": "22d096a03e",
+  "purescript_source_commit": "651ac721a8",
+  "purescript_run": 40062877489,
+  "workflow_run": 40063516106,
+  "apk_artifact": 12548038010,
+  "evidence_artifact": 12547754406,
+  "apk_sha256": "8f45bc57acad0738a048b8e241b197236775753bafe9e9d544ec3751913d3e38",
+  "android_api": 29,
+  "recompiled_modules": [
+    "Development.Passenger",
+    "Main"
+  ],
+  "purescript_seconds": 242.98,
+  "purescript_peak_rss_gib": 8.32,
+  "footer": {
+    "acceptance": "passed",
+    "tabs": [
+      "Início",
+      "Carteira",
+      "Perfil"
+    ]
+  },
+  "places": "passed",
+  "visual_review": [
+    "home-footer-home.png",
+    "home-footer-profile.png",
+    "home-footer-wallet.png"
+  ],
+  "verified": [
+    "three footer tabs",
+    "legacy menu hidden",
+    "real search",
+    "addresses preserved across tabs",
+    "Android back returns Home",
+    "Portuguese labels"
+  ],
+  "limitations": [
+    "Wallet financial service unavailable; explicit message, no simulated balance.",
+    "Profile reads local development name; editing and server persistence unavailable.",
+    "Production navigation unchanged; Android 12 not tested in this increment."
+  ],
+  "corrected_regression": {
+    "run": 40062130214,
+    "failure": "Search failed after replacing the root layout when hiding the footer.",
+    "fix": "Keep the PrestoDOM root stable; change footer visibility only."
+  }
+}
