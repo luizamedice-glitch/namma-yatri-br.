@@ -139,3 +139,77 @@ jobs:
           name: ride-motorista-apk
           path: ride-apks/alce-yatri-motorista-teste.apk
           if-no-files-found: error
+  emulator:
+    needs: android
+    if: ${{ always() && !cancelled() && (needs.android.result == 'success' || inputs.apk_run_id) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar origem e fontes dos APKs reutilizados
+        if: ${{ inputs.apk_run_id }}
+        uses: actions/github-script@v7
+        env:
+          SOURCE_RUN: ${{ inputs.apk_run_id }}
+        with:
+          script: |
+            const id=Number(process.env.SOURCE_RUN);
+            if(!Number.isSafeInteger(id)||id<=0)throw Error('Run invalido');
+            const {data:run}=await github.rest.actions.getWorkflowRun({...context.repo,run_id:id});
+            if(run.path!=='.github/workflows/br-driver-original.yml')throw Error('Origem invalida');
+            const {data}=await github.rest.actions.listJobsForWorkflowRun({...context.repo,run_id:id});
+            if(!data.jobs.some(j=>j.name==='ride-pair / android'&&j.conclusion==='success'))throw Error('APKs nao aprovados');
+            await exec.exec('git',['fetch','origin',run.head_sha]);
+            await exec.exec('git',['diff','--exit-code',run.head_sha,'HEAD','--','Frontend/android-native','Frontend/ui-customer','Frontend/ui-driver','Frontend/ui-common','Frontend/packages.dhall']);
+      - uses: actions/download-artifact@v4
+        with:
+          name: ride-passageiro-apk
+          path: ride-apks
+          run-id: ${{ inputs.apk_run_id || github.run_id }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: ride-motorista-apk
+          path: ride-apks
+          run-id: ${{ inputs.apk_run_id || github.run_id }}
+          github-token: ${{ github.token }}
+      - name: Preparar duas ativacoes privadas sem expor codigos
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+          YATRI_DRIVER_OPERATION: activate
+        run: |
+          umask 077
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out "$RUNNER_TEMP/ride-delivery.key" 2>/dev/null
+          openssl pkey -in "$RUNNER_TEMP/ride-delivery.key" -pubout -out "$RUNNER_TEMP/ride-delivery.pub"
+          export YATRI_DRIVER_PUBLIC_FILE="$RUNNER_TEMP/ride-delivery.pub"
+          for profile in driver passenger; do
+            export YATRI_PILOT_ROLE="$profile"
+            bash brasil/backend/ops/driver-ssh-operation.sh
+            base64 -d "$RUNNER_TEMP/driver-activation.enc" > "$RUNNER_TEMP/activation.bin"
+            openssl pkeyutl -decrypt -inkey "$RUNNER_TEMP/ride-delivery.key" -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -in "$RUNNER_TEMP/activation.bin" -out "$RUNNER_TEMP/ride-$profile.json"
+          done
+          echo "RIDE_DRIVER_ACTIVATION=$RUNNER_TEMP/ride-driver.json" >> "$GITHUB_ENV"
+          echo "RIDE_PASSENGER_ACTIVATION=$RUNNER_TEMP/ride-passenger.json" >> "$GITHUB_ENV"
+      - name: Habilitar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          ram-size: 4096M
+          script: |
+            adb install -g ride-apks/alce-yatri-passageiro-teste.apk
+            adb install -g ride-apks/alce-yatri-motorista-teste.apk
+            python3 Frontend/scripts/test-ride-pair.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ride-pair-aceite-android
+          path: ride-pair-evidence/
+          if-no-files-found: warn
