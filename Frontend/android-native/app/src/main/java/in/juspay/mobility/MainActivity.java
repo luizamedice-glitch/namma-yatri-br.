@@ -706,6 +706,7 @@ public class MainActivity extends AppCompatActivity {
             setContentView(R.layout.activity_main);
             // Only the Brazilian passenger overlay contains this local video view.
             if (findViewById(R.id.splash) instanceof BrandVideoSplash) {
+                BrHeaderBranding.install(findViewById(R.id.cl_dui_container));
                 findViewById(R.id.splash).setVisibility(View.VISIBLE);
                 return;
             }

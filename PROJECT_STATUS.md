@@ -213,5 +213,6 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 
 - Solicitado: reduzir a percepção de tela rosa ociosa e ampliar a marca no cabeçalho da Home.
 - Implementado: janela de lançamento já mostra o primeiro quadro visível da marca; Android 12+ recebe o monograma no splash do sistema. Fade inicial adiantado em aproximadamente 267 ms, redistribuindo o restante da sequência para preservar 2500 ms totais. Fundo continua rosa sólido.
-- Logo da Home BR debug passa de 93×32 dp para 136×44 dp (116×44 dp em telas menores que 380 dp). Produção mantém dimensões anteriores. Fontes PureScript alterados apenas na view original do cabeçalho; requer compilação incremental com cache, sem reutilizar bundle incompatível.
+- Logo da Home BR debug passa de 93×32 dp para 136×44 dp (116×44 dp em telas menores que 380 dp), por adaptador Android restrito ao cabeçalho original (imagem 93×32 dp ao lado do botão Navigation). Produção mantém dimensões anteriores. Fontes PureScript e bundle preservados.
+- Diagnóstico: alterar a view PureScript acionou recompilação de Flow, interrompida por falta de progresso após pico de aproximadamente 11 GB de RSS no run 40043513972. A alteração PureScript foi revertida; escolhido ajuste Android para reutilizar o bundle validado sem aumentar limites/timeouts.
 - Verificação local: GIF com primeiro quadro visível e duração de 2500 ms; XML válido. Compilação/validação Android deste ajuste pendentes.
