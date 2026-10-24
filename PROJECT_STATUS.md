@@ -224,3 +224,9 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - Implementada tradução inicial de 1.789 mensagens do catálogo central (125 com funções/parâmetros), 1.815 correspondências de literais de apresentação e 111 recursos Android. Revisão manual de 295 mensagens centrais, rótulos de acessibilidade e recursos nativos; demais textos têm tradução inicial e exigem revisão dos fluxos secundários antes de sua ativação.
 - O adaptador Webpack mantém contratos/output PureScript, substitui apenas o catálogo de apresentação no contexto BR e traduz literais em propriedades PrestoDOM/toasts. Contexto Android configurado para pt-BR; motorista, produção e idioma do dispositivo preservados. Datas passam a reconhecer PT_BR no formatador de apresentação. Nenhum serviço de tradução ou modelo é incluído no APK.
 - Validação local: cobertura total de chaves, parâmetros, HTML, símbolos monetários e isolamento de produção/WEB aprovados. Compilação e testes Android em português pendentes. Documentação/proveniência em `Frontend/ui-customer/src/Localization/README.md`.
+
+## Continuação da tradução — 2026-10-24
+
+- Corrigidas 14 mensagens adicionais e literais associados: avaliação, solicitação, aceite automático, veículo e cancelamento; 309 mensagens centrais revisadas manualmente. Cobertura das 1.789 chaves, parâmetros/HTML/moedas e isolamento de produção aprovados localmente.
+- Run 40051436076: bundle e APK aprovados; teste interrompido ao ler dump ausente no launcher, antes de abrir o app. Captura agora tenta obter XML válido três vezes e preserva screenshot em falha, mantendo aceite obrigatório.
+- Nova compilação/validação Android pendentes neste registro. Textos secundários traduzidos automaticamente ainda requerem revisão contextual; não se declara revisão humana integral de funcionalidades desativadas.

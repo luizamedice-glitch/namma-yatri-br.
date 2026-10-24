@@ -1,295 +1,309 @@
-safety_check_in=Confirmações de segurança
-safety=Segurança
-download_invoice=Baixar comprovante
-report_an_issue=Relatar um problema
-verifying=Verificando
-referral_code_verified=Código de indicação verificado!
-referral_code_failed=Código de indicação inválido. Confira e tente novamente.
-enter_6_digit_referral_code=Digite o código de indicação
-not_verified=Não verificado
-optional_bracketted=(Opcional)
-verify=Verificar
-referral_code=Código de indicação
-submit=Enviar
-view_invoice=Ver comprovante
-total_amount=Valor total
-amount_paid=Valor pago
-trip_details_=Detalhes da viagem
-download_pdf=Baixar PDF
-invoice=Comprovante
-trip_charges=Valores da viagem
-promotion=Promoção
-send_email=Enviar e-mail
-you_can_describe_the_issue_you_faced_here=Descreva aqui o problema que você teve.
-thank_you_for_writing=Obrigado por entrar em contato!
-we_have_received_your_issue=Recebemos seu relato. Entraremos em contato em breve.
-go_home_=Ir para o início
-logo=Logo
-about_app_description={} é uma plataforma aberta que conecta passageiros e motoristas e facilita a solicitação de viagens com tarifas acessíveis.
-about=Sobre
-privacy_policy=Política de privacidade
-set_up_your_account=Configure sua conta
-continue=Continuar
-enter_your_name=Digite seu nome
-full_name=Nome completo
-email=E-mail
-welcome_text=Boas-vindas ao {}
-please_choose_your_preferred_language_to_continue=Escolha seu idioma para continuar.
-write_to_us=Fale conosco
-note=Observação 
-visit_my_rides_section_for_ride_specific_complaints=Para relatar um problema com uma viagem, acesse Minhas viagens.
-thank_you_for_writing_to_us=Obrigado por entrar em contato!
-we_have_received_your_issue_well_reach_out_to_you_in_sometime=Recebemos seu relato. Entraremos em contato em breve.
-go_to_home__=Ir para o início
-subject=Assunto
-your_email_id=Seu e-mail
-describe_your_issue=Descreva o problema
-enter_mobile_number=Digite seu celular
-by_tapping_continue=Ao tocar em Continuar, você concorda com os nossos
-to_the=Você concorda com os 
-enter_otp=Digite o código de verificação
-resend=Reenviar
-enter_your_mobile_number=Digite seu número de celular
-login_using_the_otp_sent_to=Entre com o código de verificação enviado para
-your_recent_ride=Sua última viagem
-view_all_rides=Ver todas as viagens
-all_topics=Todos os assuntos
-faq=Perguntas frequentes
-report_an_issue_with_this_trip=Relatar um problema com esta viagem
-you_rated=Sua avaliação
-getting_started_and_faqs=Primeiros passos e perguntas frequentes
-for_other_issues_write_to_us=Para outros assuntos, fale conosco.
-help_and_support=Ajuda e suporte
-our_suggested_price_for_this_trip_is=O valor sugerido para esta viagem é
-drivers_can_charge_between_the_above_range=* Os motoristas podem cobrar dentro da faixa de valores indicada acima.
-how_this_works=Como funciona?
-finding_rides_near_you=Buscando viagens perto de você...
-confirming_the_ride_for_you=Confirmando sua viagem...
-cancel_search=Cancelar busca
-your_ride_is_now_complete=Sua viagem foi concluída!
-please_pay_the_final_amount_to_the_driver_via_cash=Pague o valor final diretamente ao motorista.
-where_to=Para onde?
-home=Início
-pick_up_location=Local de embarque
-request_ride=Solicitar viagem
-name=Nome
-mobile_number_str=Celular
-personal_details=Dados pessoais
-your_rides=Minhas viagens
-you_are_offline=Você está sem conexão
-check_your_internet_connection_and_try_again=Verifique sua conexão com a internet e tente novamente.
-try_again=Tentar novamente
-thank_your_driver=Agradeça ao motorista!
-hope_your_ride_was_hassle_free=Esperamos que sua viagem tenha sido tranquila.
-how_was_your_ride_with=Como foi sua viagem com 
-got_it_tell_us_more=Entendi. Conte um pouco mais.
-write_a_comment=Escreva um comentário (opcional)
-update=Atualizar
-language=Idioma
-details=Detalhes
-otp=Código de verificação
-payment_method=Forma de pagamento
-payment_method_string=Dinheiro ou aplicativo UPI
-payment_method_string_=Dinheiro ou aplicativo UPI
-cancel_ride=Cancelar viagem
-request_edit=Solicitar alteração
-support=Suporte
-pickup_and_drop=Embarque e destino
-cancelled=Cancelada
-how_the_pricing_works=Como o valor é calculado?
-select_an_offer=Selecionar uma oferta
-choose_a_ride_as_per_your_comfort=Escolha a melhor opção para sua viagem
-location_permission_subtitle=Precisamos da sua localização para encontrar viagens perto de você.
-please_tell_us_why_you_want_to_cancel=Conte por que você quer cancelar.
-save_as=Salvar como
-save=Salvar
-saved_addresses=Endereços salvos
-no_favourites_saved_yet=Você ainda não tem favoritos salvos
-saved_address_helps_you_keep_your_favourite_places_handy=Salve seus locais favoritos para encontrá-los com facilidade.
-edit_emergency_contacts=Editar contatos de emergência
-no_emergency_contacts_set=Nenhum contato de emergência cadastrado
-save_place=Salvar local
-select_an_offer_from_our_drivers=Selecionar uma oferta (opcional)
-edit=Editar
-cancel_str=Cancelar
-loading=Carregando
-please_wait_while_in_progress=Aguarde um instante.
-current_location=Localização atual
-please_confirm_with_your_after_requesting=Confirme com o motorista após solicitar a viagem.
-delete=Excluir
-cancel_=Cancelar
-enter_4_digit_otp=Digite o código de verificação de 4 dígitos
-enter_a_location=Digite um endereço
-confirm_pickup_location=Confirmar local de embarque
-confirm_drop_location=Confirmar destino
-confirm_for=Confirmar para
-destination_outside_limits=O destino informado está fora da área atendida.
-cancel_auto_assigning=Cancelar atribuição automática
-location_unserviceable=Local fora da área de atendimento
-currently_we_are_live_in_=Ainda não atendemos sua região.\nVocê pode acessar o histórico de viagens e as configurações pelo menu.
-help_us_with_your_reason=Conte o motivo
-no_more_rides=Não há mais viagens
-select_a_ride=Selecione uma viagem para ver os detalhes
-confirm_ride_=Confirmar viagem
-help_us_with_your_feedback_optional=Deixe sua opinião (opcional)
-remove=Remover
-confirm_location=Confirmar localização
-select_on_map=Selecionar no mapa
-edit_favourite=Editar favorito
-choose_on_map=Escolher no mapa
-location=Localização
-location_already_exists_as=Este local já foi salvo como
-confirm_and_save=Confirmar e salvar
-remove_favourite=Remover favorito
-select_your_drop=Selecione seu destino
-location_already_exists=Este local já existe
-location_already=Local já cadastrado
-select_favourite=Selecionar favorito
-confirm_changes=Confirmar alterações
-your_ride_has_started=Sua viagem começou! 🤩
-choose_between_multiple_drivers=Escolha entre os motoristas disponíveis
-choose_between_multiple_rides=Escolha entre as opções de viagem
-select_contacts=Selecionar contatos
-confirm_emergency_contacts=Confirmar contatos de confiança
-search_contacts=Buscar contatos
-live_stats_dashboard=Estatísticas em tempo real
-check_out_live_stats=Ver estatísticas em tempo real
-book_and_move=Peça sua viagem,
-anywhere_in_the_city=para qualquer lugar da cidade
-checkout_our_live_stats=Ver estatísticas ao vivo
-most_loved_app=O app sem comissão mais amado ❤️
-choose_your_ride=Escolha sua viagem
-confirm_and_book=Confirmar e solicitar
-cancel_ongoing_search=Deseja cancelar a busca em andamento?
-search_again_with_a_tip=Buscar novamente com gorjeta?
-try_again_with_a_tip=Tentar novamente com gorjeta?
-try_again_without_tip=Tentar novamente sem gorjeta
-search_again_without_a_tip=Buscar novamente sem gorjeta
-no_qoutes_available=Nenhuma cotação disponível
-destination=Destino
-cancel_booking=Cancelar solicitação?
-cancellation_date=Data do cancelamento
-location_is_too_far=O local está muito distante!
-continue_search_with_no_tip=Continuar busca sem gorjeta
-searching_with_no_tip=Buscando sem gorjeta
-search_again=Buscar novamente
-select_popular_spot_for_hassle_free_pickup=Selecione um ponto conhecido para facilitar o embarque
-continue_with_safety_settings=Continuar com as configurações de segurança
-got_a_referral_from_a_driver_or_friend=Recebeu um código de indicação de um motorista ou amigo?
-have_a_refferal=Tem um código?
-enter_referral_code_=Digite o código de indicação
-your_referral_code=Seu código de indicação
-enter_now=Digitar agora
-enter_6_digit_referral_code_below=Digite abaixo o código de indicação de 6 dígitos
-no_report_an_issue=Não, relatar um problema
-select_vehicle=Selecionar veículo
-select_duration=Selecionar duração
-select_distance=Selecionar distância
-edit_pickup=Editar embarque
-enter_pickup_loc=Digite o local de embarque
-select_package=Selecionar pacote
-cancel_scheduled_ride=Cancelar viagem agendada
-confirm_cancellation=Confirmar cancelamento
-your_cancellation_rate_is_high=Sua taxa de cancelamento está alta!
-network_error=Erro de conexão
-please_do_not_pay_extra_to_driver=Não pague valores adicionais ao motorista.
-cancel_booking_=Cancelar solicitação
-cancellation=Cancelamento
-where_are_you_going=Para onde você vai?
-locations=Locais
-remove_from_favourite=Remover dos favoritos
-no_favourite_yet=Você ainda não tem motoristas favoritos
-confirm_pickup_and_drop_location=Confirmar embarque e destino
-confirm=Confirmar
-confirm_pickup=Confirmar embarque
-back=Voltar
-please_enter_a_valid_mobile_number=Digite um número de celular válido.
-please_enter_a_valid_address=Digite um endereço válido.
-please_enter_a_valid_name=Digite um nome válido.
-enter_a_name=Digite um nome
-enter_a_address=Digite um endereço
-confirm_contacts=Confirmar contatos
-book_and_pay=Solicitar e pagar
-your_current_location=Sua localização atual
-skip=Pular
-trip_id=ID da viagem
-mins_away=min de distância
-online_=Online
-min_fare_upto=Valor mínimo até {0}
-hey=Olá
-polite_driver=Motorista educado
-rude_driver=Motorista mal-educado
-late_pick_up=Atraso no embarque
-auto_rickshaw=Tuk-tuk
-ac_cab=Carro com ar-condicionado
-chats=Conversas
-disclaimer=Aviso
-fare_for=Valor para {0}
-star_rating=Avaliação por estrelas
-clean_bike=Moto limpa
-dashcam=Câmera veicular
-mins= min
-bus__=Acompanhar ônibus
-enter_upi_id=Digite o identificador UPI
-waiting_charge_ratecard_description=1. A espera é gratuita nos primeiros {1} minutos.\n2. Após esse período, será cobrado {0} por minuto.
-waiting_charge_info=Será cobrado {0} por minuto após os primeiros {1} minutos de espera.
-customer_selected_fare=Gorjeta do passageiro^
-customer_tip_description=^Valor adicional oferecido pelo passageiro para aumentar as chances de encontrar uma viagem.
-corporate_address_description=Moving Tech Innovations Private Limited <br> Girija Building, Number 817, Ganapathi Temple Rd, 8th Block, Koramangala, Bengaluru, Karnataka 560095, India.
-finding_quotes_text=Buscando motoristas por perto
-educational_pop_up_slide_2_subtitle=• Os motoristas serão orientados a ligar em vez <br> de enviar mensagens. <br> • Os motoristas serão orientados a buzinar <br> uma vez no local de embarque. <br> • Os motoristas serão orientados a ajudar com <br> suas necessidades e solicitações.
-educational_pop_up_slide_3_subtitle=• Os motoristas serão orientados a enviar mensagens em vez <br> de ligar. <br> • Os motoristas serão orientados a enviar uma mensagem <br> ao chegar ao local de embarque. <br> • Os motoristas serão orientados a ajudar com <br> suas necessidades e solicitações.
-ride_ended=A viagem de {0} terminou.
-last_chosen_variant_not_available=A última categoria escolhida não está disponível. Selecione outra opção.
-toll_or_parking_charges=Taxas de pedágio ou estacionamento
-great_enjoy_the_trip=Ótimo, boa viagem!
-women_drivers_sub=Promovemos a participação de mulheres motoristas com treinamento e acesso a financiamento de veículos elétricos. Conforme esse número crescer, planejamos oferecer às passageiras a opção de escolher motoristas mulheres.
-dashcam_sub=Estamos viabilizando a instalação de câmeras veiculares pelos motoristas. Conforme esse número crescer, planejamos oferecer a opção de escolher veículos com câmera.
-intercity_bus=Ônibus intermunicipal
-last_trip=Última viagem em 
-tickets_for_chennai_bus=Passagens de ônibus em Chennai
-bus_no=Linha de ônibus: {0}
-ac_bus=Ônibus com ar-condicionado
-enter_upi_id_in_the_format_numberbankname=Digite o identificador UPI no formato “number@bankname”.
-educational_pop_up_slide_4_subtitle=• Os motoristas serão orientados a ir até o seu <br> local exato de embarque. <br> • Os motoristas serão orientados a ajudar você <br> com seu equipamento de mobilidade. <br> • Os motoristas serão orientados a ajudar com <br> suas necessidades e solicitações.
-ride_fare=Valor da viagem
-auto_assign_driver=Selecionar motorista automaticamente
-pickup_charge=Taxa de embarque
-pickup_charges=Taxas de embarque
-nominal_fare=Adicional opcional do motorista*
-six_digit_referral_code=Digite o código de indicação de 6 dígitos compartilhado pelo motorista.
-your_number_will_be_visible_to_the_driver_use_if_not_calling_from_registered_number=Seu número ficará visível para o motorista. Use esta opção se estiver ligando de outro número ou tiver problemas de conexão.
-driver_additions=Adicionais do motorista*
-driver_additions_optional=Adicionais do motorista (opcional)
-the_pickup_location_entered_was_wrong=O local de embarque informado estava errado.
-wrong_pickup_location=Local de embarque incorreto
-go_to_selected_pickup_spot=Vá até o ponto de embarque selecionado.
-pi_pointer_1=Os motoristas serão orientados a ir até o seu local exato de embarque.
-download_driver_receipt=Baixar recibo do motorista
-driver_related_issue_page_name=Problema com o motorista
-payment_and_fare_related_issue_page_name=Problema com pagamento ou valor da viagem
-get_fare=Ver valor
-maximum_edit_pickup_attempts_reached=Você atingiu o limite de alterações do local de embarque.
-change_pickup_location=Alterar local de embarque
-special_pickup_zone=Área especial de embarque
-special_pickup_zone_ride=Viagem com embarque em área especial
-driver_at_pickup_location=O motorista está no local de embarque.
-ac_not_working_desc=O ar-condicionado não funciona ou o motorista se recusou a ligá-lo.
-ride_booking=Solicitação de viagem
-extra_per_km_fare=Valor adicional por km
-walking_directions_to_pickup=Trajeto a pé até o embarque
-additional_charges_will_be_applicable=Poderá haver uma cobrança adicional quando o motorista estiver perto do local de embarque.
-parking_charges_desc=A taxa de estacionamento depende do valor cobrado ao motorista no local de embarque.
-driver_verification=Verificação do motorista
-driver_id_check=Verificação de identificação do motorista
-failed_to_remove_driver=Não foi possível remover o motorista dos favoritos.
-pickup_instruction=Instruções de embarque
-edit_your_pickup_location_instead=Altere o local de embarque em vez de cancelar a viagem.
-pickup_time_not_selected=Selecione o horário de embarque.
-pickup_input=Digite o horário de embarque
-trip_fare_includes=O valor da viagem inclui
-trip_fare_excludes=O valor da viagem não inclui
-pickup_date_and_time=Data e horário de embarque
-pickup_instructions=Instruções de embarque (opcional)
-out_for_pickup=A caminho da retirada
-your_driver_might_want_to_go_towards_the_current_drop_kindly_ask_them_to_confirm_after_requesting=O motorista pode estar seguindo em direção ao destino informado. Confirme com ele após solicitar a viagem.
+about
+about_app_description
+ac_bus
+ac_cab
+ac_not_working_desc
+additional_charges_will_be_applicable
+all_topics
+amount_paid
+anywhere_in_the_city
+auto_accepting_selected_ride
+auto_assign_driver
+auto_rickshaw
+back
+book_and_move
+book_and_pay
+book_ride_
+bus__
+bus_no
+by_tapping_continue
+cancel_
+cancel_auto_assigning
+cancel_booking
+cancel_booking_
+cancel_ongoing_search
+cancel_ride
+cancel_scheduled_ride
+cancel_search
+cancel_str
+cancellation
+cancellation_date
+cancelled
+cancelling_as_i_got_a_ride_on_another_app
+change_pickup_location
+chats
+check_out_live_stats
+check_your_internet_connection_and_try_again
+checkout_our_live_stats
+chennai_metro_term_1
+choose_a_ride_as_per_your_comfort
+choose_between_multiple_drivers
+choose_between_multiple_rides
+choose_on_map
+choose_your_ride
+clean_bike
+confirm
+confirm_and_book
+confirm_and_save
+confirm_cancellation
+confirm_changes
+confirm_contacts
+confirm_drop_location
+confirm_emergency_contacts
+confirm_for
+confirm_location
+confirm_pickup
+confirm_pickup_and_drop_location
+confirm_pickup_location
+confirm_ride_
+confirming_the_ride_for_you
+continue
+continue_search_with_no_tip
+continue_with_safety_settings
+corporate_address_description
+current_location
+currently_we_are_live_in_
+customer_selected_fare
+customer_tip_description
+dashcam
+dashcam_sub
+delete
+describe_your_issue
+destination
+destination_outside_limits
+details
+different_auto
+disclaimer
+download_driver_receipt
+download_invoice
+download_pdf
+driver_additions
+driver_additions_optional
+driver_at_pickup_location
+driver_id_check
+driver_related_issue_page_name
+driver_verification
+drivers_can_charge_between_the_above_range
+edit
+edit_emergency_contacts
+edit_favourite
+edit_pickup
+edit_your_pickup_location_instead
+educational_pop_up_slide_2_subtitle
+educational_pop_up_slide_3_subtitle
+educational_pop_up_slide_4_subtitle
+email
+enter_4_digit_otp
+enter_6_digit_referral_code
+enter_6_digit_referral_code_below
+enter_a_address
+enter_a_location
+enter_a_name
+enter_mobile_number
+enter_now
+enter_otp
+enter_pickup_loc
+enter_referral_code_
+enter_upi_id
+enter_upi_id_in_the_format_numberbankname
+enter_your_mobile_number
+enter_your_name
+extra_per_km_fare
+failed_to_cancel
+failed_to_remove_driver
+faq
+fare_for
+finding_quotes_text
+finding_rides_near_you
+for_other_issues_write_to_us
+full_name
+get_fare
+getting_started_and_faqs
+go_home_
+go_to_home__
+go_to_selected_pickup_spot
+got_a_referral_from_a_driver_or_friend
+got_it_tell_us_more
+great_enjoy_the_trip
+have_a_refferal
+help_and_support
+help_us_with_your_feedback_optional
+help_us_with_your_reason
+hey
+home
+hope_your_ride_was_hassle_free
+how_the_pricing_works
+how_this_works
+how_was_your_ride_with
+intercity_bus
+invoice
+language
+last_chosen_variant_not_available
+last_trip
+late_pick_up
+live_stats_dashboard
+loading
+location
+location_already
+location_already_exists
+location_already_exists_as
+location_is_too_far
+location_permission_subtitle
+location_unserviceable
+locations
+login_using_the_otp_sent_to
+logo
+maximum_edit_pickup_attempts_reached
+min_fare_upto
+mins
+mins_away
+mobile_number_str
+most_loved_app
+name
+network_error
+no_emergency_contacts_set
+no_favourite_yet
+no_favourites_saved_yet
+no_more_rides
+no_qoutes_available
+no_report_an_issue
+nominal_fare
+not_verified
+note
+online_
+optional_bracketted
+otp
+our_suggested_price_for_this_trip_is
+out_for_pickup
+parking_charges_desc
+payment_and_fare_related_issue_page_name
+payment_method
+payment_method_string
+payment_method_string_
+personal_details
+pi_pointer_1
+pick_up_location
+pickup_and_drop
+pickup_charge
+pickup_charges
+pickup_date_and_time
+pickup_input
+pickup_instruction
+pickup_instructions
+pickup_time_not_selected
+please_choose_your_preferred_language_to_continue
+please_confirm_with_your_after_requesting
+please_do_not_pay_extra_to_driver
+please_enter_a_valid_address
+please_enter_a_valid_mobile_number
+please_enter_a_valid_name
+please_pay_the_final_amount_to_the_driver_via_cash
+please_tell_us_why_you_want_to_cancel
+please_wait_while_in_progress
+polite_driver
+privacy_policy
+promotion
+rate_your_ride
+rate_your_ride_with
+referral_code
+referral_code_failed
+referral_code_verified
+remove
+remove_favourite
+remove_from_favourite
+report_an_issue
+report_an_issue_with_this_trip
+request_edit
+request_ride
+resend
+ride_booking
+ride_cancelled
+ride_ended
+ride_fare
+rude_driver
+safety
+safety_check_in
+safety_guidelines_7
+save
+save_as
+save_place
+saved_address_helps_you_keep_your_favourite_places_handy
+saved_addresses
+search_again
+search_again_with_a_tip
+search_again_without_a_tip
+search_contacts
+searching_with_no_tip
+select_a_ride
+select_an_offer
+select_an_offer_from_our_drivers
+select_contacts
+select_distance
+select_duration
+select_favourite
+select_on_map
+select_package
+select_popular_spot_for_hassle_free_pickup
+select_vehicle
+select_your_drop
+send_email
+set_up_your_account
+six_digit_referral_code
+skip
+special_pickup_zone
+special_pickup_zone_ride
+star_rating
+subject
+submit
+support
+thank_you_for_writing
+thank_you_for_writing_to_us
+thank_your_driver
+the_pickup_location_entered_was_wrong
+ticket_is_non_cancellable
+tickets_for_chennai_bus
+to_the
+toll_or_parking_charges
+total_amount
+trip_charges
+trip_details_
+trip_fare_excludes
+trip_fare_includes
+trip_id
+try_again
+try_again_with_a_tip
+try_again_without_tip
+unable_to_cancel_ride
+uncomfortable_cab
+update
+verify
+verifying
+view_all_rides
+view_invoice
+visit_my_rides_section_for_ride_specific_complaints
+waiting_charge_info
+waiting_charge_ratecard_description
+walking_directions_to_pickup
+we_have_received_your_issue
+we_have_received_your_issue_well_reach_out_to_you_in_sometime
+welcome_text
+where_are_you_going
+where_to
+women_drivers_sub
+write_a_comment
+write_to_us
+wrong_pickup_location
+yes_cancel_search
+you_are_offline
+you_can_describe_the_issue_you_faced_here
+you_rated
+your_cancellation_rate_is_high
+your_current_location
+your_driver_might_want_to_go_towards_the_current_drop_kindly_ask_them_to_confirm_after_requesting
+your_email_id
+your_number_will_be_visible_to_the_driver_use_if_not_calling_from_registered_number
+your_recent_ride
+your_referral_code
+your_ride_has_started
+your_ride_is_now_complete
+your_rides

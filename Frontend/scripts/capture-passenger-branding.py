@@ -21,8 +21,20 @@ time.sleep(2)
 # Use the launcher's actual accessibility control rather than screen-size guesses.
 icons = []
 for attempt in range(3):
-    adb('shell', 'uiautomator', 'dump', '/sdcard/branding-launcher.xml')
-    xml = adb('shell', 'cat', '/sdcard/branding-launcher.xml')
+    # The launcher can still be animating when its first dump is requested.
+    xml = None
+    for dump_attempt in range(3):
+        try:
+            adb('shell', 'uiautomator', 'dump', '/sdcard/branding-launcher.xml')
+            candidate = adb('shell', 'cat', '/sdcard/branding-launcher.xml')
+            ET.fromstring(candidate)
+            xml = candidate
+            break
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, ET.ParseError):
+            time.sleep(1)
+    if xml is None:
+        screenshot('branding-launcher-dump-failed.png')
+        raise SystemExit('Launcher sem XML válido após três tentativas')
     (out / f'branding-launcher-{attempt}.xml').write_bytes(xml)
     screenshot(f'branding-launcher-{attempt}.png')
     nodes = list(ET.fromstring(xml).iter('node'))

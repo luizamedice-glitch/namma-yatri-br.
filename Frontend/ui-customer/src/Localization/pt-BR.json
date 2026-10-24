@@ -16,11 +16,13 @@
     "all_topics",
     "amount_paid",
     "anywhere_in_the_city",
+    "auto_accepting_selected_ride",
     "auto_assign_driver",
     "auto_rickshaw",
     "back",
     "book_and_move",
     "book_and_pay",
+    "book_ride_",
     "bus__",
     "bus_no",
     "by_tapping_continue",
@@ -36,11 +38,13 @@
     "cancellation",
     "cancellation_date",
     "cancelled",
+    "cancelling_as_i_got_a_ride_on_another_app",
     "change_pickup_location",
     "chats",
     "check_out_live_stats",
     "check_your_internet_connection_and_try_again",
     "checkout_our_live_stats",
+    "chennai_metro_term_1",
     "choose_a_ride_as_per_your_comfort",
     "choose_between_multiple_drivers",
     "choose_between_multiple_rides",
@@ -77,6 +81,7 @@
     "destination",
     "destination_outside_limits",
     "details",
+    "different_auto",
     "disclaimer",
     "download_driver_receipt",
     "download_invoice",
@@ -113,6 +118,7 @@
     "enter_your_mobile_number",
     "enter_your_name",
     "extra_per_km_fare",
+    "failed_to_cancel",
     "failed_to_remove_driver",
     "faq",
     "fare_for",
@@ -206,6 +212,8 @@
     "polite_driver",
     "privacy_policy",
     "promotion",
+    "rate_your_ride",
+    "rate_your_ride_with",
     "referral_code",
     "referral_code_failed",
     "referral_code_verified",
@@ -218,11 +226,13 @@
     "request_ride",
     "resend",
     "ride_booking",
+    "ride_cancelled",
     "ride_ended",
     "ride_fare",
     "rude_driver",
     "safety",
     "safety_check_in",
+    "safety_guidelines_7",
     "save",
     "save_as",
     "save_place",
@@ -259,6 +269,7 @@
     "thank_you_for_writing_to_us",
     "thank_your_driver",
     "the_pickup_location_entered_was_wrong",
+    "ticket_is_non_cancellable",
     "tickets_for_chennai_bus",
     "to_the",
     "toll_or_parking_charges",
@@ -271,6 +282,8 @@
     "try_again",
     "try_again_with_a_tip",
     "try_again_without_tip",
+    "unable_to_cancel_ride",
+    "uncomfortable_cab",
     "update",
     "verify",
     "verifying",
@@ -289,6 +302,7 @@
     "write_a_comment",
     "write_to_us",
     "wrong_pickup_location",
+    "yes_cancel_search",
     "you_are_offline",
     "you_can_describe_the_issue_you_faced_here",
     "you_rated",
@@ -794,7 +808,7 @@
     },
     "rate_your_ride": {
       "arity": 0,
-      "text": "Rate your viagem"
+      "text": "Avalie sua viagem"
     },
     "skip": {
       "arity": 0,
@@ -1210,7 +1224,7 @@
     },
     "book_ride_": {
       "arity": 0,
-      "text": "Book Viagem"
+      "text": "Solicitar viagem"
     },
     "cancel_auto_assigning": {
       "arity": 0,
@@ -1230,7 +1244,7 @@
     },
     "auto_accepting_selected_ride": {
       "arity": 0,
-      "text": "Auto aceitando em"
+      "text": "Aceite automático em"
     },
     "the_trip_is_very_short_and_just_take": {
       "arity": 0,
@@ -1326,7 +1340,7 @@
     },
     "rate_your_ride_with": {
       "arity": 0,
-      "text": "Rate sua viagem com "
+      "text": "Avalie sua viagem com "
     },
     "view_breakdown": {
       "arity": 0,
@@ -2042,7 +2056,7 @@
     },
     "yes_cancel_search": {
       "arity": 0,
-      "text": "Sim, cancelar pesquisa"
+      "text": "Sim, cancelar busca"
     },
     "try_looking_for_rides_again": {
       "arity": 0,
@@ -2202,7 +2216,7 @@
     },
     "cancelling_as_i_got_a_ride_on_another_app": {
       "arity": 0,
-      "text": "Cancelando como eu tenho uma viagem em outro aplicativo"
+      "text": "Consegui uma viagem em outro aplicativo"
     },
     "driver_location_wasnt_changing_on_the_map": {
       "arity": 0,
@@ -2258,7 +2272,7 @@
     },
     "different_auto": {
       "arity": 0,
-      "text": "Auto diferente"
+      "text": "Veículo diferente"
     },
     "different_cab": {
       "arity": 0,
@@ -2558,7 +2572,7 @@
     },
     "uncomfortable_cab": {
       "arity": 0,
-      "text": "Cab desconfortável"
+      "text": "Veículo desconfortável"
     },
     "trip_got_delayed": {
       "arity": 0,
@@ -3754,7 +3768,7 @@
     },
     "safety_guidelines_7": {
       "arity": 0,
-      "text": "Rate and Review para ajudar a manter uma comunidade confiável e segura"
+      "text": "Avalie e deixe um comentário para ajudar a manter uma comunidade confiável e segura"
     },
     "about_sos_1": {
       "arity": 0,
@@ -4306,7 +4320,7 @@
     },
     "chennai_metro_term_1": {
       "arity": 0,
-      "text": "Cancelamento de passagems não é aplicável"
+      "text": "Não é possível cancelar passagens"
     },
     "chennai_metro_term_2": {
       "arity": 0,
@@ -4470,7 +4484,7 @@
     },
     "ticket_is_non_cancellable": {
       "arity": 0,
-      "text": "O passagem não é cancelável."
+      "text": "Não é possível cancelar esta passagem."
     },
     "cancel_booking": {
       "arity": 0,
@@ -4614,7 +4628,7 @@
     },
     "ride_cancelled": {
       "arity": 0,
-      "text": "Viagem Cancelado"
+      "text": "Viagem cancelada"
     },
     "track_ride_string": {
       "arity": 4,
@@ -4818,7 +4832,7 @@
     },
     "unable_to_cancel_ride": {
       "arity": 0,
-      "text": "Incapaz de cancelar o viagem"
+      "text": "Não foi possível cancelar a viagem"
     },
     "got_a_referral_from_a_driver_or_friend": {
       "arity": 0,
@@ -5294,7 +5308,7 @@
     },
     "failed_to_cancel": {
       "arity": 0,
-      "text": "Falha ao cancelar o viagem"
+      "text": "Falha ao cancelar a viagem"
     },
     "scheduling_allowed_in_intercity_rental": {
       "arity": 0,
@@ -7551,7 +7565,7 @@
     "Hey ": "Olá ",
     "Hurry! Limited number of tickets available today! adsfkjaksdfjaksjd fkafjdk;a .jdfkl;ajdkfja; klj": "Número limitado de ingressos disponíveis hoje! adsfkjaksdfjaksjd fkafjdk;a .jdfkl;ajdkfja;klj",
     "I agree to the": "Eu concordo com o",
-    "Inside Book Any : ": "Inside Book Qualquer: ",
+    "Inside Book Any : ": "Na opção de qualquer veículo: ",
     "Learn More Button": "Saiba mais: botão",
     "Location": "Localização",
     "Logout": "Sair",
@@ -7765,7 +7779,7 @@
     "Please tell us why you want to cancel": "Conte por que você quer cancelar.",
     "Mandatory": "Obrigatório",
     "Software license": "Licença de software",
-    "Rate your ride": "Rate your viagem",
+    "Rate your ride": "Avalie sua viagem",
     "Skip": "Pular",
     "Error 404": "Erro 404",
     "There seems to be a problem at our end. Get notified when we are up again": "Parece haver um problema no nosso final. Seja notificado quando estivermos de novo",
@@ -7868,11 +7882,11 @@
     "You may wish to walk or continue with the ride booking": "Você pode querer andar ou continuar com a reserva de viagem.",
     "Your trip distance is too short. Destination is just ": "Sua distância de viagem é muito curta. ",
     "m away!": "Eu vou embora!",
-    "Book Ride": "Book Viagem",
+    "Book Ride": "Solicitar viagem",
     "Cancel Auto Assigning": "Cancelar atribuição automática",
     "Location unserviceable": "Local fora da área de atendimento",
     "Change Location": "Alterar localização",
-    "Auto accepting in": "Auto aceitando em",
+    "Auto accepting in": "Aceite automático em",
     "The trip is very short and just take": "A viagem é muito curta e basta tomar",
     "if you still want to book, click continue and start booking the ride": "Se você ainda quiser reservar, clique em continuar e começar a reservar o viagem",
     "Steps to complete": "Passos para completar",
@@ -7896,7 +7910,7 @@
     "Submit Feedback": "Enviar feedback",
     "How was your ride experience?": "Como foi sua experiência de viagem?",
     "Drop": "Solte",
-    "Rate your ride with ": "Rate sua viagem com ",
+    "Rate your ride with ": "Avalie sua viagem com ",
     "View Breakdown": "Ver Desagregação",
     "Pay Driver using Cash/UPI": "Pagar ao motorista usando dinheiroUPI",
     "Rate Your Driver": "Classifique seu motorista",
@@ -8058,7 +8072,7 @@
     "^Ending a ride early incurs additional charges amounting to half the fare of the untravelled distance (max. ₹50)": "Terminar uma viagem cedo incorre em custos adicionais que equivalem a metade da tarifa da distância não percorrida (máx. ₹50)",
     "Yes, Try Again": "Sim, tente de novo",
     "No, Don’t": "Não, não.",
-    "Yes, Cancel Search": "Sim, cancelar pesquisa",
+    "Yes, Cancel Search": "Sim, cancelar busca",
     "No Tip": "Sem Dica",
     "^Extra amount added by the customer to increase the chances of getting a ride.": "^Valor adicional oferecido pelo passageiro para aumentar as chances de encontrar uma viagem.",
     "Place Call": "Faça uma chamada",
@@ -8090,7 +8104,7 @@
     "Ok, Got it": "Ok, entendi.",
     "Wait For Driver": "Espere pelo motorista.",
     "No longer require a ride due to change in plans": "Não precisa mais de viagem devido a mudanças nos planos.",
-    "Cancelling as I got a ride on another app": "Cancelando como eu tenho uma viagem em outro aplicativo",
+    "Cancelling as I got a ride on another app": "Consegui uma viagem em outro aplicativo",
     "Driver location wasn`t changing on the map": "A localização do motorista não estava mudando no mapa",
     "Driver was taking too long to reach the pickup location": "O motorista estava demorando muito para chegar ao local da coleta.",
     "The pickup location entered was wrong": "O local de embarque informado estava errado.",
@@ -8104,7 +8118,7 @@
     "Wrong pickup location": "Local de embarque incorreto",
     "Different Vehicle No": "Veículo diferente Não",
     "Vehicle number is different from  what is shown in the app": "O número do veículo é diferente do que é mostrado no aplicativo",
-    "Different Auto": "Auto diferente",
+    "Different Auto": "Veículo diferente",
     "Different Cab": "Táxi diferente.",
     "Driver might be taking an alternate route.": "O motorista pode estar tomando uma rota alternativa.",
     "Driver is not moving?": "O motorista não está se movendo?",
@@ -8174,7 +8188,7 @@
     "Rash Driving": "Condução de Rash",
     "Driver charged more": "Motorista cobrava mais",
     "Uncomfortable Auto": "Desconfortável Auto",
-    "Uncomfortable Cab": "Cab desconfortável",
+    "Uncomfortable Cab": "Veículo desconfortável",
     "Trip Got Delayed": "Viagem foi adiada",
     "Felt Unsafe": "Senti-me inseguro.",
     "Polite Driver": "Motorista educado",
@@ -8451,7 +8465,7 @@
     "If you feel uncomfortable, share your ride with emergency contacts": "Se você se sentir desconfortável, compartilhe sua viagem com contatos de emergência",
     "Avoid sharing personal information": "Evite compartilhar informações pessoais",
     "Use In-App emergency Safety mode feature": "Use o recurso de modo de segurança de emergência no aplicativo",
-    "Rate and Review to help maintain a reliable and safe community": "Rate and Review para ajudar a manter uma comunidade confiável e segura",
+    "Rate and Review to help maintain a reliable and safe community": "Avalie e deixe um comentário para ajudar a manter uma comunidade confiável e segura",
     "Driver re-routing to different remote locations": "Motorista reencaminhando para diferentes locais remotos",
     "Inappropriate verbal/physical cues from the driver": "Indicações verbais/físicas inadequadas do motorista",
     "Other passengers asked to join ride without your consent": "Outros passageiros pediram para participar da viagem sem o seu consentimento",
@@ -8568,7 +8582,7 @@
     "Route Details": "Detalhes da rota",
     "Uncertain about Metro Routes?": "Não tem certeza sobre rotas de metrô?",
     "See Map": "Ver Mapa",
-    "Cancellation of tickets is not applicable": "Cancelamento de passagems não é aplicável",
+    "Cancellation of tickets is not applicable": "Não é possível cancelar passagens",
     "The tickets can be purchased between 4:30 AM to 10:30 PM on all days.": "Os ingressos podem ser comprados entre 4:30 AM para 10:30 PM em todos os dias.",
     "Cancelled tickets will not count towards the FREE ticket offer": "Bilhetes cancelados não contarão para a oferta de ingressos GRÁTIS",
     "Cashback for the FREE ticket offer will be credited within 24 hours": "Cashback para a oferta de passagems GRÁTIS será creditado dentro 24 horas",
@@ -8606,7 +8620,7 @@
     "Past Tickets": "Bilhetes passados",
     "One Way": "Uma Via",
     "Share Ticket": "Compartilhar Ticket",
-    "Ticket is non-cancellable": "O passagem não é cancelável.",
+    "Ticket is non-cancellable": "Não é possível cancelar esta passagem.",
     "Cancel Booking?": "Cancelar solicitação?",
     "This booking is not cancellable as per the Metro Booking Policy": "Esta reserva não é cancelável de acordo com a Política de Reservas do Metro.",
     "All tickets associated with this booking will be canceled.": "Todos os ingressos associados a esta reserva serão cancelados.",
@@ -8636,7 +8650,7 @@
     "Don’t send trip Notification to emergency contact": "Não envie notificação de viagem para contato de emergência",
     "Share Trip Notifications": "Compartilhar notificações de viagem",
     "Call Customer Support": "Ligue para o Suporte ao Cliente",
-    "Ride Cancelled": "Viagem Cancelado",
+    "Ride Cancelled": "Viagem cancelada",
     "Driver is almost at pickup, please contact them to change pickup": "Motorista está quase no captador, por favor entre em contato com eles para mudar o captador",
     "You have reached the maximum number of attempts to change the pickup location": "Você atingiu o limite de alterações do local de embarque.",
     "Move the pin to the desired pickup point (within the indicated area)": "Mova o pino para o ponto de captação desejado (dentro da área indicada)",
@@ -8681,7 +8695,7 @@
     "Update Tip": "Dica de atualização",
     "Time Taken": "Tempo decorrido",
     "Trip Distance": "Distância da viagem",
-    "Unable to cancel ride": "Incapaz de cancelar o viagem",
+    "Unable to cancel ride": "Não foi possível cancelar a viagem",
     "Got a referral code from a driver or a friend?": "Recebeu um código de indicação de um motorista ou amigo?",
     "Enter Referral Code": "Digite o código de indicação",
     "Referred Users": "Usuários referenciados",
@@ -8788,7 +8802,7 @@
     "Every hour gets you 10 kms in the package. You can plan additional kms upto a limit and save on extra costs if you end up exceeding the base distance.": "Cada hora te pega. 10 Você pode planejar kms adicionais até um limite e economizar em custos extras se você acabar excedendo a distância base.",
     "Review the fare on the next screen before confirming the booking": "Revise a tarifa na próxima tela antes de confirmar a reserva",
     "Check it out": "Veja só.",
-    "Failed To Cancel Ride": "Falha ao cancelar o viagem",
+    "Failed To Cancel Ride": "Falha ao cancelar a viagem",
     "Scheduling is only allowed in Intercity or Rental Rides.": "O agendamento só é permitido em Intercity ou Rental Viagens.",
     "Locations within special zone are not eligible for intercity rides.": "Locais dentro da zona especial não são elegíveis para viagens interurbanos.",
     "No rides scheduled yet!": "Ainda não há viagens programados!",

@@ -1,7 +1,7 @@
 # Português do Brasil no passageiro BR
 
 `pt-BR.json` cobre as 1.789 chaves do catálogo original, inclusive 125 funções
-currificadas. Os 295 textos listados em `reviewed-pt-BR.txt` têm revisão manual,
+currificadas. Os 309 textos listados em `reviewed-pt-BR.txt` têm revisão manual,
 assim como os rótulos/acessibilidade em `reviewed-literals-pt-BR.txt` e os recursos
 Android em `app/src/brTest/res/values-pt-rBR/strings.xml`. Os demais textos têm
 tradução inicial automática e precisam de revisão funcional antes de ativar os
