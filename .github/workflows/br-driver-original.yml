@@ -146,6 +146,7 @@ jobs:
       - run: npm ci --prefix brasil/backend
       - run: node --test Frontend/scripts/test-driver-operations.mjs Frontend/scripts/test-driver-backend.integration.mjs
   emulator:
+    if: always() && !cancelled() && needs.android.result == 'success'
     needs: android
     runs-on: ubuntu-latest
     timeout-minutes: 25
