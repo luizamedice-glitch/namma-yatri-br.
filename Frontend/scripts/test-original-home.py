@@ -209,6 +209,15 @@ try:
         nodes = capture(stage)
         assert any(expected in (n.get('text', '') + n.get('content-desc', '')) for n in nodes), 'Conteúdo ausente: ' + label
     assert not any(n.get('content-desc') in ('Navigation : Button', 'Navegação: botão') for n in nodes), 'Menu antigo continua visível'
+    if places_evidence['acceptance'] == 'passed':
+        tap(where(nodes))
+        time.sleep(2)
+        persisted = capture('footer-addresses-preserved')
+        values = {n.get('text', '') for n in persisted}
+        for field in ('source', 'destination'):
+            assert places_evidence[field]['address'] in values, 'Endereço perdido ao trocar de aba: ' + field
+        adb('shell', 'input', 'keyevent', 'KEYCODE_BACK')
+
     (out/'footer-acceptance.json').write_text(json.dumps({'acceptance':'passed','tabs':['Início','Carteira','Perfil']},ensure_ascii=False))
 
     assert adb('shell','pidof',package).strip(), 'Processo encerrou.'
