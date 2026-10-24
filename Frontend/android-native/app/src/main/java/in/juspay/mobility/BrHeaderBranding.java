@@ -42,8 +42,8 @@ final class BrHeaderBranding {
     }
 
     private static boolean hasNavigationButton(View view) {
-        if ("Navigation : Button".contentEquals(
-                view.getContentDescription() == null ? "" : view.getContentDescription())) return true;
+        CharSequence label = view.getContentDescription() == null ? "" : view.getContentDescription();
+        if ("Navigation : Button".contentEquals(label) || "Navegação: botão".contentEquals(label)) return true;
         if (view instanceof ViewGroup) {
             ViewGroup group = (ViewGroup) view;
             for (int i = 0; i < group.getChildCount(); i++) {

@@ -42,7 +42,7 @@ def tap(node):
 
 def where(nodes):
     # Both controls exist in the historical HomeScreen (primary button and new-home layout).
-    hints = {'Where To : Button', 'Where are you going? : Button'}
+    hints = {'Where To : Button', 'Where are you going? : Button', 'Para onde?: botão', 'Para onde você vai?: botão'}
     return next((n for n in nodes if n.get('package') == package and n.get('content-desc') in hints), None)
 
 def no_auth(nodes):

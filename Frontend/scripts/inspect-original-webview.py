@@ -46,6 +46,7 @@ try:
                 expression = """JSON.stringify({url:location.href,readyState:document.readyState,os:window.__OS,
                 developmentMode:window.__YATRI_BR_DEVELOPMENT__===true,
                 configDiagnostics:window.__YATRI_BR_CONFIG_DIAGNOSTICS__||null,
+                localization:window.__YATRI_BR_LOCALIZATION__||null,languageKey:window.languageKey,
                 placesDiagnostics:window.__YATRI_BR_PLACES_STATE__||null,
                 hasRegistrationToken:(()=>{try{const t=window.JBridge.getKeysInSharedPref('REGISTERATION_TOKEN');return !!t && !['__failed','(null)','null'].includes(t);}catch(_){return null;}})(),
                 josType:typeof window.JOS,josSelf:window.JOS&&window.JOS.self,bridgeType:typeof window.JBridge,

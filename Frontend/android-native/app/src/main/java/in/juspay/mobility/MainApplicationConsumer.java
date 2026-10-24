@@ -11,6 +11,9 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import java.lang.reflect.Method;
 
 public class MainApplicationConsumer extends Application {
+    @Override protected void attachBaseContext(android.content.Context context) {
+        super.attachBaseContext(BrLocale.wrap(context));
+    }
 
     @Override
     public void onCreate() {

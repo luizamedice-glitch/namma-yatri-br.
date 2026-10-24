@@ -124,6 +124,9 @@ import in.juspay.mobility.common.utils.Utils;
 
 
 public class MainActivity extends AppCompatActivity {
+    @Override protected void attachBaseContext(Context context) {
+        super.attachBaseContext(BrLocale.wrap(context));
+    }
 
     private static final String LOG_TAG = "MAIN_ACTIVITY";
     private static final int REQUEST_CODE_UPDATE_APP = 587;

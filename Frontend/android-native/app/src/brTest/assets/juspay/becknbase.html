@@ -15,6 +15,9 @@
     window.JBridge.setAnalyticsHeader(JSON.stringify({ "x-client-id": "mobility" }));
 
     const sessionInfo = JSON.parse(JBridge.getDeviceInfo())
+    const brPassengerLocale = sessionInfo.package_name === "in.juspay.nammayatri.debug";
+    Object.defineProperty(window, "__YATRI_BR_PT_BR__", {value: brPassengerLocale, writable: false});
+    if (brPassengerLocale) window.languageKey = "PT_BR";
     const enableLogs = JBridge.fetchRemoteConfigBool && JBridge.fetchRemoteConfigBool("enable_logs")
     const JOSFlags = window.JOS.getJOSflags()
     if (sessionInfo.package_name.includes(".debug") || sessionInfo.package_name.includes(".staging") || enableLogs || JOSFlags.isCUGUser || JOSFlags.isDevQa.isDevQa) {

@@ -133,7 +133,10 @@ jobs:
           git cat-file -e "$SOURCE_SHA^{commit}" || git fetch --depth 1 origin "$SOURCE_SHA"
           git diff --exit-code "$SOURCE_SHA" HEAD -- 'Frontend/**/*.purs' 'Frontend/**/spago.dhall' Frontend/packages.dhall \
             'Frontend/ui-customer/src/**/*.js' 'Frontend/ui-common/src/**/*.js' \
-            Frontend/ui-customer/package.json 'Frontend/ui-customer/webpack*.js' 'Frontend/ui-customer/webpack*.cjs'
+            Frontend/ui-customer/package.json 'Frontend/ui-customer/webpack*.js' 'Frontend/ui-customer/webpack*.cjs' \
+            ':!Frontend/ui-customer/src/Localization/*.js' ':!Frontend/ui-customer/webpack.android.js' \
+            ':!Frontend/ui-customer/webpack.br-portuguese.cjs' ':!Frontend/ui-customer/webpack.br-portuguese-babel.cjs'
+          python3 Frontend/scripts/validate-portuguese-webpack.py "$SOURCE_SHA"
       - uses: actions/cache/restore@v4
         id: cache
         with:
@@ -198,6 +201,11 @@ jobs:
         env:
           NODE_OPTIONS: '--openssl-legacy-provider'
         run: node Frontend/scripts/test-development-config-webpack.cjs
+      - name: Validar catálogo e integração pt-BR no Webpack real
+        run: |
+          python3 Frontend/scripts/validate-portuguese-catalog.py
+          node --test Frontend/scripts/test-portuguese-localization.mjs
+          NODE_OPTIONS=--openssl-legacy-provider node Frontend/scripts/test-portuguese-webpack.cjs
       - name: Conferir FFI atual dentro do output compilado
         run: cmp Frontend/ui-common/src/DecodeUtil/DecodeUtil.js Frontend/ui-customer/output/DecodeUtil/foreign.js
       - name: Empacotar frontend original para Android
