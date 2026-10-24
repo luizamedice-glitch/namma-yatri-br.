@@ -189,6 +189,9 @@ jobs:
           path: ride-apks/alce-yatri-motorista-teste.apk
           if-no-files-found: error
   emulator:
+    concurrency:
+      group: br-ride-pilot-remote-e2e
+      cancel-in-progress: false
     needs: android
     if: ${{ always() && !cancelled() && (needs.android.result == 'success' || inputs.apk_run_id) }}
     runs-on: ubuntu-latest
