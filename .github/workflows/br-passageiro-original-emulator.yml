@@ -3,6 +3,9 @@ name: BR - Abertura do passageiro original
 on:
   workflow_call:
     inputs:
+      api_level:
+        type: number
+        default: 29
       require_places:
         type: boolean
         default: false
@@ -11,6 +14,11 @@ on:
         type: string
   workflow_dispatch:
     inputs:
+      api_level:
+        description: 'Versão Android: API 29 = Android 10; API 31 = Android 12'
+        type: choice
+        options: ['29', '31']
+        default: '29'
       require_places:
         description: 'Exigir pesquisa real e seleção de origem/destino'
         type: boolean
@@ -79,7 +87,7 @@ jobs:
       - name: Validar HomeScreen original offline e online sem autenticacao
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 29
+          api-level: ${{ inputs.api_level || 29 }}
           target: google_apis
           arch: x86_64
           profile: pixel_2
