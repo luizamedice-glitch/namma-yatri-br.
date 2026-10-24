@@ -5,6 +5,10 @@ on:
     paths: ['.github/workflows/br-driver-original.yml']
   workflow_dispatch:
     inputs:
+      apk_run_id:
+        description: 'Repetir aceite Android usando APK original já compilado'
+        type: string
+        required: false
       bundle_run_id:
         description: 'Reutilizar bundle original aprovado, sem recompilar PureScript'
         type: string
@@ -17,7 +21,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   original:
-    if: ${{ !inputs.bundle_run_id }}
+    if: ${{ !inputs.bundle_run_id && !inputs.apk_run_id }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -71,7 +75,7 @@ jobs:
           name: motorista-original-bundle
           path: Frontend/ui-driver/dist/android/
   android:
-    if: always() && !cancelled() && (needs.original.result == 'success' || inputs.bundle_run_id)
+    if: always() && !cancelled() && !inputs.apk_run_id && (needs.original.result == 'success' || inputs.bundle_run_id)
     needs: original
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -146,7 +150,7 @@ jobs:
       - run: npm ci --prefix brasil/backend
       - run: node --test Frontend/scripts/test-driver-operations.mjs Frontend/scripts/test-driver-backend.integration.mjs
   emulator:
-    if: always() && !cancelled() && needs.android.result == 'success'
+    if: always() && !cancelled() && (needs.android.result == 'success' || inputs.apk_run_id)
     needs: android
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -167,10 +171,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Validar origem do APK reutilizado
+        if: inputs.apk_run_id
+        uses: actions/github-script@v7
+        env:
+          SOURCE_RUN: ${{ inputs.apk_run_id }}
+        with:
+          script: |
+            const id=Number(process.env.SOURCE_RUN);
+            if(!Number.isSafeInteger(id)||id<=0)throw Error('Run inválido');
+            const {data:run}=await github.rest.actions.getWorkflowRun({...context.repo,run_id:id});
+            if(run.path!=='.github/workflows/br-driver-original.yml')throw Error('Origem inválida');
+            const {data}=await github.rest.actions.listJobsForWorkflowRun({...context.repo,run_id:id});
+            if(!data.jobs.some(j=>j.name==='android'&&j.conclusion==='success'))throw Error('APK não aprovado');
+            await exec.exec('git',['fetch','origin',run.head_sha]);
+            await exec.exec('git',['diff','--exit-code',run.head_sha,'HEAD','--','Frontend/android-native','Frontend/ui-driver/src','Frontend/ui-driver/webpack*.js','Frontend/ui-driver/index.js','Frontend/ui-common']);
       - uses: actions/download-artifact@v4
         with:
           name: alce-yatri-motorista-original-apk
           path: driver-apk
+          run-id: ${{ inputs.apk_run_id || github.run_id }}
+          github-token: ${{ github.token }}
       - run: npm ci --prefix brasil/backend
       - name: Iniciar API e contas persistidas do aceite isolado
         run: |

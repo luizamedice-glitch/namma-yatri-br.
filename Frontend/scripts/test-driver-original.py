@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exercise the original driver dashboard against the real local API/database."""
 from pathlib import Path
-import json, os, re, subprocess, time, urllib.request, xml.etree.ElementTree as ET
+import atexit, json, os, re, subprocess, time, urllib.request, xml.etree.ElementTree as ET
 out=Path('driver-original-evidence');out.mkdir(exist_ok=True)
 package='in.juspay.nammayatripartner.debug'
 def adb(*args):return subprocess.check_output(['adb',*args],timeout=45)
@@ -17,6 +17,17 @@ def capture(name):
         except Exception:
             if attempt==2:raise
             time.sleep(2)
+def diagnostics():
+    try:
+        raw=adb('logcat','-d').decode(errors='replace')
+        raw=re.sub(r'AIza[0-9A-Za-z_-]{20,}','[REDACTED_GOOGLE_KEY]',raw)
+        raw=re.sub(r'\b[a-fA-F0-9]{64}\b','[REDACTED_SESSION]',raw)
+        raw=re.sub(r'(?i)(bearer\s+)[a-z0-9._~-]+',r'\1[REDACTED]',raw)
+        (out/'logcat.txt').write_text(raw)
+        (out/'activity.txt').write_bytes(adb('shell','dumpsys','activity','activities'))
+    except Exception:pass
+atexit.register(diagnostics)
+
 def snapshot():
     req=urllib.request.Request('http://127.0.0.1:8080/v1/snapshot',headers={'Authorization':'Bearer '+session['token']})
     with urllib.request.urlopen(req,timeout=10) as response:return json.load(response)
@@ -29,7 +40,7 @@ adb('shell','run-as',package,'mkdir','-p','shared_prefs')
 subprocess.run(['adb','shell','run-as',package,'sh','-c','"cat > shared_prefs/godel.xml"'],input=ET.tostring(root),check=True,timeout=30)
 adb('reverse','tcp:8080','tcp:8080')
 adb('emu','geo','fix','-46.63','-23.55')
-adb('shell','am','start','-W','-n',package+'/in.juspay.mobility.MainActivity')
+(out/'launch.txt').write_bytes(adb('shell','am','start','-W','-n',package+'/in.juspay.mobility.MainActivity'))
 time.sleep(40)
 nodes=capture('dashboard-offline')
 labels=[n.get('text','') for n in nodes]
