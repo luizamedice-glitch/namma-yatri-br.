@@ -50,3 +50,22 @@ test('stale driver GPS is explicitly marked instead of presented as live',()=>{
   const ride={fare_cents:500,driver_lat:-23.55,driver_lng:-46.63,driver_location_at:new Date(Date.now()-61000).toISOString()};
   assert.equal(tripView(ride).gpsFresh,false);assert.match(tripView(ride).tracking,/desatualizado/);
 });
+test('trip map uses the existing native bridge and updates the assigned GPS marker',async()=>{
+  let ready;const calls=[];
+  globalThis.tripMapTest={mapPayload};
+  const source=(await readFile(new URL('../ui-common/src/Development/TripMapRuntime.js',import.meta.url),'utf8')).replace(/^import .*;$/gm,'');
+  const runtime=await import('data:text/javascript;base64,'+Buffer.from('const {mapPayload}=globalThis.tripMapTest;'+source).toString('base64'));
+  globalThis.window={__OS:'ANDROID',__YATRI_BR_DEVELOPMENT__:true,JBridge:{getDeviceInfo:()=>JSON.stringify({package_name:'in.juspay.nammayatri.debug'}),
+    showMap:()=>calls.push('mount'),removeAllPolylines:()=>calls.push('clear'),drawRouteV2:data=>calls.push(JSON.parse(data)),showMarker:data=>calls.push(JSON.parse(data)),removeMarker:()=>calls.push('remove')},__PROXY_FN:{}};
+  runtime.updateTripMap({polyline:'_p~iF~ps|U_ulLnnqC_mqNvxq`@',gpsFresh:true,driverLat:-23.55,driverLng:-46.63,phase:'accepted'});
+  runtime.mountMapWithMapper('123',callback=>{ready=callback;return 'cb';});
+  ready('MAP');
+  assert.equal(calls[0],'mount');assert.equal(calls[2].routeConfigs[0].locations.points.length,3);
+  assert.equal(calls[3].lat,'-23.55');
+  runtime.updateTripMap({polyline:'_p~iF~ps|U_ulLnnqC_mqNvxq`@',gpsFresh:false,driverLat:0,driverLng:0,phase:'accepted'});
+  assert.equal(calls.at(-1),'remove');assert.equal(window.__YATRI_TRIP_MAP__.gpsFresh,false);
+  runtime.releaseTripMap();assert.equal(window.__YATRI_TRIP_MAP__.ready,false);
+  const length=calls.length;window.__YATRI_BR_DEVELOPMENT__=false;runtime.mountMapWithMapper('456',()=>{});
+  assert.equal(calls.length,length);
+  delete globalThis.window;delete globalThis.tripMapTest;
+});

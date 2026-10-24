@@ -29,7 +29,8 @@ test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo po
   const development = await developmentAccounts(pool, config);
   await provisionDriverPilot(pool,config.vehicle);
   await assert.rejects(provisionDriverPilot(pool,{...config.vehicle,plate:'TST9Z99'}),/EXISTING_VEHICLE_DIFFERS/);
-  const maps = { route: async () => ({ distanceMeters: 1200, durationSeconds: 240, encodedPolyline: 'fixture-only', fareCents: 740 }) };
+  let mapsCalls=0;
+  const maps = { route: async () => (mapsCalls++,{ distanceMeters: 1200, durationSeconds: 240, encodedPolyline: 'fixture-only', fareCents: 740 }) };
   const service = mobilityService(pool, maps, { allowDevelopmentAccounts: true });
   const server = createApi({ pool, maps, service, development });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -129,7 +130,13 @@ test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo po
     const next=await pilotPassenger.requestRide(nextQuote.id);
     await pilotClient.rideAction(next.id,'accept');
     await pilotClient.location(-23.551,-46.631);
-    assert.equal((await pilotPassenger.navigation(next.id)).leg,'pickup');
+    const beforeNavigation=mapsCalls;
+    const paths=await Promise.all([pilotPassenger.navigation(next.id),pilotClient.navigation(next.id)]);
+    assert.ok(paths.every(path=>path.leg==='pickup'));
+    assert.equal(mapsCalls,beforeNavigation+1,'Both roles share one cached Google pickup route');
+    await pool.query("UPDATE drivers SET location_at=now()-interval '2 minutes' WHERE user_id=$1",[driver.user.id]);
+    await assert.rejects(pilotPassenger.navigation(next.id),/desatualizada/);
+    await pilotClient.location(-23.551,-46.631);
     assert.equal((await pilotPassenger.ride(next.id)).driver_lat,-23.551);
     const unknown=randomUUID();
     await assert.rejects(pilotPassenger.navigation(unknown),/encontrada/);

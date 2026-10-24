@@ -34,3 +34,19 @@ O mapa inicial acima é histórico. O run `40134223066` validou o ciclo completo
 - Autoridade operacional: `brasil/backend/src/mobility.mjs` e PostgreSQL existentes. `driver-pilot.mjs` restringe o serviço temporário aos perfis/IDs de Fagner e Giselo, janela vigente e rotas explícitas. Transições e concorrência são verificadas no servidor. Não há dois bancos ou estado de corrida simulado no cliente.
 - Atualizações: passageiro consulta a cada 3s e motorista a cada 5s enquanto o painel está ativo. Snapshot contém viagens ativas; GET da própria viagem recupera conclusão/cancelamento e IDs privados permitem retomada após recriar processos. Respostas antigas do motorista são descartadas; fechamento visual não despacha eventos síncronos reentrantes durante a avaliação do clique.
 - Google Places/Routes e tiles Maps reais aprovados no emulador. Permanecem pendentes mapa/trajeto do motorista durante a viagem, navegação, segundo plano e dois aparelhos físicos. SDKs nativos de compatibilidade continuam no APK; isso não significa uso obrigatório dos serviços indianos, Firebase Push, KYC ou pagamentos no fluxo de testes.
+
+## Mapa da corrida — incremento em validação
+
+`Development.PilotTrip` define o modelo visual compartilhado e um contêiner
+PrestoDOM para o mapa nativo existente. `TripMapRuntime.js` usa `showMap`,
+`drawRouteV2` e `showMarker` da ponte Android; `TripMap.mjs` decodifica a geometria
+Google sem substituí-la por linhas retas. O runtime recebe o mapper do frontend,
+sem depender de instalação npm em ui-common.
+
+Passageiro consulta estado a cada 3 s; motorista publica GPS e consulta a cada
+5 s enquanto o app está ativo. Marcador só aparece como atualizado com GPS de
+menos de 60 s. GET autenticado `/v1/rides/:id/navigation` verifica a associação
+persistida antes de consultar/cachear a rota motorista→embarque; ambos os perfis
+compartilham uma consulta por 30 s. Durante a viagem usa a rota da cotação.
+A menos de 25 m do embarque não solicita uma rota Google de distância zero.
+Não há migration, cobrança financeira nem navegação curva a curva neste incremento.

@@ -327,3 +327,23 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - A pedido do proprietário, emitidas novas ativações dos perfis motorista e passageiro nos runs `40136475509` e `40136477122`, ambos aprovados. Somente job activate; implantação e provisionamento não executados.
 - Entrega RSA por chave pública temporária opcional, sem substituir a pública do operador no repositório. Arquivos decifrados e chave privada permanecem fora do Git; nenhum código/sessão foi publicado em logs ou documentação. Formato, perfil e expiração conferidos sem consumir os códigos.
 - Validades UTC: motorista `2026-10-25T21:57:46.819Z`, passageiro `2026-10-25T21:58:05.108Z`. Códigos de uso único; arquivo privado disponibilizado diretamente ao proprietário. Não são credenciais SSH.
+
+### Acompanhamento no mapa — implementação em validação
+
+- Retomada a branch remota `ee8c72b`, preservando o ciclo completo já aprovado e
+  as correções de polling/reconexão/recibos. Incremento restrito a rota e GPS nas
+  telas de viagem dos dois aplicativos; HomeScreens e produção preservadas.
+- IMPLEMENTADO: geometria Google desenhada pela ponte nativa, marcador do
+  motorista e indicação de GPS vencido/falha de atualização. Rota até o embarque
+  em endpoint autenticado; cache compartilhado limitado, autorização refeita em
+  cada leitura. Rota da viagem permanece a da cotação, com o valor acordado.
+- Servidor `86ef0de` implantado no run 40141820508; revisão de cache/distância zero
+  `2ff16a8` no run 40142001067. Ambos aprovados, sem migration/conta/porta nova;
+  proteção de viagens existentes e expiração do piloto mantidas.
+- Build inicial: PureScript motorista aprovado; bundle falhou ao resolver
+  presto-ui a partir do módulo compartilhado. Mapper movido para o FFI compilado
+  de cada app, sem instalar dependência em ui-common. Novo build/aceite pendentes.
+- Testes locais cobrem geometria Google, contrato da ponte nativa, GPS vencido,
+  recuperação dos dois clientes e guard de produção. Teste Android ampliado exige
+  traçado visível, GPS do emulador recebido pelo servidor/passageiro, ciclo completo
+  e recriação dos processos. Não se declara aceite visual/Android antecipadamente.

@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import {callbackMapper} from 'presto-ui';
 import {mapPayload} from './TripMap.mjs';
 let current=null,latest=null,lastPolyline='',ready=false,callback;
 function allowed(){try{return window.__OS==='ANDROID'&&window.__YATRI_BR_DEVELOPMENT__===true&&
@@ -19,10 +18,10 @@ function draw(){
       gpsFresh:latest.gpsFresh,driverLat:latest.driverLat,driverLng:latest.driverLng,phase:latest.phase};
   }catch(_){window.__YATRI_TRIP_MAP__={ready:false,error:'Não foi possível desenhar o mapa da viagem.'};}
 }
-export const mountMap=id=>()=>{
+export const mountMapWithMapper=(id,mapCallback)=>{
   if(!allowed()||current===id)return;
   current=id;ready=false;lastPolyline='';window.__YATRI_TRIP_MAP__={ready:false};
-  callback=callbackMapper.map(key=>{if(current===id&&key==='MAP'){ready=true;draw();}});
+  callback=mapCallback(key=>{if(current===id&&key==='MAP'){ready=true;draw();}});
   window.JBridge.showMap(id,false,'normal',15,callback,'{}');
 };
 export const updateTripMap=trip=>{latest=trip;draw();};
