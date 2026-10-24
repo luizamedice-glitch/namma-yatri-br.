@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+"""Passenger stays foreground: real Android -> HTTP -> PostgreSQL, driver via HTTP.
+Test accounts/vehicle exist only in an isolated disposable database, no simulated rides.
+"""
+from pathlib import Path
+import json,os,re,subprocess,time,unicodedata,urllib.request,xml.etree.ElementTree as ET
+out=Path('passenger-foreground-evidence');out.mkdir(exist_ok=True)
+base='http://127.0.0.1:8080'
+package='in.juspay.nammayatri.debug'
+sessions=json.loads(Path(os.environ['PASSENGER_FOREGROUND_SESSIONS']).read_text())
+def adb(*args):return subprocess.check_output(['adb',*args],timeout=40)
+def nodes():
+    for attempt in range(3):
+        try:
+            adb('shell','rm','-f','/sdcard/ride-ui.xml')
+            adb('shell','uiautomator','dump','/sdcard/ride-ui.xml')
+            return list(ET.fromstring(adb('shell','cat','/sdcard/ride-ui.xml')).iter('node'))
+        except Exception:
+            if attempt==2:raise
+            time.sleep(2)
+def capture(name):
+    # Only pre-assignment/public-place screens are captured; no real plate/code.
+    ns=nodes();(out/(name+'.png')).write_bytes(adb('exec-out','screencap','-p'))
+    return ns
+def tap(node):
+    x,y,xx,yy=map(int,re.findall(r'\d+',node.get('bounds','')))
+    adb('shell','input','tap',str((x+xx)//2),str((y+yy)//2))
+def label(ns,text):return next((n for n in ns if n.get('text','').casefold()==text.casefold()),None)
+def wait_label(text,attempts=12):
+    for _ in range(attempts):
+        found=label(nodes(),text)
+        if found is not None:return found
+        time.sleep(2)
+    raise AssertionError('Controle ausente: '+text)
+def wait_driver_panel():
+    for _ in range(12):
+        ns=nodes()
+        if label(ns,'Disponível') is not None and label(ns,'Início') is not None and all(label(ns,text) is None for text in ['Voltar ao painel','Viagem concluída','Viagem cancelada','Nova solicitação']):return
+        time.sleep(2)
+    raise AssertionError('O motorista não retornou ao painel')
+def start(role):
+    adb('shell','am','start','-W','-n',packages[role]+'/in.juspay.mobility.MainActivity')
+    time.sleep(2)
+def call(role,path,body=None):
+    request=urllib.request.Request(base+'/v1'+path,data=json.dumps(body).encode() if body is not None else None,
+      headers={'Content-Type':'application/json','Authorization':'Bearer '+sessions[role]})
+    with urllib.request.urlopen(request,timeout=20) as r:return json.load(r)
+def where(ns):return next((n for n in ns if n.get('content-desc') in {'Where To : Button','Where are you going? : Button','Para onde?: botão','Para onde você vai?: botão'}),None)
+def home():
+    for _ in range(15):
+        ns=nodes()
+        if where(ns) is not None:return ns
+        time.sleep(2)
+    raise AssertionError('Home original do passageiro ausente')
+def normalized(text):return ''.join(c for c in unicodedata.normalize('NFD',text).casefold() if not unicodedata.combining(c))
+def select_place(query,match,source):
+    tap(where(home()));time.sleep(1)
+    fields=[n for n in nodes() if n.get('class')=='android.widget.EditText']
+    assert len(fields)>=2,'Campos originais de enderecos ausentes'
+    field=fields[0] if source else fields[-1];tap(field)
+    if field.get('text'):
+        adb('shell','input','keyevent','KEYCODE_MOVE_END')
+        adb('shell','input','keyevent',*(['KEYCODE_DEL']*len(field.get('text'))))
+    adb('shell','input','text',query.replace(' ','%s'))
+    found=None
+    for _ in range(10):
+        time.sleep(2)
+        found=next((n for n in nodes() if n.get('class')=='android.widget.TextView' and match in normalized(n.get('text',''))),None)
+        if found is not None:break
+    assert found is not None,'Google Places nao apresentou endereco real'
+    tap(found);home()
+
+def safe_webview():
+    # Read-only CDP. Never collect console, requests, tokens or private preferences.
+    import websocket
+    pid=adb('shell','pidof',package).decode().strip().split()[0]
+    adb('forward','tcp:9222','localabstract:webview_devtools_remote_'+pid)
+    with urllib.request.urlopen('http://127.0.0.1:9222/json',timeout=8) as r:targets=json.load(r)
+    states=[]
+    for target in targets:
+        if not target.get('webSocketDebuggerUrl'):continue
+        ws=websocket.create_connection(target['webSocketDebuggerUrl'],timeout=5,suppress_origin=True)
+        try:
+            ws.send(json.dumps({'id':1,'method':'Runtime.evaluate','params':{'expression':"JSON.stringify({phase:window.__YATRI_PASSENGER_RIDE__?.phase,diagnostics:window.__YATRI_PASSENGER_POLL__||null})",'returnByValue':True}}))
+            for _ in range(100):
+                msg=json.loads(ws.recv())
+                if msg.get('id')==1:
+                    states.append(msg.get('result',{}).get('result',{}).get('value'));break
+        finally:ws.close()
+    (out/'webview-phases.json').write_text(json.dumps(states))
+
+def same_foreground(pid):
+    assert adb('shell','pidof',package).decode().strip()==pid,'Processo passageiro foi recriado'
+    activities=adb('shell','dumpsys','activity','activities').decode()
+    assert any(package in line for line in activities.splitlines() if 'mResumedActivity' in line),'Passageiro saiu do primeiro plano'
+
+try:
+    # Private provisioning in disposable emulator before first launch; not embedded in APK.
+    values={'YATRI_PASSENGER_BACKEND_URL':base,'YATRI_PASSENGER_SESSION':sessions['passenger']}
+    root=ET.Element('map')
+    for key,value in values.items():ET.SubElement(root,'string',name=key).text=value
+    adb('shell','run-as',package,'mkdir','-p','shared_prefs')
+    subprocess.run(['adb','shell','run-as',package,'sh','-c','"cat > shared_prefs/godel.xml"'],input=ET.tostring(root),check=True,capture_output=True,timeout=30)
+    adb('reverse','tcp:8080','tcp:8080')
+    adb('shell','settings','put','secure','location_mode','3')
+    adb('emu','geo','fix','-46.6333','-23.5505')
+    adb('shell','am','start','-W','-n',package+'/in.juspay.mobility.MainActivity')
+    home()
+    select_place('Avenida Paulista Sao Paulo','paulista',False)
+    select_place('Praca da Se Sao Paulo','praca da se',True)
+    tap(wait_label('Ver estimativa'));wait_label('Solicitar viagem')
+    tap(wait_label('Solicitar viagem'));wait_label('Procurando motorista')
+    pid=adb('shell','pidof',package).decode().strip()
+    ride=call('passenger','/snapshot')['rides'][0];ride_id=ride['id']
+    assert ride['route']['distanceMeters']>0 and ride['route']['encodedPolyline']!='fixture-only'
+    capture('procurando')
+    # A genuine second authenticated actor changes this database while the UI remains open.
+    call('driver','/driver/location',{'lat':ride['origin']['lat'],'lng':ride['origin']['lng']})
+    call('driver','/driver/availability',{'available':True})
+    assert any(r['id']==ride_id for r in call('driver','/snapshot')['offers'])
+    timings={}
+    for action,phase,heading in [('accept','accepted','Motorista a caminho'),('arrive','arrived','Motorista no embarque'),('start','in_progress','Viagem em andamento'),('complete','completed','Viagem concluída')]:
+        same_foreground(pid);started=time.monotonic()
+        call('driver','/rides/'+ride_id+'/'+action,{})
+        assert call('passenger','/rides/'+ride_id)['status']==phase
+        wait_label(heading,attempts=7)
+        timings[phase]=round(time.monotonic()-started,2)
+        same_foreground(pid);capture(phase)
+    tap(wait_label('Voltar ao início'));home()
+    result={'acceptance':'passed','isolated_database':True,'driver_actions_real_http':True,'google_routes_real':True,
+      'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'state_latency_seconds':timings}
+    (out/'acceptance.json').write_text(json.dumps(result,indent=2))
+finally:
+    try:safe_webview()
+    except Exception as e:(out/'cdp-error.txt').write_text(type(e).__name__)
+    try:capture('final')
+    except Exception:pass

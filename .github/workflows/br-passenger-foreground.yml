@@ -1,0 +1,74 @@
+name: BR - Passageiro atualizacao em primeiro plano
+on:
+  push:
+    branches: [codex/issue-1-purescript-memory]
+    paths: ['.github/workflows/br-passenger-foreground.yml']
+  workflow_dispatch:
+    inputs:
+      apk_run_id:
+        description: Run de origem do APK passageiro
+        type: string
+        default: '40134223066'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  foreground:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: yatri_test
+          POSTGRES_PASSWORD: fixture-only
+          POSTGRES_DB: passenger_foreground
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U yatri_test" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://yatri_test:fixture-only@127.0.0.1:5432/passenger_foreground
+      PASSENGER_FOREGROUND_SESSIONS: ${{ github.workspace }}/../foreground-sessions.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: ride-passageiro-apk
+          path: passenger-apk
+          run-id: ${{ inputs.apk_run_id || '40134223066' }}
+          github-token: ${{ github.token }}
+      - run: npm ci --prefix brasil/backend
+      - name: Iniciar API e banco isolados
+        run: |
+          node Frontend/scripts/serve-passenger-foreground.mjs > "$RUNNER_TEMP/api.log" 2>&1 &
+          for attempt in $(seq 1 30); do
+            test -s "$PASSENGER_FOREGROUND_SESSIONS" && break
+            sleep 1
+          done
+          test -s "$PASSENGER_FOREGROUND_SESSIONS"
+      - name: Preparar KVM e CDP somente leitura
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          python3 -m venv "$RUNNER_TEMP/cdp"
+          "$RUNNER_TEMP/cdp/bin/pip" install websocket-client==1.8.0
+          echo "$RUNNER_TEMP/cdp/bin" >> "$GITHUB_PATH"
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          ram-size: 4096M
+          script: |
+            adb install -g passenger-apk/*.apk
+            python3 Frontend/scripts/test-passenger-foreground.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: passenger-foreground-evidence
+          path: passenger-foreground-evidence/
+          if-no-files-found: warn
