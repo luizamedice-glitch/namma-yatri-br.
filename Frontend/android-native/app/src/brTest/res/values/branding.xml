@@ -9,4 +9,6 @@
     <item type="drawable" name="ny_ic_logo_light">@drawable/br_logo_transparent</item>
     <item type="drawable" name="ny_splash_scn_logo_with_text">@drawable/br_logo_transparent</item>
     <item type="drawable" name="ic_logo_name">@drawable/br_logo_transparent</item>
+    <!-- Reuse the original monochrome wallet icon in the Brazilian navigation. -->
+    <item type="drawable" name="ny_ic_wallet">@drawable/ny_ic_wallet_outline</item>
 </resources>
