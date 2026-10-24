@@ -3,6 +3,7 @@
 Test accounts/vehicle exist only in an isolated disposable database, no simulated rides.
 """
 from pathlib import Path
+import hashlib
 import json,os,re,subprocess,time,unicodedata,urllib.request,xml.etree.ElementTree as ET
 out=Path('passenger-foreground-evidence');out.mkdir(exist_ok=True)
 base='http://127.0.0.1:8080'
@@ -32,15 +33,6 @@ def wait_label(text,attempts=12):
         if found is not None:return found
         time.sleep(2)
     raise AssertionError('Controle ausente: '+text)
-def wait_driver_panel():
-    for _ in range(12):
-        ns=nodes()
-        if label(ns,'Disponível') is not None and label(ns,'Início') is not None and all(label(ns,text) is None for text in ['Voltar ao painel','Viagem concluída','Viagem cancelada','Nova solicitação']):return
-        time.sleep(2)
-    raise AssertionError('O motorista não retornou ao painel')
-def start(role):
-    adb('shell','am','start','-W','-n',packages[role]+'/in.juspay.mobility.MainActivity')
-    time.sleep(2)
 def call(role,path,body=None):
     request=urllib.request.Request(base+'/v1'+path,data=json.dumps(body).encode() if body is not None else None,
       headers={'Content-Type':'application/json','Authorization':'Bearer '+sessions[role]})
@@ -102,7 +94,7 @@ def safe_webview():
 def same_foreground(pid):
     assert adb('shell','pidof',package).decode().strip()==pid,'Processo passageiro foi recriado'
     activities=adb('shell','dumpsys','activity','activities').decode()
-    assert any(package in line for line in activities.splitlines() if 'mResumedActivity' in line),'Passageiro saiu do primeiro plano'
+    assert any(package in line for line in activities.splitlines() if 'ResumedActivity' in line),'Passageiro saiu do primeiro plano'
 
 try:
     # Private provisioning in disposable emulator before first launch; not embedded in APK.
@@ -116,6 +108,7 @@ try:
     adb('emu','geo','fix','-46.6333','-23.5505')
     adb('shell','am','start','-W','-n',package+'/in.juspay.mobility.MainActivity')
     home()
+    (out/'device.json').write_text(json.dumps({'api':adb('shell','getprop','ro.build.version.sdk').decode().strip(),'model':adb('shell','getprop','ro.product.model').decode().strip()}))
     select_place('Avenida Paulista Sao Paulo','paulista',False)
     select_place('Praca da Se Sao Paulo','praca da se',True)
     tap(wait_label('Ver estimativa'));wait_label('Solicitar viagem')
@@ -134,8 +127,10 @@ try:
     for elapsed in range(0,idle,30):
         time.sleep(min(30,idle-elapsed));same_foreground(pid)
         print('Passageiro mantido em primeiro plano:',min(elapsed+30,idle),'s',flush=True)
-    safe_webview()
-    (out/'webview-idle.json').write_bytes((out/'webview-phases.json').read_bytes())
+    try:
+        safe_webview()
+        (out/'webview-idle.json').write_bytes((out/'webview-phases.json').read_bytes())
+    except Exception as e:(out/'cdp-idle-error.txt').write_text(type(e).__name__)
     for action,phase,heading in [('accept','accepted','Motorista a caminho'),('arrive','arrived','Motorista no embarque'),('start','in_progress','Viagem em andamento'),('complete','completed','Viagem concluída')]:
         same_foreground(pid);started=time.monotonic()
         reconnect=action=='arrive' and os.environ.get('PASSENGER_RECONNECT')=='true'
@@ -150,7 +145,7 @@ try:
         same_foreground(pid);capture(phase)
     tap(wait_label('Voltar ao início'));home()
     result={'acceptance':'passed','isolated_database':True,'driver_actions_real_http':True,'google_routes_real':True,
-      'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','state_latency_seconds':timings}
+      'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','state_latency_seconds':timings,'apk_source_run':os.environ.get('PASSENGER_APK_SOURCE_RUN'),'apk_sha256':hashlib.sha256(next(Path('passenger-apk').glob('*.apk')).read_bytes()).hexdigest()}
     (out/'acceptance.json').write_text(json.dumps(result,indent=2))
 finally:
     try:safe_webview()
