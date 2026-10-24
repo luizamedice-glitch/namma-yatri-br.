@@ -149,6 +149,8 @@ try:
     assert all(isinstance(s.get('configDiagnostics'), dict) for s in development), 'Adaptador Android de diagnosticos nao foi carregado.'
     assert all(s['configDiagnostics'].get('notices') == (1 if s['configDiagnostics'].get('warnings', 0) else 0) for s in development), 'Avisos de configuracao nao foram agregados.'
     assert all(s.get('hasRegistrationToken') is False for s in development), 'Home depende de um token preexistente ou a leitura nao foi verificada.'
+    assert all(s.get('localization', {}).get('locale') == 'pt-BR' for s in development), 'Catálogo pt-BR não chegou ao frontend.'
+    assert all(s.get('localization', {}).get('messages') == 1789 for s in development), 'Catálogo pt-BR incompleto.'
     nodes = capture('offline')
     no_auth(nodes)
     button = where(nodes)
@@ -184,6 +186,14 @@ try:
             break
     else:
         raise AssertionError('Reabertura com rede nao chegou diretamente a home.')
+    visible = {n.get('text') for n in nodes if n.get('text')}
+    assert 'Para onde você vai?' in visible, 'Controle principal não está em português.'
+    untranslated = {'Where are you going?', 'Got a referral Code?', 'Book and move,', 'Checkout our Live Stats'}
+    assert not visible.intersection(untranslated), 'Textos principais continuam em inglês.'
+    (out/'portuguese-acceptance.json').write_text(json.dumps({
+        'locale': 'pt-BR', 'catalog_messages': 1789, 'acceptance': 'passed',
+        'main_labels': sorted(visible),
+    }, ensure_ascii=False, indent=2) + '\n')
     places_evidence = real_places_or_explicit_block(nodes)
     print('Pesquisa real:', places_evidence['acceptance'])
     assert adb('shell','pidof',package).strip(), 'Processo encerrou.'
