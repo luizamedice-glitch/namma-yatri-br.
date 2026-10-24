@@ -47,8 +47,9 @@ test('Google encoded geometry is decoded without substituting straight lines',()
   assert.equal(payload.pureScriptID,'123');assert.equal(payload.routeConfigs[0].isActual,true);
 });
 test('stale driver GPS is explicitly marked instead of presented as live',()=>{
-  const ride={fare_cents:500,driver_lat:-23.55,driver_lng:-46.63,driver_location_at:new Date(Date.now()-61000).toISOString()};
+  const ride={status:'accepted',fare_cents:500,driver_lat:-23.55,driver_lng:-46.63,driver_location_at:new Date(Date.now()-61000).toISOString()};
   assert.equal(tripView(ride).gpsFresh,false);assert.match(tripView(ride).tracking,/desatualizado/);
+  assert.equal(tripView({...ride,status:'completed'}).tracking,'');
 });
 test('trip map uses the existing native bridge and updates the assigned GPS marker',async()=>{
   let ready;const calls=[];

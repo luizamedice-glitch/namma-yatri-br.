@@ -9,7 +9,8 @@ function draw(){
     if(lastPolyline!==latest.polyline){
       window.JBridge.removeAllPolylines(JSON.stringify({gmapPursId:current,markersToRemove:[],polyLinesToRemove:[]}));
       const payload=mapPayload(latest,current);
-      if(payload.routeConfigs[0].locations.points.length>=2){window.JBridge.drawRouteV2(JSON.stringify(payload));lastPolyline=latest.polyline;}
+      if(payload.routeConfigs[0].locations.points.length>=2)window.JBridge.drawRouteV2(JSON.stringify(payload));
+      lastPolyline=latest.polyline;
     }
     if(latest.gpsFresh)window.JBridge.showMarker(JSON.stringify({purescriptId:current,lat:String(latest.driverLat),lng:String(latest.driverLng),
       markerSize:100,anchorV:0.5,anchorV1:0.5,markerConfig:{markerId:'br-live-driver',pointerIcon:'ny_ic_vehicle_nav_on_map',rotation:'0',zIndex:10,animationConfig:{animationType:'NONE',animationDuration:0}}}));

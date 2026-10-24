@@ -72,7 +72,11 @@ async function snapshot() {
     if(ride&&['accepted','arrived'].includes(ride.status)){
       if(!navAt||Date.now()-navAt>30000||navPhase!==ride.status){
         navAt=Date.now();navPhase=ride.status;
-        try{nav=await api.navigation(ride.id);}catch(error){nav=null;if(owner===changed&&revision===snapshotRevision)failed(error);}
+        try{
+          const nextNavigation=await api.navigation(ride.id);
+          if(owner!==changed||revision!==snapshotRevision)return;
+          nav=nextNavigation;
+        }catch(error){if(owner!==changed||revision!==snapshotRevision)return;nav=null;failed(error);}
       }
       ride={...ride,route:{...ride.route,encodedPolyline:nav?nav.route.encodedPolyline:''}};
     }else{nav=null;navPhase=ride&&ride.status;}

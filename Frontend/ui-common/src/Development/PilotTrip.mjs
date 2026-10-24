@@ -9,6 +9,6 @@ export function tripView(ride,phase=ride.status){
     passenger:ride.passenger_name||'',driver:ride.driver_name||'',
     polyline:ride.route&&ride.route.encodedPolyline||'',driverLat:Number(ride.driver_lat)||0,driverLng:Number(ride.driver_lng)||0,
     gpsFresh:ride.driver_lat!=null&&ride.driver_lng!=null&&Date.now()-Date.parse(ride.driver_location_at)<60000,
-    tracking:ride.driver_location_at?(Date.now()-Date.parse(ride.driver_location_at)<60000?'GPS atualizado':'GPS desatualizado — aguardando motorista'):'Aguardando localização do motorista',
+    tracking:!['accepted','arrived','in_progress'].includes(phase)?'':ride.driver_location_at?(Date.now()-Date.parse(ride.driver_location_at)<60000?'GPS atualizado':'GPS desatualizado — aguardando motorista'):'Aguardando localização do motorista',
     vehicle:[ride.model,ride.color,ride.plate].filter(Boolean).join(' · ')};
 }

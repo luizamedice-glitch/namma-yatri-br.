@@ -199,3 +199,16 @@ consumi-los durante a conferência da entrega.
 Continuação do piloto existente: as ações `arrive`, `start` e `complete` estão preparadas nas allowlists de API/Caddy, com autorização e máquina de estados existentes. A atualização recusa viagens ativas e preserva `YATRI_DRIVER_PILOT_UNTIL` (não renova a janela implicitamente). Sem mudanças de migrations, contas ou portas. O marco `40121323902` validou pedido/aceite/cancelamento; implantação e aceite Android do ciclo completo ainda precisam ser registrados após a execução correspondente.
 
 Atualização concluída: run **40131046069**, fontes `5777475bd9`, mantém o prazo em **2026-10-31T18:16:18.740028+00:00** e os serviços existentes. As três ações adicionais sem sessão retornaram 401; cadastro público permaneceu 403. Aceite Android **40134223066** aprovado contra o serviço real: duas contas ativadas privadamente, ciclo completo e recuperação dos processos; nenhuma viagem ativa e motorista indisponível ao encerrar. Não há produção, pagamento ou ativação anônima. A instrução anterior sobre implantação pendente fica superada por este registro.
+
+## Rota de aproximação do motorista — 24/10/2026
+
+GET `/v1/rides/<UUID>/navigation` foi acrescentado à fronteira do piloto nos
+runs 40141820508 e 40142001067. Exige sessão, associação à corrida persistida e
+GPS de menos de 60 s para calcular aproximação. Google Routes é consultado pelo
+servidor; os dois perfis compartilham cache de 30 s, sem chave no APK. Demais
+estados retornam a rota já armazenada na cotação. Não altera migrations, contas,
+portas nem a janela vigente. Versões anteriores dos APKs continuam compatíveis.
+
+O acompanhamento deste incremento depende do motorista aberto e com permissão
+GPS. Push/serviço em segundo plano e navegação curva a curva não estão incluídos.
+Aceite Android com traçado e movimento ainda pendente no registro inicial.

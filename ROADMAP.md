@@ -90,3 +90,10 @@ Marco confirmado `40121323902` (fontes `f0bfa4f447`): chamada real entre os dois
 Marco **40134223066 aprovado**, fontes `32d7e1d496`: ciclo pedido/oferta/aceite/chegada/início/conclusão confirmado nos dois APKs e no PostgreSQL Lightsail; cancelamento, recuperação após recriar processos e retorno efetivo ao painel aprovados em Android API 29. A implementação das etapas usa os componentes PureScript existentes. Backend implantado no piloto autenticado, sem renovar sua janela. Relatório em `Frontend/build-reports/ciclo-completo/40134223066.json`.
 
 Próximo incremento da Fase 5: mapa/trajeto e localização do motorista durante a viagem, navegação até o embarque, indicador de horário GPS, segundo plano e validação em dois celulares físicos/Android 12+. Manter controles financeiros e menus secundários fora do escopo operacional aprovado; não considerar o teste de estados uma homologação de produção.
+
+Próximo incremento autorizado: acompanhamento no mapa durante o ciclo completo,
+com rota Google até o embarque, geometria da viagem e GPS real do Android enviado
+pelo aplicativo motorista. Aceite deve comprovar o traçado nos dois APKs e a
+posição atualizada no passageiro, preservando conclusão, cancelamento e retomada.
+Após este aceite, priorizar operação em segundo plano/push e teste de campo em
+dois celulares; pagamentos reais seguem fora do piloto.

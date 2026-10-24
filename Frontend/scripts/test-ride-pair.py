@@ -129,9 +129,12 @@ def check_map(role,name,expected_lat=None):
         time.sleep(2)
     else:raise AssertionError('Mapa/rota/GPS não confirmados: '+role)
     # Save only the upper map area, excluding the private vehicle card entirely.
-    image=Image.open(BytesIO(adb('exec-out','screencap','-p'))).convert('RGB')
-    safe=image.crop((0,int(image.height*.12),image.width,int(image.height*.40)))
-    purple=sum(1 for r,g,b in safe.getdata() if abs(r-116)<6 and abs(g-52)<6 and abs(b-84)<6)
+    for _ in range(6):
+        image=Image.open(BytesIO(adb('exec-out','screencap','-p'))).convert('RGB')
+        safe=image.crop((0,int(image.height*.12),image.width,int(image.height*.40)))
+        purple=sum(1 for r,g,b in safe.getdata() if abs(r-116)<6 and abs(g-52)<6 and abs(b-84)<6)
+        if purple>30:break
+        time.sleep(1)
     assert purple>30,'Traçado da rota não apareceu no mapa nativo de '+role
     safe.save(out/(name+'-mapa.png'))
     return state
