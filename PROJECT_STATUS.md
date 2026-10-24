@@ -260,3 +260,11 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - Isolado o pedido de token Firebase feito pelo afterRender original, apenas no pacote motorista BR debug. Configurações nativas/identidade separadas do passageiro.
 - Backend remoto atual permite apenas mapas de teste; rotas operacionais continuam bloqueadas. Integração remota ainda não validada e nenhuma rota pública foi alterada.
 - Workflow dedicado compila a dependência transitiva de Development.Driver em lotes de 25, separando módulos pesados, com timeout/guard de RSS e cache recuperável. Flow indiano não entra no bundle de teste. Compilação/Android e ofertas no layout original ainda pendentes.
+
+### Motorista — compilação e diagnóstico Android, 2026-10-24
+
+- COMPILADO: bundle original no run `40103387972`, 30 lotes recuperáveis, 74,92 s somados de compilador e pico RSS amostrado de 4,07 GiB com cache. APK motorista produzido nos runs `40104037177`, `40105100413` e `40106690472`; isso ainda não aprova abertura/operação.
+- TESTADO EM API/BANCO: cliente usado pelo motorista passou no ciclo HTTP Fagner/Giselo com PostgreSQL, isolamento por papel e emissão privada de sessão por 24h. Google Routes usa fixture explícita apenas nesse teste de contrato. Regressão do backend: 13 testes básicos e 3 de integração aprovados, incluindo concorrência e SSE; não são testes de duas interfaces Android.
+- Corrigido crash inicial de FirebaseApp ausente: contêiner local de compatibilidade restrito a BR debug motorista, coleta/push desativados. Não utiliza credenciais Firebase operacionais.
+- Emulador `40106690472`: Activity viva, mas splash persistente. Diagnóstico CDP revelou `window.__PROXY_FN.set is not a function`: Core2 original copia o registro objeto do SDK após a entrada ter marcado seu tipo como Map. Correção `5fa252f6d8` sincroniza o indicador após imports, preservando callbacks; quatro testes do adaptador aprovados. Novo aceite Android em execução, sem declarar este APK funcional antecipadamente.
+- Próximo critério: painel original sem login → GPS enviado à API real local → disponibilidade confirmada no banco. Ofertas/ações de viagem nas views e integração remota permanecem pendentes. Instruções de sessão fora do APK em `Frontend/ui-driver/DRIVER-BR-TEST.md`.
