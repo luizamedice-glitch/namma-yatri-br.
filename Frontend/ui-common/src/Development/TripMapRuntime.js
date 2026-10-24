@@ -27,6 +27,8 @@ export const mountMapWithMapper=(id,mapCallback)=>{
 };
 export const updateTripMap=trip=>{latest=trip;draw();};
 export const releaseTripMap=()=>{
+  if(current&&allowed())window.JBridge.removeAllPolylines(JSON.stringify({gmapPursId:current,
+    markersToRemove:['br-live-driver','br-origin','br-destination'],polyLinesToRemove:[]}));
   current=null;latest=null;ready=false;lastPolyline='';if(allowed())window.__YATRI_TRIP_MAP__={ready:false};
   if(callback){const registry=window.__PROXY_FN;if(registry instanceof Map)registry.delete(callback);else if(registry)delete registry[callback];callback=null;}
 };
