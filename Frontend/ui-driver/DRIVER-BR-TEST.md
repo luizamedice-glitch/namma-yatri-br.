@@ -60,8 +60,9 @@ O serviço `driver-pilot` é separado da API principal e tem expiração explíc
 Cadastro público e login continuam bloqueados. O run `40121323902` aprovou nos
 dois APKs Places/Routes reais, pedido, oferta, aceite e cancelamento via HTTPS.
 As ações de chegada/início/conclusão foram implantadas no piloto no run
-`40131046069`, com sessões e máquina de estados validadas no backend; o aceite
-Android desse incremento ainda está em andamento. Atualizações recusam viagens
+`40131046069`, com sessões e máquina de estados validadas no backend. O aceite
+Android do ciclo completo foi aprovado no run `40134223066`, incluindo retorno
+ao painel e recuperação dos processos. Atualizações recusam viagens
 ativas e preservam o prazo existente, sem migrations ou alterações de contas.
 Consulte AWS-DESENVOLVIMENTO.md; não use a função compartilhada do Alce.
 
@@ -79,9 +80,13 @@ Consulte AWS-DESENVOLVIMENTO.md; não use a função compartilhada do Alce.
   `PrimaryButton` já presentes; a Home original é preservada. Isso não comprova
   equivalência visual exata com a versão atual da Play Store.
 - Chegada/início/conclusão e recuperação após recriar os processos estão
-  implementadas e em validação Android. A confirmação final consulta o registro
+  aprovadas em Pixel 2/API 29 no run `40134223066`. A confirmação final consulta o registro
   persistido, pois o snapshot retorna somente viagens ativas. O passageiro pode
   usar “Acompanhar viagem” na Home após reabrir o processo.
+- APKs e relatório com hashes: `Frontend/build-reports/ciclo-completo/40134223066.json`.
+  Na primeira conexão, use a ativação privada do respectivo perfil e conceda
+  localização. Se o Android recusar atualizar um debug de assinatura diferente,
+  reinstale somente esse aplicativo de testes e refaça sua conexão privada.
 - Navegação curva a curva, desenho/acompanhamento da rota durante a viagem,
   indicador legado de horário GPS e menus secundários não são aprovados por
   esse teste de estados. Não há pagamento real.

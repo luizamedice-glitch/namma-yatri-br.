@@ -34,4 +34,4 @@ Leia antes de modificar o código:
 Priorizar a tela principal original do passageiro (HomeScreen): inicialização debug sem login, mapa, origem/destino e navegação. Depois conectar progressivamente serviços reais brasileiros, sem mascarar respostas do backend. Otimizar o ciclo de build antes de alterações extensas.
 
 ## Servidor de desenvolvimento AWS
-Leia também `AWS-DESENVOLVIMENTO.md` antes de alterar integração remota, autenticação, rotas HTTP ou infraestrutura. A URL de testes atual é `https://52-67-246-31.sslip.io`, mas apenas `/health` está autorizado pelo Caddy. Documentação não concede acesso SSH e nunca se devem incluir credenciais no APK ou no Git.
+Leia também `AWS-DESENVOLVIMENTO.md` antes de alterar integração remota, autenticação, rotas HTTP ou infraestrutura. A URL de testes atual é `https://52-67-246-31.sslip.io`, com mapas de teste e um piloto autenticado temporário; consulte nesse documento as rotas, evidências e expiração atuais, sem presumir liberação geral de endpoints. Documentação não concede acesso SSH e nunca se devem incluir credenciais no APK ou no Git.

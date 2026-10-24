@@ -86,3 +86,7 @@ aberta para ofertas e ações de viagem nas views originais, solicitação pelo
 passageiro e sincronização dos dois APKs.
 
 Marco confirmado `40121323902` (fontes `f0bfa4f447`): chamada real entre os dois APKs aprovada até aceite e cancelamento, com Google e Lightsail. Continuação imediata: chegada → início → conclusão, recuperação após recriar os processos e confirmação dos mesmos estados nas duas interfaces. Implementação e contratos locais preparados; falta aprovar os novos APKs no Android e a fronteira HTTPS atualizada. Sem pagamentos e sem ampliação de funcionalidades paralelas.
+
+Marco **40134223066 aprovado**, fontes `32d7e1d496`: ciclo pedido/oferta/aceite/chegada/início/conclusão confirmado nos dois APKs e no PostgreSQL Lightsail; cancelamento, recuperação após recriar processos e retorno efetivo ao painel aprovados em Android API 29. A implementação das etapas usa os componentes PureScript existentes. Backend implantado no piloto autenticado, sem renovar sua janela. Relatório em `Frontend/build-reports/ciclo-completo/40134223066.json`.
+
+Próximo incremento da Fase 5: mapa/trajeto e localização do motorista durante a viagem, navegação até o embarque, indicador de horário GPS, segundo plano e validação em dois celulares físicos/Android 12+. Manter controles financeiros e menus secundários fora do escopo operacional aprovado; não considerar o teste de estados uma homologação de produção.
