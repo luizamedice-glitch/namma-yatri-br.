@@ -14,7 +14,11 @@ export function createOperationsClient({baseUrl, token, fetchImpl = fetch}) {
       return await response.json();
     } finally { clearTimeout(timer); }
   }
-  return {snapshot:() => call('/snapshot'),
+  return {snapshot:async () => {
+      const data = await call('/snapshot');
+      if (data.user?.role !== 'driver') throw Error('Esta sessão não pertence ao motorista.');
+      return data;
+    },
     location:(lat,lng) => {
       if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat)>90 || Math.abs(lng)>180) throw Error('Localização GPS inválida.');
       return call('/driver/location',{lat,lng});

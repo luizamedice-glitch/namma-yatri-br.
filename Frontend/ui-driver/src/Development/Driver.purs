@@ -11,8 +11,7 @@ import Common.Types.App (Event, FCMBundleUpdate)
 import Engineering.Helpers.Commons (flowRunner)
 import Engineering.Helpers.BackTrack (liftFlowBT)
 import Engineering.Helpers.Utils (showToast)
-import Helpers.PrestoUtils (initUIWrapper)
-import PrestoDOM (Eval, Screen, continue)
+import PrestoDOM (initUI, Eval, Screen, continue)
 import PrestoDOM.Core (processEvent)
 import PrestoDOM.Core.Types.Language.Flow (runScreen)
 import PrestoDOM.Types.Core (class Loggable)
@@ -44,7 +43,7 @@ main _ = do
 
 start :: FlowBT String Unit
 start = do
-  initUIWrapper ""
+  lift $ lift $ initUI
   liftFlowBT JB.initiateLocationServiceClient
   loop $ Data.initData {data {driverName = "Giselo"}, props {statusOnline = false, driverStatusSet = Offline}}
 

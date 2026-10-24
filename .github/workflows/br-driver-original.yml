@@ -18,6 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '18.20.8'
+      - run: node --test Frontend/scripts/test-driver-operations.mjs
       - run: npm install --global purescript@0.15.14 spago@0.21.0
       - uses: actions/cache/restore@v4
         id: cache
