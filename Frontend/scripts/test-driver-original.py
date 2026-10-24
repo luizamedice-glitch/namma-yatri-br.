@@ -42,6 +42,7 @@ adb('reverse','tcp:8080','tcp:8080')
 adb('emu','geo','fix','-46.63','-23.55')
 (out/'launch.txt').write_bytes(adb('shell','am','start','-W','-n',package+'/in.juspay.mobility.MainActivity'))
 time.sleep(40)
+subprocess.run([os.environ.get('CDP_PYTHON','python3'),'Frontend/scripts/inspect-original-webview.py',str(out),package],timeout=90,check=False)
 nodes=capture('dashboard-offline')
 labels=[n.get('text','') for n in nodes]
 assert not any('Enter Mobile' in text or 'Enter OTP' in text for text in labels),'Entrou em autenticação original'

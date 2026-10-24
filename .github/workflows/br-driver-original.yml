@@ -206,6 +206,11 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+      - name: Preparar diagnóstico somente leitura do WebView
+        run: |
+          python3 -m venv "$RUNNER_TEMP/driver-cdp"
+          "$RUNNER_TEMP/driver-cdp/bin/pip" install websocket-client==1.8.0
+          echo "CDP_PYTHON=$RUNNER_TEMP/driver-cdp/bin/python" >> "$GITHUB_ENV"
       - uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29

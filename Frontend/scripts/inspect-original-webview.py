@@ -14,7 +14,8 @@ import websocket
 out = Path(sys.argv[1])
 report = {"contexts": [], "console": [], "errors": []}
 try:
-    pid = subprocess.check_output(["adb", "shell", "pidof", "in.juspay.nammayatri.debug"], text=True).strip().split()[0]
+    package = sys.argv[2] if len(sys.argv) > 2 else "in.juspay.nammayatri.debug"
+    pid = subprocess.check_output(["adb", "shell", "pidof", package], text=True).strip().split()[0]
     subprocess.run(["adb", "forward", "tcp:9222", f"localabstract:webview_devtools_remote_{pid}"], check=True, capture_output=True)
     with urllib.request.urlopen("http://127.0.0.1:9222/json", timeout=8) as response:
         targets = json.load(response)
@@ -48,6 +49,7 @@ try:
                 configDiagnostics:window.__YATRI_BR_CONFIG_DIAGNOSTICS__||null,
                 localization:window.__YATRI_BR_LOCALIZATION__||null,languageKey:window.languageKey,
                 placesDiagnostics:window.__YATRI_BR_PLACES_STATE__||null,
+                driverOperations:window.__YATRI_DRIVER_OPERATIONS__||null,
                 hasRegistrationToken:(()=>{try{const t=window.JBridge.getKeysInSharedPref('REGISTERATION_TOKEN');return !!t && !['__failed','(null)','null'].includes(t);}catch(_){return null;}})(),
                 josType:typeof window.JOS,josSelf:window.JOS&&window.JOS.self,bridgeType:typeof window.JBridge,
                 version:window.version||null,merchant:window.merchantID,
