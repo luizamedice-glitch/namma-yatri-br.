@@ -112,7 +112,7 @@ jobs:
           curl --fail --silent --show-error --max-time 10 http://127.0.0.1:8080/health
           printf '\n'
           # Somente estados booleanos; nenhum valor sensível sai do contêiner.
-          sudo -n docker compose -f compose.yaml exec -T api node --input-type=module -e '
+          sudo -n docker compose -f compose.yaml exec -T api node --input-type=module </dev/null -e '
             console.log(JSON.stringify({
               googleMapsConfigured: Boolean(process.env.GOOGLE_MAPS_SERVER_KEY),
               automaticDevelopmentAccounts: process.env.YATRI_DEVELOPMENT_MODE === "true",
@@ -120,7 +120,7 @@ jobs:
               databaseConfigured: Boolean(process.env.DATABASE_URL)
             }));
           '
-          sudo -n docker compose -f compose.yaml exec -T api node --input-type=module -e '
+          sudo -n docker compose -f compose.yaml exec -T api node --input-type=module </dev/null -e '
             import pg from "pg";
             const pool=new pg.Pool({connectionString:process.env.DATABASE_URL});
             try {
