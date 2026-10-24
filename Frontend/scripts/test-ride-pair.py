@@ -249,6 +249,7 @@ finally:
             current=call('passenger','/rides/'+ride_id)
             if current['status'] in ['searching','accepted','arrived']:call('passenger','/rides/'+ride_id+'/cancel',{})
             elif current['status']=='in_progress' and 'driver' in sessions:call('driver','/rides/'+ride_id+'/complete',{})
+            elif current['status']=='in_progress' and 'driver' in sessions:call('driver','/rides/'+ride_id+'/complete',{})
         except Exception:pass
     if driver_touched and 'driver' in sessions:
         try:call('driver','/driver/availability',{'available':False})

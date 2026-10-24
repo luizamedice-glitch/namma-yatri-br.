@@ -5,6 +5,10 @@ on:
     paths: ['.github/workflows/br-driver-original.yml']
   workflow_dispatch:
     inputs:
+      runtime_cache_run_id:
+        description: 'Reutilizar compilacao aprovada para mudanca exclusiva no runtime de mapa'
+        type: string
+        required: false
       passenger_bundle_run_id:
         description: 'Reutilizar bundle passageiro aprovado quando suas fontes estao identicas'
         type: string
@@ -37,6 +41,7 @@ jobs:
     uses: ./.github/workflows/br-ride-pilot.yml
     secrets: inherit
     with:
+      runtime_cache_run_id: ${{ inputs.runtime_cache_run_id || '' }}
       apk_run_id: ${{ inputs.apk_run_id || '' }}
       passenger_bundle_run_id: ${{ inputs.passenger_bundle_run_id || '' }}
   original:

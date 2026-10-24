@@ -14,7 +14,7 @@ function draw(){
     }
     if(latest.gpsFresh)window.JBridge.showMarker(JSON.stringify({purescriptId:current,lat:String(latest.driverLat),lng:String(latest.driverLng),
       markerSize:100,anchorV:0.5,anchorV1:0.5,markerConfig:{markerId:'br-live-driver',pointerIcon:'ny_ic_vehicle_nav_on_map',rotation:'0',zIndex:10,animationConfig:{animationType:'NONE',animationDuration:0}}}));
-    else window.JBridge.removeMarker('ny_ic_vehicle_nav_on_map');
+    else window.JBridge.removeMarker('br-live-driver');
     window.__YATRI_TRIP_MAP__={ready:true,routePoints:lastPolyline?mapPayload(latest,current).routeConfigs[0].locations.points.length:0,
       gpsFresh:latest.gpsFresh,driverLat:latest.driverLat,driverLng:latest.driverLng,phase:latest.phase};
   }catch(_){window.__YATRI_TRIP_MAP__={ready:false,error:'Não foi possível desenhar o mapa da viagem.'};}
