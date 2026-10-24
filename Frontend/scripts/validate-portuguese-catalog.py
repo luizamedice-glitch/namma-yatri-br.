@@ -23,7 +23,7 @@ assert source.keys()==d['messages'].keys()
 for k, original in source.items():
     target=d['messages'][k]
     assert target['arity']==original['arity'],k
-    for pattern in [r'\{\d*\}',r'</?[^>]+>',r'[₹€£$]']:
+    for pattern in [r'\{\d*\}',r'</?[^>]+>',r'[₹€£$]',r'https?://[^\s<>]+']:
         assert collections.Counter(re.findall(pattern,original['text']))==collections.Counter(re.findall(pattern,target['text'])),(k,pattern)
     assert target['text'].strip() or not original['text'].strip(),k
     assert '⁇' not in target['text'],k

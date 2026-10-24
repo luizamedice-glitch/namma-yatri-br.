@@ -11,9 +11,12 @@
     "about_app_description",
     "ac_bus",
     "ac_cab",
+    "ac_not_working_desc",
+    "additional_charges_will_be_applicable",
     "all_topics",
     "amount_paid",
     "anywhere_in_the_city",
+    "auto_assign_driver",
     "auto_rickshaw",
     "back",
     "book_and_move",
@@ -33,6 +36,7 @@
     "cancellation",
     "cancellation_date",
     "cancelled",
+    "change_pickup_location",
     "chats",
     "check_out_live_stats",
     "check_your_internet_connection_and_try_again",
@@ -74,13 +78,21 @@
     "destination_outside_limits",
     "details",
     "disclaimer",
+    "download_driver_receipt",
     "download_invoice",
     "download_pdf",
+    "driver_additions",
+    "driver_additions_optional",
+    "driver_at_pickup_location",
+    "driver_id_check",
+    "driver_related_issue_page_name",
+    "driver_verification",
     "drivers_can_charge_between_the_above_range",
     "edit",
     "edit_emergency_contacts",
     "edit_favourite",
     "edit_pickup",
+    "edit_your_pickup_location_instead",
     "educational_pop_up_slide_2_subtitle",
     "educational_pop_up_slide_3_subtitle",
     "educational_pop_up_slide_4_subtitle",
@@ -100,15 +112,19 @@
     "enter_upi_id_in_the_format_numberbankname",
     "enter_your_mobile_number",
     "enter_your_name",
+    "extra_per_km_fare",
+    "failed_to_remove_driver",
     "faq",
     "fare_for",
     "finding_quotes_text",
     "finding_rides_near_you",
     "for_other_issues_write_to_us",
     "full_name",
+    "get_fare",
     "getting_started_and_faqs",
     "go_home_",
     "go_to_home__",
+    "go_to_selected_pickup_spot",
     "got_a_referral_from_a_driver_or_friend",
     "got_it_tell_us_more",
     "great_enjoy_the_trip",
@@ -140,6 +156,7 @@
     "locations",
     "login_using_the_otp_sent_to",
     "logo",
+    "maximum_edit_pickup_attempts_reached",
     "min_fare_upto",
     "mins",
     "mins_away",
@@ -153,18 +170,30 @@
     "no_more_rides",
     "no_qoutes_available",
     "no_report_an_issue",
+    "nominal_fare",
     "not_verified",
     "note",
     "online_",
     "optional_bracketted",
     "otp",
     "our_suggested_price_for_this_trip_is",
+    "out_for_pickup",
+    "parking_charges_desc",
+    "payment_and_fare_related_issue_page_name",
     "payment_method",
     "payment_method_string",
     "payment_method_string_",
     "personal_details",
+    "pi_pointer_1",
     "pick_up_location",
     "pickup_and_drop",
+    "pickup_charge",
+    "pickup_charges",
+    "pickup_date_and_time",
+    "pickup_input",
+    "pickup_instruction",
+    "pickup_instructions",
+    "pickup_time_not_selected",
     "please_choose_your_preferred_language_to_continue",
     "please_confirm_with_your_after_requesting",
     "please_do_not_pay_extra_to_driver",
@@ -188,7 +217,9 @@
     "request_edit",
     "request_ride",
     "resend",
+    "ride_booking",
     "ride_ended",
+    "ride_fare",
     "rude_driver",
     "safety",
     "safety_check_in",
@@ -216,7 +247,10 @@
     "select_your_drop",
     "send_email",
     "set_up_your_account",
+    "six_digit_referral_code",
     "skip",
+    "special_pickup_zone",
+    "special_pickup_zone_ride",
     "star_rating",
     "subject",
     "submit",
@@ -224,12 +258,15 @@
     "thank_you_for_writing",
     "thank_you_for_writing_to_us",
     "thank_your_driver",
+    "the_pickup_location_entered_was_wrong",
     "tickets_for_chennai_bus",
     "to_the",
     "toll_or_parking_charges",
     "total_amount",
     "trip_charges",
     "trip_details_",
+    "trip_fare_excludes",
+    "trip_fare_includes",
     "trip_id",
     "try_again",
     "try_again_with_a_tip",
@@ -242,6 +279,7 @@
     "visit_my_rides_section_for_ride_specific_complaints",
     "waiting_charge_info",
     "waiting_charge_ratecard_description",
+    "walking_directions_to_pickup",
     "we_have_received_your_issue",
     "we_have_received_your_issue_well_reach_out_to_you_in_sometime",
     "welcome_text",
@@ -250,12 +288,15 @@
     "women_drivers_sub",
     "write_a_comment",
     "write_to_us",
+    "wrong_pickup_location",
     "you_are_offline",
     "you_can_describe_the_issue_you_faced_here",
     "you_rated",
     "your_cancellation_rate_is_high",
     "your_current_location",
+    "your_driver_might_want_to_go_towards_the_current_drop_kindly_ask_them_to_confirm_after_requesting",
     "your_email_id",
+    "your_number_will_be_visible_to_the_driver_use_if_not_calling_from_registered_number",
     "your_recent_ride",
     "your_referral_code",
     "your_ride_has_started",
@@ -853,7 +894,7 @@
     },
     "ride_fare": {
       "arity": 0,
-      "text": "Viagem Fare"
+      "text": "Valor da viagem"
     },
     "ask_for_price": {
       "arity": 0,
@@ -873,7 +914,7 @@
     },
     "select_an_offer_from_our_drivers_info": {
       "arity": 0,
-      "text": "Por padrão, quando \"<b>Auto-atribuir uma viagem</b>\"está habilitado, você recebe um motorista que aceita o pedido primeiro, dentro do intervalo de estimativa. Em vez disso, se você quiser escolher uma oferta de driver, você pode desativar e prosseguir."
+      "text": "Por padrão, quando \"<b>Auto-atribuir uma viagem</b>\"está habilitado, você recebe um motorista que aceita o pedido primeiro, dentro do intervalo de estimativa. Em vez disso, se você quiser escolher uma oferta de motorista, você pode desativar e prosseguir."
     },
     "pay_the_driver": {
       "arity": 0,
@@ -961,7 +1002,7 @@
     },
     "your_driver_might_want_to_go_towards_the_current_drop_kindly_ask_them_to_confirm_after_requesting": {
       "arity": 0,
-      "text": "Seu motorista pode querer ir para a queda atual. Por favor, peça-lhes para confirmar depois de pedir"
+      "text": "O motorista pode estar seguindo em direção ao destino informado. Confirme com ele após solicitar a viagem."
     },
     "actual_fare_was_higher_than_what_was_shown": {
       "arity": 0,
@@ -1589,7 +1630,7 @@
     },
     "is_waiting_at_pickup": {
       "arity": 0,
-      "text": "está esperando no pick up"
+      "text": "está esperando no embarque"
     },
     "wait_time_too_long": {
       "arity": 0,
@@ -1629,7 +1670,7 @@
     },
     "auto_assign_driver": {
       "arity": 0,
-      "text": "Auto-atribuir um driver"
+      "text": "Selecionar motorista automaticamente"
     },
     "choose_between_multiple_drivers": {
       "arity": 0,
@@ -1653,7 +1694,7 @@
     },
     "pickup_charge": {
       "arity": 0,
-      "text": "Cobranças de retirada"
+      "text": "Taxa de embarque"
     },
     "total_paid": {
       "arity": 0,
@@ -1665,7 +1706,7 @@
     },
     "nominal_fare": {
       "arity": 0,
-      "text": "Solicitação de driver opcional*"
+      "text": "Adicional opcional do motorista*"
     },
     "customer_cancellation_dues": {
       "arity": 0,
@@ -1673,7 +1714,7 @@
     },
     "drivers_can_charge_an_additional_fare_upto": {
       "arity": 0,
-      "text": "* Drivers podem opcionalmente solicitar 10% de tarifa base (arredondado para Rs mais próximo.10) para cobrir outros fatores como tráfego, chances de viagem de volta, etc."
+      "text": "* Motoristas podem opcionalmente solicitar 10% de tarifa base (arredondado para Rs mais próximo.10) para cobrir outros fatores como tráfego, chances de viagem de volta, etc."
     },
     "waiting_charge_description": {
       "arity": 0,
@@ -1701,7 +1742,7 @@
     },
     "six_digit_referral_code": {
       "arity": 0,
-      "text": "Enter 6 código digital compartilhado pelo driver"
+      "text": "Digite o código de indicação de 6 dígitos compartilhado pelo motorista."
     },
     "about_referral_program": {
       "arity": 0,
@@ -2033,7 +2074,7 @@
     },
     "your_number_will_be_visible_to_the_driver_use_if_not_calling_from_registered_number": {
       "arity": 0,
-      "text": "Seu número ficará visível para o driver. Use quando não ligar de um número registrado ou enfrentar problemas de conexão."
+      "text": "Seu número ficará visível para o motorista. Use esta opção se estiver ligando de outro número ou tiver problemas de conexão."
     },
     "call_driver_using": {
       "arity": 0,
@@ -2045,7 +2086,7 @@
     },
     "driver_additions": {
       "arity": 0,
-      "text": "Adições de driver*"
+      "text": "Adicionais do motorista*"
     },
     "fare_update_policy": {
       "arity": 0,
@@ -2053,7 +2094,7 @@
     },
     "driver_additions_optional": {
       "arity": 0,
-      "text": "Adições de driver (Opcional)"
+      "text": "Adicionais do motorista (opcional)"
     },
     "the_driver_may_quote_extra_to_cover_for_traffic": {
       "arity": 0,
@@ -2173,7 +2214,7 @@
     },
     "the_pickup_location_entered_was_wrong": {
       "arity": 0,
-      "text": "O local de retirada estava errado."
+      "text": "O local de embarque informado estava errado."
     },
     "your_driver_is_just": {
       "arity": 0,
@@ -2205,7 +2246,7 @@
     },
     "wrong_pickup_location": {
       "arity": 0,
-      "text": "Local de retirada errado"
+      "text": "Local de embarque incorreto"
     },
     "different_vehicle_number": {
       "arity": 0,
@@ -2493,7 +2534,7 @@
     },
     "go_to_selected_pickup_spot": {
       "arity": 0,
-      "text": "Vá para o local de retirada selecionado"
+      "text": "Vá até o ponto de embarque selecionado."
     },
     "go_to_selected_pickup_spot_as_autos_are_restricted": {
       "arity": 0,
@@ -2521,7 +2562,7 @@
     },
     "trip_got_delayed": {
       "arity": 0,
-      "text": "Trip foi adiada"
+      "text": "Viagem foi adiada"
     },
     "felt_unsafe": {
       "arity": 0,
@@ -2693,7 +2734,7 @@
     },
     "pi_pointer_1": {
       "arity": 0,
-      "text": "Os motoristas serão solicitados a vir ao seu local exato para a retirada."
+      "text": "Os motoristas serão orientados a ir até o seu local exato de embarque."
     },
     "pi_pointer_2": {
       "arity": 0,
@@ -2809,7 +2850,7 @@
     },
     "download_driver_receipt": {
       "arity": 0,
-      "text": "Baixar Driver Receipt"
+      "text": "Baixar recibo do motorista"
     },
     "view_driver_receipt": {
       "arity": 0,
@@ -3329,7 +3370,7 @@
     },
     "driver_related_issue_page_name": {
       "arity": 0,
-      "text": "Problema relacionado ao driver"
+      "text": "Problema com o motorista"
     },
     "lost_and_found_issue_page_name": {
       "arity": 0,
@@ -3393,7 +3434,7 @@
     },
     "payment_and_fare_related_issue_page_name": {
       "arity": 0,
-      "text": "Pagamento e Fare Related Issue"
+      "text": "Problema com pagamento ou valor da viagem"
     },
     "vehicle_related_issue_page_name": {
       "arity": 0,
@@ -4369,7 +4410,7 @@
     },
     "get_fare": {
       "arity": 0,
-      "text": "Obter Fare"
+      "text": "Ver valor"
     },
     "metro_booking_timings": {
       "arity": 0,
@@ -4585,7 +4626,7 @@
     },
     "maximum_edit_pickup_attempts_reached": {
       "arity": 0,
-      "text": "Você atingiu o número máximo de tentativas de mudar o local de retirada"
+      "text": "Você atingiu o limite de alterações do local de embarque."
     },
     "move_pin_to_the_desired_pickup_point": {
       "arity": 0,
@@ -4593,7 +4634,7 @@
     },
     "change_pickup_location": {
       "arity": 0,
-      "text": "Alterar local de retirada"
+      "text": "Alterar local de embarque"
     },
     "safety_center_is_disabled": {
       "arity": 0,
@@ -4609,11 +4650,11 @@
     },
     "special_pickup_zone": {
       "arity": 0,
-      "text": "Zona de retirada especial"
+      "text": "Área especial de embarque"
     },
     "special_pickup_zone_ride": {
       "arity": 0,
-      "text": "Viagem especial pela zona de retirada"
+      "text": "Viagem com embarque em área especial"
     },
     "we_will_try_to_connect_you_with_driver_in_closest_pickup_zone": {
       "arity": 0,
@@ -4625,7 +4666,7 @@
     },
     "driver_at_pickup_location": {
       "arity": 0,
-      "text": "Seu motorista está no local de retirada."
+      "text": "O motorista está no local de embarque."
     },
     "location_is_too_far": {
       "arity": 0,
@@ -4873,7 +4914,7 @@
     },
     "ac_not_working_desc": {
       "arity": 0,
-      "text": "AC não está funcionando/Driver se recusou a ligar"
+      "text": "O ar-condicionado não funciona ou o motorista se recusou a ligá-lo."
     },
     "showing_fare_from_multi_provider": {
       "arity": 0,
@@ -4969,7 +5010,7 @@
     },
     "congestion_charges_desc": {
       "arity": 1,
-      "text": "* Uma carga de congestionamento de {0}% no sua viagem é aplicável atualmente para compensar o tempo do motorista em tráfego elevado ou para obter mais drivers disponíveis para você"
+      "text": "* Uma carga de congestionamento de {0}% no sua viagem é aplicável atualmente para compensar o tempo do motorista em tráfego elevado ou para obter mais motoristas disponíveis para você"
     },
     "ac_turned_off": {
       "arity": 0,
@@ -4993,7 +5034,7 @@
     },
     "trip_delayed": {
       "arity": 0,
-      "text": "Trip Atrasado"
+      "text": "Viagem Atrasado"
     },
     "select_vehicle": {
       "arity": 0,
@@ -5269,7 +5310,7 @@
     },
     "ride_booking": {
       "arity": 0,
-      "text": "Viagem Booking"
+      "text": "Solicitação de viagem"
     },
     "special_zone_rental_ineligible": {
       "arity": 0,
@@ -5329,7 +5370,7 @@
     },
     "extra_per_km_fare": {
       "arity": 0,
-      "text": "Extra por KM Fare"
+      "text": "Valor adicional por km"
     },
     "extra_per_minute_fare": {
       "arity": 0,
@@ -5337,7 +5378,7 @@
     },
     "pickup_charges": {
       "arity": 0,
-      "text": "Cobranças de retirada"
+      "text": "Taxas de embarque"
     },
     "waiting_charges_after_3_mins": {
       "arity": 0,
@@ -5517,7 +5558,7 @@
     },
     "walking_directions_to_pickup": {
       "arity": 0,
-      "text": "Direções para a retirada"
+      "text": "Trajeto a pé até o embarque"
     },
     "explore_city_with_us": {
       "arity": 1,
@@ -5653,7 +5694,7 @@
     },
     "additional_charges_will_be_applicable": {
       "arity": 0,
-      "text": "Cobranças adicionais podem ser aplicadas quando o motorista estiver perto do local de retirada."
+      "text": "Poderá haver uma cobrança adicional quando o motorista estiver perto do local de embarque."
     },
     "parking_charges_included": {
       "arity": 1,
@@ -5673,7 +5714,7 @@
     },
     "parking_charges_desc": {
       "arity": 0,
-      "text": "As taxas de estacionamento dependem da taxa cobrada ao motorista no local de retirada."
+      "text": "A taxa de estacionamento depende do valor cobrado ao motorista no local de embarque."
     },
     "toll_charges_included_in_fair": {
       "arity": 0,
@@ -5833,7 +5874,7 @@
     },
     "drivers_available": {
       "arity": 0,
-      "text": "Drivers disponíveis"
+      "text": "Motoristas disponíveis"
     },
     "more_safety_measures": {
       "arity": 0,
@@ -6037,7 +6078,7 @@
     },
     "driver_verification": {
       "arity": 0,
-      "text": "Verificação do driver"
+      "text": "Verificação do motorista"
     },
     "driver_verification_sub": {
       "arity": 0,
@@ -6061,7 +6102,7 @@
     },
     "driver_id_check": {
       "arity": 0,
-      "text": "Verificação de ID do driver"
+      "text": "Verificação de identificação do motorista"
     },
     "driver_id_check_sub": {
       "arity": 0,
@@ -6085,7 +6126,7 @@
     },
     "women_drivers": {
       "arity": 0,
-      "text": "Mulheres Drivers"
+      "text": "Mulheres Motoristas"
     },
     "women_drivers_sub": {
       "arity": 0,
@@ -6397,7 +6438,7 @@
     },
     "failed_to_remove_driver": {
       "arity": 0,
-      "text": "Falha ao remover o driver favorito"
+      "text": "Não foi possível remover o motorista dos favoritos."
     },
     "not_available": {
       "arity": 0,
@@ -6465,11 +6506,11 @@
     },
     "pickup_instruction": {
       "arity": 0,
-      "text": "Instruções de retirada"
+      "text": "Instruções de embarque"
     },
     "edit_your_pickup_location_instead": {
       "arity": 0,
-      "text": "Edite seu local de retirada em vez de cancelar sua viagem"
+      "text": "Altere o local de embarque em vez de cancelar a viagem."
     },
     "round_trip_invalid_message": {
       "arity": 0,
@@ -6477,7 +6518,7 @@
     },
     "pickup_time_not_selected": {
       "arity": 0,
-      "text": "Por favor, selecione Hora de retirada"
+      "text": "Selecione o horário de embarque."
     },
     "booking_duration_invalid": {
       "arity": 0,
@@ -6489,7 +6530,7 @@
     },
     "pickup_input": {
       "arity": 0,
-      "text": "Digite a hora de retirada"
+      "text": "Digite o horário de embarque"
     },
     "return_input": {
       "arity": 0,
@@ -6701,11 +6742,11 @@
     },
     "trip_fare_includes": {
       "arity": 0,
-      "text": "Trip Fare Inclui"
+      "text": "O valor da viagem inclui"
     },
     "trip_fare_excludes": {
       "arity": 0,
-      "text": "Trip Fare Exclui"
+      "text": "O valor da viagem não inclui"
     },
     "extras_will_be_charged_at": {
       "arity": 0,
@@ -6717,7 +6758,7 @@
     },
     "pickup_date_and_time": {
       "arity": 0,
-      "text": "Data e hora de retirada"
+      "text": "Data e horário de embarque"
     },
     "drop_back_in_at": {
       "arity": 1,
@@ -6865,7 +6906,7 @@
     },
     "pickup_instructions": {
       "arity": 0,
-      "text": "Instruções de retirada (Opcional)"
+      "text": "Instruções de embarque (opcional)"
     },
     "receiver_name": {
       "arity": 0,
@@ -6897,7 +6938,7 @@
     },
     "out_for_pickup": {
       "arity": 0,
-      "text": "Fora para pegar"
+      "text": "A caminho da retirada"
     },
     "confirm_pickup": {
       "arity": 0,
@@ -7480,7 +7521,7 @@
     "Driver Name : ": "Nome do motorista: ",
     "Drop : ": "Solte: ",
     "Edit : Button": "Editar : Botão",
-    "Edit Pickup Location : Button": "Editar local de retirada : Botão",
+    "Edit Pickup Location : Button": "Editar local de embarque : Botão",
     "Edit Profile : Button": "Editar perfil : Botão",
     "Emergency Button": "Botão de emergência",
     "Enter Aadhaar Details": "Digite Detalhes do Aadhaar",
@@ -7749,12 +7790,12 @@
     "Copied": "Copiado",
     "Trip Id": "ID da viagem",
     "Save Place": "Salvar local",
-    "Ride Fare": "Viagem Fare",
+    "Ride Fare": "Valor da viagem",
     "Ask for a price": "Peça um preço.",
     "You will receive a fare based on <b> government set </b> base price , with an additional <b> Rs.10 </b> nominal fee for the <b> pick-up distance </b> traveled by the drivers. Some drivers may request nominal tips solely at their discretion to cover factors like traffic, chances of return trip etc.": "Você receberá uma tarifa baseada em <b> conjunto de governo </b> preço base, com um adicional <b> Rs.10 </b> taxa nominal para o <b> Distância de retirada </b> Alguns motoristas podem solicitar dicas nominais apenas a seu critério para cobrir fatores como tráfego, chances de viagem de volta, etc.",
     "Get estimate fare": "Obter tarifa de estimativa",
     "Select an offer (Optional)": "Selecionar uma oferta (opcional)",
-    "By default, when “<b>Auto-assign a ride</b>” is enabled, you are assigned a driver who accepts the request first, within the estimate range. Instead, if you wish to choose a driver offer, you can disable and proceed.": "Por padrão, quando \"<b>Auto-atribuir uma viagem</b>\"está habilitado, você recebe um motorista que aceita o pedido primeiro, dentro do intervalo de estimativa. Em vez disso, se você quiser escolher uma oferta de driver, você pode desativar e prosseguir.",
+    "By default, when “<b>Auto-assign a ride</b>” is enabled, you are assigned a driver who accepts the request first, within the estimate range. Instead, if you wish to choose a driver offer, you can disable and proceed.": "Por padrão, quando \"<b>Auto-atribuir uma viagem</b>\"está habilitado, você recebe um motorista que aceita o pedido primeiro, dentro do intervalo de estimativa. Em vez disso, se você quiser escolher uma oferta de motorista, você pode desativar e prosseguir.",
     "Pay the driver": "Pague ao motorista.",
     "Pay the driver directly, the price that was confirmed by you": "Pague o motorista diretamente, o preço que foi confirmado por você.",
     "(Total fare may change if ride distance changes)": "(Taxa total pode mudar se a distância de viagem mudar)",
@@ -7776,7 +7817,7 @@
     "Please confirm with driver after requesting": "Confirme com o motorista após solicitar a viagem.",
     "previously": "Anteriormente.",
     "Updated Route & Fare": "Rota e Tarifa Atualizadas",
-    "Your driver might want to go towards the current drop. Kindly ask them to confirm after requesting": "Seu motorista pode querer ir para a queda atual. Por favor, peça-lhes para confirmar depois de pedir",
+    "Your driver might want to go towards the current drop. Kindly ask them to confirm after requesting": "O motorista pode estar seguindo em direção ao destino informado. Confirme com ele após solicitar a viagem.",
     "Actual fare was higher than what was shown": "A tarifa real era maior do que a mostrada.",
     "Delete": "Excluir",
     "Are you sure you want to logout?": "Tem certeza que quer sair?",
@@ -7921,7 +7962,7 @@
     "*You can add new favourites from Side menu > Favourites": "*Você pode adicionar novos favoritos no menu lateral > Favoritos",
     "You will be asked to select upto 3  contacts": "Você será solicitado a selecionar até 3  contatos",
     "Auto-assign a ride": "Auto-atribuir uma viagem",
-    "is waiting at pick up": "está esperando no pick up",
+    "is waiting at pick up": "está esperando no embarque",
     "Wait time too long": "Espere muito tempo.",
     "Got another ride elsewhere": "Tenho outra viagem em outro lugar",
     "Driver was rude": "O motorista foi rude.",
@@ -7931,22 +7972,22 @@
     "View Details": "Ver detalhes",
     "Repeat Ride": "Repetir Viagem",
     "Fare was high": "A tarifa era alta.",
-    "Auto-assign a driver": "Auto-atribuir um driver",
+    "Auto-assign a driver": "Selecionar motorista automaticamente",
     "Choose between multiple drivers": "Escolha entre os motoristas disponíveis",
     "Choose between multiple ride options": "Escolha entre as opções de viagem",
     "Enable this feature to choose your preferred ride & fare": "Habilite esse recurso para escolher sua viagem e tarifa preferidas",
     "Booking Preference": "Preferência de reserva",
     "Base Fare ": "Tarifa Base ",
-    "Pickup Charges": "Cobranças de retirada",
+    "Pickup Charges": "Taxas de embarque",
     "Total Paid": "Total Pago",
     "Waiting Charges": "Cargas de espera",
-    "Optional Driver Request*": "Solicitação de driver opcional*",
+    "Optional Driver Request*": "Adicional opcional do motorista*",
     "Cancellation Dues": "Taxas de cancelamento",
-    "* Drivers may optionally request 10% of base fare (rounded to nearest Rs.10) to cover other factors like traffic, chances of return trip etc.": "* Drivers podem opcionalmente solicitar 10% de tarifa base (arredondado para Rs mais próximo.10) para cobrir outros fatores como tráfego, chances de viagem de volta, etc.",
+    "* Drivers may optionally request 10% of base fare (rounded to nearest Rs.10) to cover other factors like traffic, chances of return trip etc.": "* Motoristas podem opcionalmente solicitar 10% de tarifa base (arredondado para Rs mais próximo.10) para cobrir outros fatores como tráfego, chances de viagem de volta, etc.",
     "°Waiting charge is zero for the first {} minutes. You will be charged ₹{} per minute of wait time after that.": "A carga de espera é zero para a primeira {} minutos. Você será cobrado ₹{} por minuto de espera depois disso.",
     "Have a Referral Code?": "Tem um código de referência?",
     "Your referral might just be the reason for \n a driver to be rewarded!": "Sua indicação pode ser a razão para \n Um motorista a ser recompensado!",
-    "Enter 6 digit code shared by driver": "Enter 6 código digital compartilhado pelo driver",
+    "Enter 6 digit code shared by driver": "Digite o código de indicação de 6 dígitos compartilhado pelo motorista.",
     "What is the Referral Program?": "O que é o Programa de Indicação?",
     "You have successfully applied \nthe referral code": "Você aplicou com sucesso. \no código de referência",
     "Referral Applied!": "Indicação aplicada!",
@@ -8024,12 +8065,12 @@
     "Direct Call": "Chamada direta",
     "Anonymous Call": "Chamada anônima",
     "Your number will not be shown to the driver. The call will be recorded for compliance.": "Seu número não será mostrado ao motorista. A ligação será registrada para conformidade.",
-    "Your number will be visible to the driver. Use when not calling from a registered number or facing connection issues.": "Seu número ficará visível para o driver. Use quando não ligar de um número registrado ou enfrentar problemas de conexão.",
+    "Your number will be visible to the driver. Use when not calling from a registered number or facing connection issues.": "Seu número ficará visível para o motorista. Use esta opção se estiver ligando de outro número ou tiver problemas de conexão.",
     "Call Driver using": "Ligue para o motorista usando",
     "Was Your Call Successful": "Sua chamada foi bem sucedida.",
-    "Driver Additions*": "Adições de driver*",
+    "Driver Additions*": "Adicionais do motorista*",
     "Fare Update Policy": "Política de atualização de tarifas",
-    "Driver Additions (Optional)": "Adições de driver (Opcional)",
+    "Driver Additions (Optional)": "Adicionais do motorista (opcional)",
     "The Driver may quote extra to cover for traffic, chance of return trip etc.": "O motorista pode citar mais para cobrir o tráfego, a chance de viagem de volta, etc.",
     "Note The driver may/may not charge this additional fare": "Nota O motorista pode/não pode cobrar esta tarifa adicional",
     "You may see an updated final fare due to any of the below reasons": "Você pode ver uma tarifa final atualizada devido a qualquer uma das razões abaixo",
@@ -8052,7 +8093,7 @@
     "Cancelling as I got a ride on another app": "Cancelando como eu tenho uma viagem em outro aplicativo",
     "Driver location wasn`t changing on the map": "A localização do motorista não estava mudando no mapa",
     "Driver was taking too long to reach the pickup location": "O motorista estava demorando muito para chegar ao local da coleta.",
-    "The pickup location entered was wrong": "O local de retirada estava errado.",
+    "The pickup location entered was wrong": "O local de embarque informado estava errado.",
     "Your Driver is just ": "Seu motorista é apenas ",
     " m away.": " Estou longe.",
     "Driver has already travelled ": "O motorista já viajou. ",
@@ -8060,7 +8101,7 @@
     "Confirm with your Driver": "Confirme com seu motorista",
     "Change of plans": "Mudança de planos",
     "Driver is not moving": "O motorista não está se movendo.",
-    "Wrong pickup location": "Local de retirada errado",
+    "Wrong pickup location": "Local de embarque incorreto",
     "Different Vehicle No": "Veículo diferente Não",
     "Vehicle number is different from  what is shown in the app": "O número do veículo é diferente do que é mostrado no aplicativo",
     "Different Auto": "Auto diferente",
@@ -8127,14 +8168,14 @@
     "It seems that you have an on-going booking, please restart the app to view it": "Parece que você tem uma reserva em curso, por favor reinicie o aplicativo para vê-lo",
     "Incorrect OTP, please try again.": "Incorreto OTPPor favor, tente de novo.",
     " more attempts left": " Mais tentativas deixadas",
-    "Go to selected pickup spot": "Vá para o local de retirada selecionado",
+    "Go to selected pickup spot": "Vá até o ponto de embarque selecionado.",
     "Go to the suggested pickup spot as Autos are restricted inside this area": "Vá para o ponto de coleta sugerido como Autos são restritos dentro desta área",
     "Unprofessional Driver": "Motorista não profissional",
     "Rash Driving": "Condução de Rash",
     "Driver charged more": "Motorista cobrava mais",
     "Uncomfortable Auto": "Desconfortável Auto",
     "Uncomfortable Cab": "Cab desconfortável",
-    "Trip Got Delayed": "Trip foi adiada",
+    "Trip Got Delayed": "Viagem foi adiada",
     "Felt Unsafe": "Senti-me inseguro.",
     "Polite Driver": "Motorista educado",
     "Expert Driving": "Condução especializada",
@@ -8175,7 +8216,7 @@
     "Toll charges are included": "Cobranças de pedágio estão incluídas",
     "Auto Rickshaw": "Tuk-tuk",
     "cabs available": "táxis disponíveis",
-    "Drivers will be prompted to come to your exact location for pickup.": "Os motoristas serão solicitados a vir ao seu local exato para a retirada.",
+    "Drivers will be prompted to come to your exact location for pickup.": "Os motoristas serão orientados a ir até o seu local exato de embarque.",
     "Drivers will be prompted to help you with your mobility aid.": "Os motoristas serão solicitados a ajudá-lo com sua ajuda de mobilidade.",
     "Drivers will be prompted to call instead of texting.": "Os motoristas serão solicitados a ligar em vez de enviar mensagens de texto.",
     "Drivers will be prompted to sound horn once at the pickup.": "Os motoristas serão solicitados a soar chifre uma vez na coleta.",
@@ -8201,7 +8242,7 @@
     "Ride Type": "Tipo de viagem",
     "Fare will be 1.5x if the pickup or destination lies outside Ernakulam corporation limits": "A tarifa será 1.5x se a coleta ou destino fica fora dos limites da corporação Ernakulam",
     "Select location on map": "Selecione a localização no mapa",
-    "Download Driver Receipt": "Baixar Driver Receipt",
+    "Download Driver Receipt": "Baixar recibo do motorista",
     "View Driver Receipt": "Ver o recibo do motorista",
     "Driver Receipt": "Recibo do motorista",
     "Help": "Ajudar",
@@ -8320,7 +8361,7 @@
     "Select ride to report issue on": "Selecione viagem para relatar problema em",
     "Ride Related Issue": "Viagem Problema Relacionado",
     "App Related Issue": "Problema relacionado ao aplicativo",
-    "Driver Related Issue": "Problema relacionado ao driver",
+    "Driver Related Issue": "Problema com o motorista",
     "Report Lost Item": "Denunciar item perdido",
     "years ago": "anos atrás",
     "months ago": "meses atrás",
@@ -8336,7 +8377,7 @@
     "Fare Related Issue": "Problema Relacionado à Tarifa",
     "Payment Related Issue": "Problema relacionado ao pagamento",
     "Account Related Issue": "Problema relacionado à conta",
-    "Payment & Fare Related Issue": "Pagamento e Fare Related Issue",
+    "Payment & Fare Related Issue": "Problema com pagamento ou valor da viagem",
     "Vehicle Related Issue": "Problema relacionado ao veículo",
     "Issue": "Emissão",
     "Other Issues": "Outros problemas",
@@ -8553,7 +8594,7 @@
     "Failed": "Falhado",
     "Confirmed": "Confirmado",
     "Buy Metro Tickets": "Comprar passagems de metrô",
-    "Get Fare": "Obter Fare",
+    "Get Fare": "Ver valor",
     "Metro Booking Timings": "Horários de reserva do metrô",
     "Please come back later during the eligible time to purchase tickets.": "Por favor, volte mais tarde durante o tempo elegível para comprar ingressos.",
     "No quotes available": "Nenhuma cotação disponível",
@@ -8597,17 +8638,17 @@
     "Call Customer Support": "Ligue para o Suporte ao Cliente",
     "Ride Cancelled": "Viagem Cancelado",
     "Driver is almost at pickup, please contact them to change pickup": "Motorista está quase no captador, por favor entre em contato com eles para mudar o captador",
-    "You have reached the maximum number of attempts to change the pickup location": "Você atingiu o número máximo de tentativas de mudar o local de retirada",
+    "You have reached the maximum number of attempts to change the pickup location": "Você atingiu o limite de alterações do local de embarque.",
     "Move the pin to the desired pickup point (within the indicated area)": "Mova o pino para o ponto de captação desejado (dentro da área indicada)",
-    "Change Pickup Location": "Alterar local de retirada",
+    "Change Pickup Location": "Alterar local de embarque",
     "SOS feature is disabled as it was misused thrice": "O recurso SOS está desativado porque foi mal utilizado três vezes.",
     "Track on Google Maps  >": "Rastrear Google Mapas >",
     "Show Walking Directions to Pickup >": "Mostrar instruções de caminhada para Embarque >",
-    "Special Pickup Zone": "Zona de retirada especial",
-    "Special Pickup Zone Ride": "Viagem especial pela zona de retirada",
+    "Special Pickup Zone": "Área especial de embarque",
+    "Special Pickup Zone Ride": "Viagem com embarque em área especial",
     "We will try to connect you with a driver in the closest special pickup zone.": "Tentaremos conectá-lo com um motorista na zona especial mais próxima.",
     "This provides you an instant pickup experience.": "Isso lhe proporciona uma experiência instantânea de coleta.",
-    "Your driver is at pickup location": "Seu motorista está no local de retirada.",
+    "Your driver is at pickup location": "O motorista está no local de embarque.",
     "Location is too far!": "O local está muito distante!",
     "A tip helps find a ride quicker!": "Uma gorjeta ajuda a achar uma viagem mais rápido!",
     "tip added!": "gorjeta adicionada!",
@@ -8661,7 +8702,7 @@
     "Great! Enjoy your trip!": "Ótimo, boa viagem!",
     "Enjoy your budget friendly,\nNon AC ride!": "Aproveite seu orçamento amigável,\nViagem não-AC!",
     "AC is not available on this ride": "AC não está disponível neste viagem",
-    "AC not working/Driver refused to switch on": "AC não está funcionando/Driver se recusou a ligar",
+    "AC not working/Driver refused to switch on": "O ar-condicionado não funciona ou o motorista se recusou a ligá-lo.",
     "Showing fares from multiple providers": "Mostrando tarifas de vários provedores",
     "Live Chat": "Chat ao vivo",
     "Driver Tip Addition": "Adição de Dica de Motorista",
@@ -8684,7 +8725,7 @@
     "Estimates has been expired. Fetching again, Please wait a moment and check again.": "A busca de novo, por favor, espere um momento e verifique novamente.",
     "Quotes has been expired. Fetching again, Please wait a moment and check again.": "A busca de novo, por favor, espere um momento e verifique novamente.",
     "Pay your driver using Cash / UPI": "Pague ao seu motorista usando dinheiro. UPI",
-    "Trip Delayed": "Trip Atrasado",
+    "Trip Delayed": "Viagem Atrasado",
     "Select Vehicle": "Selecionar veículo",
     "Book Rental": "Aluguer de livros",
     "Confirm Rental": "Confirmar aluguel",
@@ -8751,7 +8792,7 @@
     "Scheduling is only allowed in Intercity or Rental Rides.": "O agendamento só é permitido em Intercity ou Rental Viagens.",
     "Locations within special zone are not eligible for intercity rides.": "Locais dentro da zona especial não são elegíveis para viagens interurbanos.",
     "No rides scheduled yet!": "Ainda não há viagens programados!",
-    "Ride Booking": "Viagem Booking",
+    "Ride Booking": "Solicitação de viagem",
     "Locations within special zone are not eligible for rental rides.": "Locais dentro da zona especial não são elegíveis para viagens de aluguel.",
     "Services": "Serviços",
     "Scheduled": "Agendado",
@@ -8763,7 +8804,7 @@
     "You have an {} ride from {} which is scheduled from {} till {}. You can take normal rides or schedule another ride unless it does not overlap with the already scheduled ride timelines.": "Você tem um {} viagem de {} que está agendada a partir de {} até {}Você pode fazer viagens normais ou agendar outra viagem, a menos que não se sobreponha aos cronogramas de viagem já agendados.",
     "For every extra hour you add, you will be allocated 10 extra kilometers of distance in your package.": "Para cada hora extra que você adicionar, você será alocado 10 quilômetros extras de distância em seu pacote.",
     "By default, 1hr is added to your booking in addition to the estimated travel duration.": "Por padrão, 1hr é adicionado à sua reserva, além da duração estimada da viagem.",
-    "Extra per KM Fare": "Extra por KM Fare",
+    "Extra per KM Fare": "Valor adicional por km",
     "Extra per Minute Fare": "Tarifa extra por minuto",
     "Waiting Charges (after 3 mins)": "Cargas de espera (depois 3 mins)",
     "The Fare is determined as per the Karnataka State Government guidelines.": "A Tarifa é determinada de acordo com as diretrizes do Governo do Estado de Karnataka.",
@@ -8803,7 +8844,7 @@
     "Final fare excludes toll charges": "Tarifa final exclui cobranças de pedágio",
     "Toll charges may be applicable": "Cobranças de pedágio podem ser aplicáveis",
     "View on Google Maps": "Ver em Google Mapas",
-    "Walking Directions to Pickup": "Direções para a retirada",
+    "Walking Directions to Pickup": "Trajeto a pé até o embarque",
     "Bangalore": "Bangalore",
     "Kolkata": "Calcutá.",
     "Paris": "Paris",
@@ -8831,10 +8872,10 @@
     "Thrissur": "Thrissur",
     "Trivandrum": "Trivandrum",
     "Next ticket added is eligible for cashback": "O próximo passagem adicionado é elegível para reembolso",
-    "Additional charges may be applicable when driver is near pickup location.": "Cobranças adicionais podem ser aplicadas quando o motorista estiver perto do local de retirada.",
+    "Additional charges may be applicable when driver is near pickup location.": "Poderá haver uma cobrança adicional quando o motorista estiver perto do local de embarque.",
     "Parking charges are included": "As taxas de estacionamento estão incluídas",
     "Toll & Parking charges are included": "Taxas de pedágio e estacionamento estão incluídas",
-    "Parking charges are dependent on the fee charged to the driver at the pickup location": "As taxas de estacionamento dependem da taxa cobrada ao motorista no local de retirada.",
+    "Parking charges are dependent on the fee charged to the driver at the pickup location": "A taxa de estacionamento depende do valor cobrado ao motorista no local de embarque.",
     "Toll Charges included in Fare": "Encargos incluídos na Tarifa",
     "Please do not pay extra to the driver": "Não pague valores adicionais ao motorista.",
     "Vellore": "Vellore",
@@ -8872,7 +8913,7 @@
     "Clean Bike": "Moto limpa",
     "Uncomfortable Bike": "Bicicleta desconfortável",
     "Driver available": "Motorista disponível",
-    "Drivers available": "Drivers disponíveis",
+    "Drivers available": "Motoristas disponíveis",
     "More Safety Measures": "Mais medidas de segurança",
     "Safety Setup": "Configuração de segurança",
     "Complete": "Completar",
@@ -8922,19 +8963,19 @@
     "In case of an emergency SOS activation, you will be notified and can perform the following actions": "Em caso de ativação de SOS de emergência, você será notificado e poderá realizar as seguintes ações:",
     "Current initiatives": "Iniciativas atuais",
     "We ensure driver and vehicle safety through multiple measures.": "Garantimos a segurança do motorista e do veículo através de várias medidas.",
-    "Driver Verification": "Verificação do driver",
+    "Driver Verification": "Verificação do motorista",
     "All drivers undergo thorough verification of their driving and vehicle credentials, along with periodic criminal record checks with the police.": "Todos os motoristas são submetidos a uma verificação completa de suas credenciais de condução e veículo, juntamente com verificações periódicas de antecedentes criminais com a polícia.",
     "Safety Feedback": "Feedback de segurança",
     "We take safety feedback seriously. Reports provided after a ride or during SOS situations are used to warn, suspend, or block drivers from all rides or specific rides, such as night rides.": "Relatos fornecidos após uma viagem ou durante situações SOS são usados para avisar, suspender ou bloquear motoristas de todas as viagens ou viagens específicos, como viagens noturnos.",
     "Safety Training": "Treinamento de segurança",
     "Drivers receive periodic training and certification on best practices to reduce safety incidents and enhance customer service.": "Os motoristas recebem treinamento e certificação periódicos sobre as melhores práticas para reduzir incidentes de segurança e melhorar o atendimento ao cliente.",
-    "Driver ID Check": "Verificação de ID do driver",
+    "Driver ID Check": "Verificação de identificação do motorista",
     "We periodically prompt drivers to take selfies and only enable them if their identity matches the verified documents.": "Periodicamente, solicitamos que os motoristas tirem selfies e só as ativem se a identidade deles corresponder aos documentos verificados.",
     "Data Privacy": "Privacidade de dados",
     "Drivers cannot see your phone number, and you have the option to make anonymous calls to the driver. Your exact address is masked from the driver after the ride ends.": "Os motoristas não podem ver seu número de telefone, e você tem a opção de fazer chamadas anônimas para o motorista. Seu endereço exato é mascarado do motorista após o término da viagem.",
     "Favourite your driver": "Favorito seu motorista",
     "You can favourite trustworthy drivers at the end of your ride to prefer them for your next ride if they are available nearby.": "Você pode preferir motoristas confiáveis no final de sua viagem para preferi-los para sua próxima viagem, se eles estão disponíveis nas proximidades.",
-    "Women Drivers": "Mulheres Drivers",
+    "Women Drivers": "Mulheres Motoristas",
     "We are promoting women drivers through comprehensive training and facilitating financing to help them become EV auto owners. As their numbers grow, we plan to allow women riders to choose women drivers.": "Promovemos a participação de mulheres motoristas com treinamento e acesso a financiamento de veículos elétricos. Conforme esse número crescer, planejamos oferecer às passageiras a opção de escolher motoristas mulheres.",
     "Dashcam": "Câmera veicular",
     "We are enabling drivers to install dashcams in their vehicles. As the number of dashcams increases, we plan to introduce an option for riders to choose vehicles equipped with dashcams.": "Estamos viabilizando a instalação de câmeras veiculares pelos motoristas. Conforme esse número crescer, planejamos oferecer a opção de escolher veículos com câmera.",
@@ -9004,7 +9045,7 @@
     "Financial": "Financeiro",
     "Kids' education": "Educação infantil",
     "Buy new vehicle": "Comprar veículo novo",
-    "Failed To Remove Favourite Driver": "Falha ao remover o driver favorito",
+    "Failed To Remove Favourite Driver": "Não foi possível remover o motorista dos favoritos.",
     "Not available at this moment": "Não disponível neste momento.",
     "Buy New Home": "Comprar nova casa",
     "You Favourited": "Você é o favorito.",
@@ -9020,13 +9061,13 @@
     "View all Guidelines": "Veja todas as diretrizes",
     "Avoid sending high-value / fragile items": "Evite enviar itens de alto valor / frágeis",
     "Illegal items are prohibited": "Itens ilegais são proibidos.",
-    "Pickup Instruction": "Instruções de retirada",
-    "Edit your pickup location instead of cancelling your ride": "Edite seu local de retirada em vez de cancelar sua viagem",
+    "Pickup Instruction": "Instruções de embarque",
+    "Edit your pickup location instead of cancelling your ride": "Altere o local de embarque em vez de cancelar a viagem.",
     "Round Trip cannot be scheduled below estimated trip time": "A viagem não pode ser agendada abaixo do tempo estimado de viagem.",
-    "Please Select Pickup Time": "Por favor, selecione Hora de retirada",
+    "Please Select Pickup Time": "Selecione o horário de embarque.",
     "booking allowed only upto two days from start date.": "A reserva só é permitida até dois dias a partir da data de início.",
     "Return": "Retornar",
-    "Enter Pickup Time": "Digite a hora de retirada",
+    "Enter Pickup Time": "Digite o horário de embarque",
     "Enter Return Time": "Digite a hora de retorno",
     "Both Cab and Driver will be at your service for the entire booking.": "Tanto o táxi quanto o motorista estarão ao seu serviço durante toda a reserva.",
     "Total Booking Time": "Tempo total de reserva",
@@ -9074,11 +9115,11 @@
     "Confirm": "Confirmar",
     "Addon km charge": "Carga de Addon km",
     "Time Fare": "Tarifa do tempo",
-    "Trip Fare Includes": "Trip Fare Inclui",
-    "Trip Fare Excludes": "Trip Fare Exclui",
+    "Trip Fare Includes": "O valor da viagem inclui",
+    "Trip Fare Excludes": "O valor da viagem não inclui",
     "Extra usage will be charged at": "Uso extra será cobrado em",
     "Fixed Charges": "Cargas Fixas",
-    "Pickup Date & Time": "Data e hora de retirada",
+    "Pickup Date & Time": "Data e horário de embarque",
     "per km": "por km",
     "per min": "por min.",
     "hour": "hora",
@@ -9112,7 +9153,7 @@
     "Sender Name*": "Nome do remetente*",
     "Sender Phone*": "Telefone do remetente*",
     "Sender's Building/Flat No.*": "Edifício do remetente/Flat No.*",
-    "Pickup Instructions (Optional)": "Instruções de retirada (Opcional)",
+    "Pickup Instructions (Optional)": "Instruções de embarque (opcional)",
     "Receiver Name*": "Nome do Receptor*",
     "Receiver Phone*": "Telefone do receptor*",
     "Receiver's Building/Flat No.*": "Edifício do Receptor/Flat No.",
@@ -9120,7 +9161,7 @@
     "Out for Delivery": "Fora para entrega",
     "Pickup in Progress": "Embarque em andamento",
     "Arrived at Drop": "Chegamos em Desembarque",
-    "Out for Pickup": "Fora para pegar",
+    "Out for Pickup": "A caminho da retirada",
     "Confirm Pickup": "Confirmar embarque",
     "Rate your delivery with": "Avalie sua entrega com",
     "Delivery Completed": "Entrega concluída",
