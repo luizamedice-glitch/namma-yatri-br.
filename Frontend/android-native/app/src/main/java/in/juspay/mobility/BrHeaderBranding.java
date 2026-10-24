@@ -31,6 +31,7 @@ final class BrHeaderBranding {
                 params.width = Math.round(widthDp * density);
                 params.height = Math.round(44 * density);
                 view.setLayoutParams(params);
+                hideLegacyMenu((ViewGroup) logoGroup.getParent());
                 Log.i("YatriBrandHeader", "logo_resized_" + widthDp + "x44dp");
                 return;
             }
@@ -38,6 +39,22 @@ final class BrHeaderBranding {
         if (view instanceof ViewGroup) {
             ViewGroup group = (ViewGroup) view;
             for (int i = 0; i < group.getChildCount(); i++) resizeHeader(group.getChildAt(i));
+        }
+    }
+
+    // The BR footer replaces the old header menu. Retain the original Presto views.
+    private static void hideLegacyMenu(View view) {
+        CharSequence label = view.getContentDescription();
+        if (label != null && ("Navigation : Button".contentEquals(label)
+                || "Navegação: botão".contentEquals(label))
+                && view.getParent() instanceof View
+                && ((View) view.getParent()).getParent() instanceof View) {
+            ((View) ((View) view.getParent()).getParent()).setVisibility(View.GONE);
+            return;
+        }
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) hideLegacyMenu(group.getChildAt(i));
         }
     }
 

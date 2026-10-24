@@ -196,6 +196,21 @@ try:
     }, ensure_ascii=False, indent=2) + '\n')
     places_evidence = real_places_or_explicit_block(nodes)
     print('Pesquisa real:', places_evidence['acceptance'])
+
+    # Actual footer navigation must work and retain the selected addresses.
+    for label, stage, expected in [('Carteira', 'footer-wallet', 'A carteira ainda não está disponível.'),
+                                   ('Perfil', 'footer-profile', 'Fagner'),
+                                   ('Início', 'footer-home', 'Para onde você vai?')]:
+        nodes = capture(stage + '-before')
+        target = next((n for n in nodes if n.get('text') == label), None)
+        assert target is not None, 'Aba ausente: ' + label
+        tap(target)
+        time.sleep(2)
+        nodes = capture(stage)
+        assert any(expected in (n.get('text', '') + n.get('content-desc', '')) for n in nodes), 'Conteúdo ausente: ' + label
+    assert not any(n.get('content-desc') in ('Navigation : Button', 'Navegação: botão') for n in nodes), 'Menu antigo continua visível'
+    (out/'footer-acceptance.json').write_text(json.dumps({'acceptance':'passed','tabs':['Início','Carteira','Perfil']},ensure_ascii=False))
+
     assert adb('shell','pidof',package).strip(), 'Processo encerrou.'
     (out/'home-result.txt').write_text('PASS: HomeScreen original sem token, offline/online, busca editavel e retorno; nenhuma corrida ou sessao simulada.\n')
     print((out/'home-result.txt').read_text())
