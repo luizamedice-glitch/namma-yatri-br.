@@ -98,7 +98,7 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          disable-animations: true
+          disable-animations: ${{ !inputs.capture_only }}
           script: bash ${{ inputs.capture_only && 'Frontend/scripts/capture-passenger-branding-only.sh' || 'Frontend/scripts/test-original-passenger.sh' }}
       - name: Publicar capturas e diagnostico de abertura
         if: always()
