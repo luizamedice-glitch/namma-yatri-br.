@@ -50,6 +50,7 @@ try:
                 localization:window.__YATRI_BR_LOCALIZATION__||null,languageKey:window.languageKey,
                 placesDiagnostics:window.__YATRI_BR_PLACES_STATE__||null,
                 driverOperations:window.__YATRI_DRIVER_OPERATIONS__||null,
+                driverStartup:window.__YATRI_DRIVER_STARTUP__||null,
                 hasRegistrationToken:(()=>{try{const t=window.JBridge.getKeysInSharedPref('REGISTERATION_TOKEN');return !!t && !['__failed','(null)','null'].includes(t);}catch(_){return null;}})(),
                 josType:typeof window.JOS,josSelf:window.JOS&&window.JOS.self,bridgeType:typeof window.JBridge,
                 version:window.version||null,merchant:window.merchantID,

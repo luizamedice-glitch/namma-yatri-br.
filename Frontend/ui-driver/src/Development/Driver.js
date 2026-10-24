@@ -6,6 +6,16 @@ export const enabled = () => {
     JSON.parse(window.JBridge.getDeviceInfo()).package_name === 'in.juspay.nammayatripartner.debug';
   } catch (_) { return false; }
 };
+export const checkpoint = phase => () => {
+  if (enabled()) window.__YATRI_DRIVER_STARTUP__ = {phase};
+};
+export const startupError = message => () => {
+  if (!enabled()) return;
+  const detail = String(message).replace(/\b[a-fA-F0-9]{64}\b/g,'[REDACTED_SESSION]')
+    .replace(/AIza[0-9A-Za-z_-]{20,}/g,'[REDACTED_KEY]');
+  window.__YATRI_DRIVER_STARTUP__ = {phase:'failed',detail};
+  console.error('Yatri driver startup:',detail);
+};
 function client() {
   if (!enabled()) throw Error('Operação restrita ao motorista BR debug.');
   return createOperationsClient({baseUrl:window.JBridge.getFromSharedPrefs('YATRI_DRIVER_BACKEND_URL'),

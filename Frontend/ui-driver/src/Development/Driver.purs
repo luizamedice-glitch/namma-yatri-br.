@@ -5,6 +5,9 @@ module Development.Driver where
 import Prelude
 import Effect (Effect)
 import Effect.Aff (launchAff_)
+import Effect.Class (liftEffect)
+import Effect.Exception (message)
+import Data.Either (Either(..))
 import Control.Monad.Except.Trans (runExceptT, lift)
 import Control.Transformers.Back.Trans (runBackT)
 import Common.Types.App (Event, FCMBundleUpdate)
@@ -26,6 +29,8 @@ import Data.Maybe (Maybe(..))
 import Effect.Unsafe (unsafePerformEffect)
 
 foreign import enabled :: Effect Boolean
+foreign import checkpoint :: String -> Effect Unit
+foreign import startupError :: String -> Effect Unit
 foreign import availability :: Boolean -> (Boolean -> Effect Unit) -> (String -> Effect Unit) -> Effect Unit
 foreign import location :: Number -> Number -> Effect Unit
 foreign import subscribe :: (Boolean -> Effect Unit) -> (String -> Effect Unit) -> Effect Unit -> Effect (Effect Unit)
@@ -39,12 +44,21 @@ instance logAction :: Loggable Action where
 main :: Event -> Effect Unit
 main _ = do
   allowed <- enabled
-  when allowed $ launchAff_ $ void $ flowRunner defaultGlobalState $ runExceptT $ runBackT $ start
+  when allowed $ launchAff_ do
+    liftEffect $ checkpoint "starting"
+    result <- flowRunner defaultGlobalState $ runExceptT $ runBackT $ start
+    case result of
+      Left error -> liftEffect $ startupError $ message error
+      Right (Left error) -> liftEffect $ startupError error
+      _ -> pure unit
 
 start :: FlowBT String Unit
 start = do
+  liftFlowBT $ checkpoint "initializing-ui"
   lift $ lift $ initUI
+  liftFlowBT $ checkpoint "initializing-location"
   liftFlowBT JB.initiateLocationServiceClient
+  liftFlowBT $ checkpoint "rendering-dashboard"
   loop $ Data.initData {data {driverName = "Giselo"}, props {statusOnline = false, driverStatusSet = Offline}}
 
 loop :: HomeScreenState -> FlowBT String Unit
