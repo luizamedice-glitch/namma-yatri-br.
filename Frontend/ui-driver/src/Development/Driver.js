@@ -2,13 +2,16 @@
 import {createOperationsClient} from '../../src/Development/OperationsClient.mjs';
 import {createNativeFetch} from '../../src/Development/NativeTransport.mjs';
 import {callbackMapper} from 'presto-ui';
+import {updateTripMap,releaseTripMap} from '../../../ui-common/src/Development/TripMapRuntime.js';
 import {tripView} from '../../../ui-common/src/Development/PilotTrip.mjs';
 let online, failure, timer, position, lastError, changed, lastAvailable, lastTrip, actionBusy=false;
+let nav=null,navAt=0,navPhase;
 let snapshotRevision=0,lastRide=null,lastPhase='idle';
 const rideKey='YATRI_DRIVER_ACTIVE_RIDE';
-const emptyTrip=()=>({id:'',phase:'idle',origin:'',destination:'',fare:'',distance:'',passenger:'',driver:'',vehicle:''});
+const emptyTrip=()=>({id:'',phase:'idle',origin:'',destination:'',fare:'',distance:'',passenger:'',driver:'',vehicle:'',polyline:'',driverLat:0,driverLng:0,gpsFresh:false,tracking:''});
 function rememberRide(id){lastRide=id;window.JBridge.setInSharedPrefs(rideKey,id||'');}
 function publishTrip(trip){
+  if(trip.phase==='idle')releaseTripMap();else updateTripMap(trip);
   const serialized=JSON.stringify(trip);
   if(changed&&serialized!==lastTrip){
     lastTrip=serialized;lastPhase=trip.phase;changed(trip)();
@@ -64,6 +67,14 @@ async function snapshot() {
     if(!ride&&lastRide){ride=await api.ride(lastRide);phase=ride.status;}
     if(owner!==changed||revision!==snapshotRevision)return;
     if (online && lastAvailable!==data.available){lastAvailable=data.available;online(data.available === true)();}
+    if(ride&&['accepted','arrived'].includes(ride.status)){
+      if(!navAt||Date.now()-navAt>30000||navPhase!==ride.status){
+        navAt=Date.now();navPhase=ride.status;
+        try{nav=await api.navigation(ride.id);}catch(error){nav=null;if(owner===changed&&revision===snapshotRevision)failed(error);}
+      }
+      if(nav)ride={...ride,route:{...ride.route,encodedPolyline:nav.route.encodedPolyline}};
+    }else{nav=null;navPhase=ride&&ride.status;}
+    if(owner!==changed||revision!==snapshotRevision)return;
     publishTrip(ride?tripView(ride,phase):emptyTrip());
     lastError = null;
     window.__YATRI_DRIVER_OPERATIONS__ = {connected:true, offers:data.offers.length, rides:data.rides.length};
@@ -81,7 +92,7 @@ export const subscribe = ok => fail => gps => updates => () => {
     busy = true;
     try { gps(); await snapshot(); } finally { busy = false; }
   }, 5000);
-  return () => { clearInterval(timer); timer = null; online = failure = changed = null;snapshotRevision++; };
+  return () => { clearInterval(timer); timer = null; online = failure = changed = null;snapshotRevision++;releaseTripMap(); };
 };
 export const act = action => id => () => {
   if(!enabled()||actionBusy||!['accept','reject','arrive','start','complete','cancel'].includes(action))return;
@@ -92,7 +103,7 @@ export const dismissTrip=()=>{
   if(!enabled()||!['completed','cancelled'].includes(lastPhase))return;
   // The controller commits its local close action. Never push synchronously
   // back into PrestoDOM's state scan while that same click is being evaluated.
-  rememberRide(null);snapshotRevision++;lastTrip=undefined;lastPhase='idle';snapshot();
+  rememberRide(null);releaseTripMap();snapshotRevision++;lastTrip=undefined;lastPhase='idle';snapshot();
 };
 export const location = lat => lng => () => {
   if (!enabled()) return;

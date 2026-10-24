@@ -13,7 +13,7 @@ export const driverPilotId = 'b1a51100-0000-4000-8000-000000000002';
 export const passengerPilotId = 'b1a51100-0000-4000-8000-000000000001';
 export function pilotRouteAllowed(method,path){
   return driverPilotRoutes.includes(method+' '+path) ||
-    method==='GET' && /^\/v1\/rides\/[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/.test(path) ||
+    method==='GET' && /^\/v1\/rides\/[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}(?:\/navigation)?$/.test(path) ||
     method==='POST' && /^\/v1\/rides\/[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}\/(accept|reject|arrive|start|complete|cancel)$/.test(path);
 }
 

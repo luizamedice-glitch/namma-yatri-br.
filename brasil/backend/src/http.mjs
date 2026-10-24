@@ -90,6 +90,7 @@ export function createApi({ service, maps, pool, allowedOrigin = '', rateLimit =
       let result;
       if (req.method === 'GET') {
         if (url.pathname === '/v1/snapshot') result = await service.snapshot(user);
+        else if (/^\/v1\/rides\/[^/]+\/navigation$/.test(url.pathname)) result = await service.navigation(user, url.pathname.split('/')[3]);
         else if (url.pathname === '/v1/rides') result = { rides: await service.history(user) };
         else if (/^\/v1\/rides\/[^/]+$/.test(url.pathname)) result = await service.ride(user, url.pathname.split('/')[3]);
       } else if (req.method === 'POST') {
@@ -101,6 +102,7 @@ export function createApi({ service, maps, pool, allowedOrigin = '', rateLimit =
         else if (url.pathname === '/v1/places/details') result = await maps.details(body.placeId);
         else if (url.pathname === '/v1/routes') result = { routes: [await maps.route(body.origin, body.destination)] };
         else if (url.pathname === '/v1/quotes') result = await service.quote(user, body);
+        else if (/^\/v1\/rides\/[^/]+\/navigation$/.test(url.pathname)) result = await service.navigation(user, url.pathname.split('/')[3]);
         else if (url.pathname === '/v1/rides') result = await service.requestRide(user, body);
         else {
           const match = url.pathname.match(/^\/v1\/rides\/([^/]+)\/(accept|reject|arrive|start|complete|cancel)$/);

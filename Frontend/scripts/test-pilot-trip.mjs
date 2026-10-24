@@ -37,3 +37,16 @@ test('passenger can resume a stored trip without a new place selection, only wit
   values.YATRI_PASSENGER_SESSION='__failed';assert.equal(ffi.hasStoredRide(),false);
   delete globalThis.window;
 });
+
+import {decodePolyline,mapPayload} from '../ui-common/src/Development/TripMap.mjs';
+test('Google encoded geometry is decoded without substituting straight lines',()=>{
+  const polyline='_p~iF~ps|U_ulLnnqC_mqNvxq`@';
+  assert.deepEqual(decodePolyline(polyline),[{lat:38.5,lng:-120.2},{lat:40.7,lng:-120.95},{lat:43.252,lng:-126.453}]);
+  assert.throws(()=>decodePolyline('_'),/incompleta/);
+  const payload=mapPayload({polyline},'123');
+  assert.equal(payload.pureScriptID,'123');assert.equal(payload.routeConfigs[0].isActual,true);
+});
+test('stale driver GPS is explicitly marked instead of presented as live',()=>{
+  const ride={fare_cents:500,driver_lat:-23.55,driver_lng:-46.63,driver_location_at:new Date(Date.now()-61000).toISOString()};
+  assert.equal(tripView(ride).gpsFresh,false);assert.match(tripView(ride).tracking,/desatualizado/);
+});

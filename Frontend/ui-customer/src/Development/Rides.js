@@ -2,6 +2,7 @@
 import {callbackMapper} from 'presto-ui';
 import {createOperationsClient} from '../../../ui-driver/src/Development/OperationsClient.mjs';
 import {createNativeFetch} from '../../../ui-driver/src/Development/NativeTransport.mjs';
+import {updateTripMap,releaseTripMap} from '../../../ui-common/src/Development/TripMapRuntime.js';
 import {tripView} from '../../../ui-common/src/Development/PilotTrip.mjs';
 let listener;
 const rideKey='YATRI_PASSENGER_ACTIVE_RIDE';
@@ -31,6 +32,7 @@ function rememberRide(owner,id){
 }
 function emit(owner,value){
   if(owner!==listener)return;
+  updateTripMap(value);
   const serialized=JSON.stringify(value);
   if(serialized===owner.lastTrip)return;
   owner.changed(value)();
@@ -44,6 +46,16 @@ function fail(owner,error){
   owner.error(error.message||'Não foi possível atualizar a viagem.')();
   diagnostics(owner);
 }
+async function present(owner,ride,current){
+  if(['accepted','arrived'].includes(ride.status)){
+    if(!owner.navAt||Date.now()-owner.navAt>30000||owner.navPhase!==ride.status){
+      owner.navAt=Date.now();owner.navPhase=ride.status;
+      try{owner.nav=await client().navigation(ride.id);}catch(error){owner.nav=null;if(current())fail(owner,error);}
+    }
+    if(owner.nav)ride={...ride,route:{...ride.route,encodedPolyline:owner.nav.route.encodedPolyline}};
+  }else{owner.nav=null;owner.navPhase=ride.status;}
+  if(current())emit(owner,tripView(ride));
+}
 async function refresh(owner){
   const revision=++owner.revision;
   const current=()=>owner===listener&&revision===owner.revision;
@@ -52,11 +64,11 @@ async function refresh(owner){
     const api=client(),data=await api.snapshot();
     if(!current())return;
     if(data.rides.length){
-      rememberRide(owner,data.rides[0].id);emit(owner,tripView(data.rides[0]));
+      rememberRide(owner,data.rides[0].id);await present(owner,data.rides[0],current);
     }else if(owner.rideId){
       const ride=await api.ride(owner.rideId);
       if(!current())return;
-      emit(owner,tripView(ride));
+      await present(owner,ride,current);
     }else if(!owner.quote){
       // Retry an initial snapshot/quote failure on the next tick, without reopening.
       const quote=await api.quote(owner.origin,owner.destination);
@@ -88,7 +100,7 @@ export const subscribe=origin=>destination=>changed=>error=>()=>{
     clearInterval(timer);owner.revision++;
     if(Array.isArray(resumed)){const index=resumed.indexOf(wake);if(index>=0)resumed.splice(index,1);}
     if(window.removeEventListener)window.removeEventListener('online',wake);
-    if(listener===owner)listener=null;
+    if(listener===owner){listener=null;releaseTripMap();}
   };
   tick(owner);
   return owner.stop;

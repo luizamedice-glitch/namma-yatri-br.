@@ -37,7 +37,9 @@ start origin destination = do
           "cancelled" -> "Viagem cancelada"
           "error" -> "Não foi possível calcular a viagem"
           _ -> "Calculando estimativa…")
+       ,Trip.mapView
        ,Trip.card push NoOp trip
+       ,textView [text trip.tracking,textSize 14,padding (Padding 20 0 20 8),color "#666666"]
        ,textView [text trip.driver,textSize 20,padding (Padding 20 8 20 8),color "#242424"]
        ,textView [text trip.vehicle,textSize 16,padding (Padding 20 0 20 12),color "#666666"]
        ,linearLayout [width MATCH_PARENT,height WRAP_CONTENT,visibility (if trip.phase=="quoted" then VISIBLE else GONE)]

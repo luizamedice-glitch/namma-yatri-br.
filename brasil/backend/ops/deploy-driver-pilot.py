@@ -48,7 +48,7 @@ def caddy_config(original):
     }
     @yatriPilotRideRead {
         method GET
-        path_regexp pilotRideRead ^/v1/rides/[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}$
+        path_regexp pilotRideRead ^/v1/rides/[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}(/navigation)?$
     }
     handle @yatriPilotRideRead {
         reverse_proxy 127.0.0.1:8082

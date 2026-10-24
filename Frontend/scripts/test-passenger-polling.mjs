@@ -12,15 +12,15 @@ async function harness(run){
   let poll,active=false,offline=false,reads=0;
   const phases=[],errors=[];
   const api={snapshot:async()=>{reads++;if(offline)throw Error('Conexão interrompida');return {rides:active&&!['cancelled','completed'].includes(ride.status)?[{...ride}]:[]};},
-    ride:async()=>({...ride}),quote:async()=>({...quote}),requestRide:async()=>{active=true;return {id};},rideAction:async()=>{ride.status='cancelled';}};
-  globalThis.passengerHarness={createOperationsClient:()=>api,createNativeFetch:()=>{},callbackMapper:{map:x=>x},tripView};
+    navigation:async()=>({route:ride.route,leg:'pickup'}),ride:async()=>({...ride}),quote:async()=>({...quote}),requestRide:async()=>{active=true;return {id};},rideAction:async()=>{ride.status='cancelled';}};
+  globalThis.passengerHarness={createOperationsClient:()=>api,createNativeFetch:()=>{},callbackMapper:{map:x=>x},tripView,updateTripMap:()=>{},releaseTripMap:()=>{}};
   const events=new Map();
   globalThis.window={onResumeListeners:[],addEventListener:(name,callback)=>events.set(name,callback),removeEventListener:(name,callback)=>{if(events.get(name)===callback)events.delete(name);},__OS:'ANDROID',__YATRI_BR_DEVELOPMENT__:true,JBridge:{getDeviceInfo:()=>JSON.stringify({package_name:'in.juspay.nammayatri.debug'}),
     getFromSharedPrefs:key=>prefs[key]||'',setInSharedPrefs:(key,value)=>{prefs[key]=value;}}};
   const interval=globalThis.setInterval,clear=globalThis.clearInterval;
   globalThis.setInterval=fn=>{poll=fn;return 1;};globalThis.clearInterval=()=>{};
   const source=(await readFile(new URL('../ui-customer/src/Development/Rides.js',import.meta.url),'utf8')).replace(/^import .*;$/gm,'');
-  const ffi=await import('data:text/javascript;base64,'+Buffer.from('const {createOperationsClient,createNativeFetch,callbackMapper,tripView}=globalThis.passengerHarness;'+source).toString('base64')+'#'+Math.random());
+  const ffi=await import('data:text/javascript;base64,'+Buffer.from('const {createOperationsClient,createNativeFetch,callbackMapper,tripView,updateTripMap,releaseTripMap}=globalThis.passengerHarness;'+source).toString('base64')+'#'+Math.random());
   const subscribe=()=>ffi.subscribe({})({})(trip=>()=>phases.push(trip.phase))(e=>()=>errors.push(e))();
   let cleanup=subscribe();
   try{await tick();await run({ffi,api,ride,prefs,phases,errors,poll:()=>poll(),subscribe:()=>{cleanup();cleanup=subscribe();},offline:v=>{offline=v;},reads:()=>reads,events,close:()=>cleanup()});}

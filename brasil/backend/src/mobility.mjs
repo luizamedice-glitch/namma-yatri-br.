@@ -14,6 +14,7 @@ const rideSelect = `SELECT r.id, r.passenger_id, r.driver_id, r.status, r.versio
  LEFT JOIN drivers dl ON dl.user_id=r.driver_id`;
 
 export function mobilityService(pool, maps, { inviteCode, radiusMeters = 5000, allowDevelopmentAccounts = false } = {}) {
+  const navigationCache = new Map();
   const role = (u, value) => requireThat(u.role === value, 403, 'Perfil sem permissão');
   async function event(db, userId, kind, payload = {}) {
     await db.query('INSERT INTO events(user_id,kind,payload) VALUES($1,$2,$3)', [userId, kind, payload]);
@@ -173,6 +174,20 @@ export function mobilityService(pool, maps, { inviteCode, radiusMeters = 5000, a
       uuid(id);
       const r = await pool.query(rideSelect + ' WHERE r.id=$1 AND (r.passenger_id=$2 OR r.driver_id=$2)', [id, user.id]);
       requireThat(r.rowCount, 404, 'Corrida não encontrada'); return r.rows[0];
+    },
+    async navigation(user, id) {
+      // Always re-authorize against persisted assignment before using cached Google data.
+      const ride = await this.ride(user, id);
+      if (!['accepted','arrived'].includes(ride.status)) return {route:ride.route,leg:'trip'};
+      requireThat(ride.driver_lat !== null && ride.driver_lng !== null &&
+        Date.now()-Date.parse(ride.driver_location_at)<60000,409,'Localização do motorista desatualizada');
+      const previous=navigationCache.get(id);
+      if (previous && previous.until>Date.now()) return previous.value;
+      const route=await maps.route({lat:ride.driver_lat,lng:ride.driver_lng},ride.origin);
+      const value={route,leg:'pickup'};
+      if(navigationCache.size>=128)navigationCache.delete(navigationCache.keys().next().value);
+      navigationCache.set(id,{until:Date.now()+30000,value});
+      return value;
     },
     async snapshot(user) {
       const rides = await pool.query(rideSelect + ` WHERE (r.passenger_id=$1 OR r.driver_id=$1) AND r.status IN ('searching','accepted','arrived','in_progress') ORDER BY r.created_at DESC`, [user.id]);

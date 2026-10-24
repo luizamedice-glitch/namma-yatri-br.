@@ -22,6 +22,7 @@ export function createOperationsClient({baseUrl, token, fetchImpl = fetch,role='
       if ((!data.user || data.user.role !== role)) throw Error(role==='driver'?'Esta sessão não pertence ao motorista.':'Esta sessão não pertence ao passageiro.');
       return data;
     },
+    navigation:id=>call('/rides/'+id+'/navigation'),
     ride:id=>call('/rides/'+id),
     quote:(origin,destination)=>call('/quotes',{origin,destination}),
     requestRide:quoteId=>call('/rides',{quoteId}),

@@ -92,9 +92,9 @@ screen state =
 view :: forall w. (Action -> Effect Unit) -> State -> DOM.PrestoDOM (Effect Unit) w
 view push state = DOM.frameLayout [DOM.width DOM.MATCH_PARENT,DOM.height DOM.MATCH_PARENT]
   [Home.view (push <<< Original) state.home
-  ,DOM.linearLayout [DOM.width DOM.MATCH_PARENT,DOM.height DOM.MATCH_PARENT,DOM.gravity DOM.CENTER,DOM.background "#88000000"
+  ,DOM.linearLayout [DOM.width DOM.MATCH_PARENT,DOM.height DOM.MATCH_PARENT,DOM.orientation DOM.VERTICAL,DOM.background "#FFFFFF"
      ,DOM.visibility (if state.trip.phase/="idle" then DOM.VISIBLE else DOM.GONE)]
-    [DOM.linearLayout [DOM.width DOM.MATCH_PARENT,DOM.height DOM.WRAP_CONTENT,DOM.orientation DOM.VERTICAL,DOM.margin (DOM.Margin 16 16 16 16),DOM.background "#FFFFFF"]
+    (if state.trip.phase=="idle" then [] else [DOM.linearLayout [DOM.width DOM.MATCH_PARENT,DOM.height DOM.MATCH_PARENT,DOM.orientation DOM.VERTICAL,DOM.background "#FFFFFF"]
       [Trip.heading (case state.trip.phase of
           "offer" -> "Nova solicitação"
           "accepted" -> "Viagem aceita"
@@ -104,7 +104,9 @@ view push state = DOM.frameLayout [DOM.width DOM.MATCH_PARENT,DOM.height DOM.MAT
           "cancelled" -> "Viagem cancelada"
           _ -> "Atualizando viagem")
       ,DOM.textView [DOM.text state.trip.passenger,DOM.textSize 18,DOM.padding (DOM.Padding 20 0 20 0),DOM.color "#242424"]
+      ,Trip.mapView
       ,Trip.card push NoOp state.trip
+      ,DOM.textView [DOM.text state.trip.tracking,DOM.textSize 14,DOM.padding (DOM.Padding 20 0 20 8),DOM.color "#666666"]
       ,DOM.linearLayout [DOM.width DOM.MATCH_PARENT,DOM.height DOM.WRAP_CONTENT,DOM.orientation DOM.VERTICAL,DOM.visibility (if state.trip.phase=="offer" then DOM.VISIBLE else DOM.GONE)]
         [Trip.button (push <<< AcceptOffer) "Aceitar viagem" true,Trip.button (push <<< RejectOffer) "Recusar" true]
       ,DOM.linearLayout [DOM.width DOM.MATCH_PARENT,DOM.height DOM.WRAP_CONTENT,DOM.visibility (if state.trip.phase=="accepted" then DOM.VISIBLE else DOM.GONE)]
@@ -116,7 +118,7 @@ view push state = DOM.frameLayout [DOM.width DOM.MATCH_PARENT,DOM.height DOM.MAT
       ,DOM.linearLayout [DOM.width DOM.MATCH_PARENT,DOM.height DOM.WRAP_CONTENT,DOM.visibility (if state.trip.phase=="accepted" || state.trip.phase=="arrived" then DOM.VISIBLE else DOM.GONE)]
         [Trip.button (push <<< CancelTrip) "Cancelar viagem" true]
       ,DOM.linearLayout [DOM.width DOM.MATCH_PARENT,DOM.height DOM.WRAP_CONTENT,DOM.visibility (if state.trip.phase=="completed" || state.trip.phase=="cancelled" then DOM.VISIBLE else DOM.GONE)]
-        [Trip.button (push <<< DismissTrip) "Voltar ao painel" true]]]]
+        [Trip.button (push <<< DismissTrip) "Voltar ao painel" true]]])]
 
 eval :: Action -> State -> Eval Action State State
 eval (TripUpdated trip) state = continue state {trip=trip}

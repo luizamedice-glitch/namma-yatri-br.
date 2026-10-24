@@ -128,6 +128,12 @@ test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo po
     const nextQuote=await pilotPassenger.quote({lat:-23.55,lng:-46.63,address:'Embarque do teste de ciclo completo'}, {lat:-23.56,lng:-46.64,address:'Destino do teste de ciclo completo'});
     const next=await pilotPassenger.requestRide(nextQuote.id);
     await pilotClient.rideAction(next.id,'accept');
+    await pilotClient.location(-23.551,-46.631);
+    assert.equal((await pilotPassenger.navigation(next.id)).leg,'pickup');
+    assert.equal((await pilotPassenger.ride(next.id)).driver_lat,-23.551);
+    const unknown=randomUUID();
+    await assert.rejects(pilotPassenger.navigation(unknown),/encontrada/);
+
     await assert.rejects(pilotClient.rideAction(next.id,'start'),/Transição/);
     for(const [action,status] of [['arrive','arrived'],['start','in_progress'],['complete','completed']]){
       await assert.rejects(pilotPassenger.rideAction(next.id,action),/Somente o motorista/);
@@ -136,6 +142,7 @@ test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo po
     }
     assert.equal((await pilotClient.snapshot()).rides.length,0);
     assert.equal((await pilotPassenger.snapshot()).rides.length,0);
+    assert.equal((await pilotPassenger.navigation(next.id)).leg,'trip');
     assert.equal((await pool.query('SELECT status FROM rides WHERE id=$1',[next.id])).rows[0].status,'completed');
   } finally {
     pilot.closeAllConnections();await new Promise(resolve=>pilot.close(resolve));

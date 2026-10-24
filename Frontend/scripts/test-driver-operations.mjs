@@ -10,14 +10,14 @@ test('driver discards stale snapshots and retains the persisted completed trip u
   let current=()=>({available:true,rides:ride.status==='completed'?[]:[{...ride}],offers:[]}),poll,resolveOld,slow=false;
   const prefs={},phases=[],errors=[];
   const api={snapshot:()=>slow?new Promise(resolve=>{resolveOld=resolve;}):Promise.resolve(current()),
-    ride:async()=>({...ride}),rideAction:async(_id,action)=>{ride.status={arrive:'arrived',start:'in_progress',complete:'completed'}[action];}};
-  globalThis.driverStateHarness={createOperationsClient:()=>api,createNativeFetch:()=>{},callbackMapper:{},tripView};
+    navigation:async()=>({route:ride.route,leg:'pickup'}),ride:async()=>({...ride}),rideAction:async(_id,action)=>{ride.status={arrive:'arrived',start:'in_progress',complete:'completed'}[action];}};
+  globalThis.driverStateHarness={createOperationsClient:()=>api,createNativeFetch:()=>{},callbackMapper:{},tripView,updateTripMap:()=>{},releaseTripMap:()=>{}};
   globalThis.window={__OS:'ANDROID',__YATRI_BR_DEVELOPMENT__:true,JBridge:{getDeviceInfo:()=>JSON.stringify({package_name:'in.juspay.nammayatripartner.debug'}),
     getFromSharedPrefs:key=>prefs[key]||'',setInSharedPrefs:(key,value)=>{prefs[key]=value;}}};
   const interval=globalThis.setInterval,clear=globalThis.clearInterval;
   globalThis.setInterval=fn=>{poll=fn;return 1;};globalThis.clearInterval=()=>{};
   const source=(await readFile(new URL('../ui-driver/src/Development/Driver.js',import.meta.url),'utf8')).replace(/^import .*;$/gm,'');
-  const url='data:text/javascript;base64,'+Buffer.from('const {createOperationsClient,createNativeFetch,callbackMapper,tripView}=globalThis.driverStateHarness;'+source).toString('base64');
+  const url='data:text/javascript;base64,'+Buffer.from('const {createOperationsClient,createNativeFetch,callbackMapper,tripView,updateTripMap,releaseTripMap}=globalThis.driverStateHarness;'+source).toString('base64');
   const tick=()=>new Promise(resolve=>setImmediate(resolve));
   let cleanup;
   try{
@@ -91,7 +91,7 @@ test('reject configuration, invalid coordinates, forbidden actions before issuin
   assert.equal(calls,0);
 });
 test('runtime gate fails closed for production, passenger, missing native bridge and web', async () => {
-  const raw=(await readFile(new URL('../ui-driver/src/Development/Driver.js',import.meta.url),'utf8')).replace("import {tripView} from '../../../ui-common/src/Development/PilotTrip.mjs';",'const tripView=x=>x;');
+  const raw=(await readFile(new URL('../ui-driver/src/Development/Driver.js',import.meta.url),'utf8')).replace(/^import \{updateTripMap,releaseTripMap\}.*;$/m,'const updateTripMap=()=>{},releaseTripMap=()=>{};').replace("import {tripView} from '../../../ui-common/src/Development/PilotTrip.mjs';",'const tripView=x=>x;');
   const ffi=await import('data:text/javascript;base64,'+Buffer.from(raw.replace("import {createOperationsClient} from '../../src/Development/OperationsClient.mjs';",'const createOperationsClient=()=>{};').replace("import {createNativeFetch} from '../../src/Development/NativeTransport.mjs';",'const createNativeFetch=()=>{};').replace("import {callbackMapper} from \'presto-ui\';",'const callbackMapper={map:x=>x};')).toString('base64'));
   for(const [name,flag,os,expected] of [
     ['in.juspay.nammayatripartner',true,'ANDROID',false],
@@ -106,7 +106,7 @@ test('runtime gate fails closed for production, passenger, missing native bridge
   assert.equal(ffi.enabled(),false);
 });
 test('resynchronize stale callback registry type after original Core2 imports, preserving SDK callbacks',async()=>{
-  const raw=(await readFile(new URL('../ui-driver/src/Development/Driver.js',import.meta.url),'utf8')).replace("import {tripView} from '../../../ui-common/src/Development/PilotTrip.mjs';",'const tripView=x=>x;');
+  const raw=(await readFile(new URL('../ui-driver/src/Development/Driver.js',import.meta.url),'utf8')).replace(/^import \{updateTripMap,releaseTripMap\}.*;$/m,'const updateTripMap=()=>{},releaseTripMap=()=>{};').replace("import {tripView} from '../../../ui-common/src/Development/PilotTrip.mjs';",'const tripView=x=>x;');
   const ffi=await import('data:text/javascript;base64,'+Buffer.from(raw.replace("import {createOperationsClient} from '../../src/Development/OperationsClient.mjs';",'const createOperationsClient=()=>{};').replace("import {createNativeFetch} from '../../src/Development/NativeTransport.mjs';",'const createNativeFetch=()=>{};').replace("import {callbackMapper} from \'presto-ui\';",'const callbackMapper={map:x=>x};')).toString('base64'));
   const callback=()=>42;
   for(const registry of [{existing:callback},new Map([['existing',callback]])]){
