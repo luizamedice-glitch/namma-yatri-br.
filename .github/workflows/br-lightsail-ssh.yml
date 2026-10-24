@@ -120,5 +120,18 @@ jobs:
               databaseConfigured: Boolean(process.env.DATABASE_URL)
             }));
           '
+          sudo -n docker compose -f compose.yaml exec -T api node --input-type=module -e '
+            import pg from "pg";
+            const pool=new pg.Pool({connectionString:process.env.DATABASE_URL});
+            try {
+              const r=await pool.query(`SELECT
+                EXISTS(SELECT 1 FROM users WHERE id=$1 AND role=\x27driver\x27 AND name=\x27Giselo\x27) AS driver_exists,
+                EXISTS(SELECT 1 FROM vehicles WHERE driver_id=$1) AS vehicle_exists,
+                (SELECT count(*)::int FROM rides WHERE status IN (\x27searching\x27,\x27accepted\x27,\x27arrived\x27,\x27in_progress\x27)) AS active_rides`,["b1a51100-0000-4000-8000-000000000002"]);
+              console.log(JSON.stringify({driverReadiness:r.rows[0],vehicleEnvironmentConfigured:
+                ["YATRI_DRIVER_PLATE","YATRI_DRIVER_MODEL","YATRI_DRIVER_COLOR"].every(k=>Boolean(process.env[k]))}));
+              console.log(JSON.stringify({migrations:(await pool.query("SELECT name FROM migrations ORDER BY name")).rows.map(r=>r.name)}));
+            } finally {await pool.end();}
+          '
           REMOTE
           echo 'SSH e inspeção de leitura concluídos; nenhum serviço ou secret remoto alterado.' >> "$GITHUB_STEP_SUMMARY"
