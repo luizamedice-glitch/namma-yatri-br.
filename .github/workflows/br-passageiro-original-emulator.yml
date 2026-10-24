@@ -3,6 +3,9 @@ name: BR - Abertura do passageiro original
 on:
   workflow_call:
     inputs:
+      capture_only:
+        type: boolean
+        default: false
       api_level:
         type: number
         default: 29
@@ -14,6 +17,10 @@ on:
         type: string
   workflow_dispatch:
     inputs:
+      capture_only:
+        description: 'Só captura visual pelo ícone (usar APK já validado)'
+        type: boolean
+        default: false
       api_level:
         description: 'Versão Android: API 29 = Android 10; API 31 = Android 12'
         type: choice
@@ -92,7 +99,7 @@ jobs:
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          script: bash Frontend/scripts/test-original-passenger.sh
+          script: bash ${{ inputs.capture_only && 'Frontend/scripts/capture-passenger-branding-only.sh' || 'Frontend/scripts/test-original-passenger.sh' }}
       - name: Publicar capturas e diagnostico de abertura
         if: always()
         uses: actions/upload-artifact@v4

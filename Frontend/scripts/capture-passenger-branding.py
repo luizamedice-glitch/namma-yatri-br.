@@ -43,13 +43,19 @@ screenshot('branding-launcher.png')
     'icon_found': bool(icons),
     'label': icons[0].get('text') if icons else None,
     'bounds': icons[0].get('bounds') if icons else None,
+    'launch_method': 'launcher_icon' if icons else 'am_start_fallback',
     'evidence': 'branding-launcher.png', 'visual_review_required': True,
 }, indent=2) + '\n')
 adb('shell', 'am', 'force-stop', 'in.juspay.nammayatri.debug')
 # Record the cold start, including frames too brief for a synchronous screenshot.
 record = subprocess.Popen(['adb', 'shell', 'screenrecord', '--time-limit', '15', '/sdcard/branding-start.mp4'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(.4)
-launch = subprocess.Popen(['adb', 'shell', 'am', 'start', '-W', '-n', 'in.juspay.nammayatri.debug/in.juspay.mobility.MainActivity'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+if icons:
+    x1, y1, x2, y2 = map(int, re.findall(r'\d+', icons[0].get('bounds')))
+    command = ['adb', 'shell', 'input', 'tap', str((x1+x2)//2), str((y1+y2)//2)]
+else:
+    command = ['adb', 'shell', 'am', 'start', '-W', '-n', 'in.juspay.nammayatri.debug/in.juspay.mobility.MainActivity']
+launch = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 for index, delay in enumerate([.2, .3, .5, .5, .5, .5, .5, 1, 1, 2]):
     time.sleep(delay)
     screenshot(f'branding-start-{index}.png')
