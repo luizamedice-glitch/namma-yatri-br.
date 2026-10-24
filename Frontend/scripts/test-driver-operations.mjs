@@ -26,6 +26,19 @@ test('runtime gate fails closed for production, passenger, missing native bridge
   delete globalThis.window.JBridge;
   assert.equal(ffi.enabled(),false);
 });
+test('resynchronize stale callback registry type after original Core2 imports, preserving SDK callbacks',async()=>{
+  const raw=await readFile(new URL('../ui-driver/src/Development/Driver.js',import.meta.url),'utf8');
+  const ffi=await import('data:text/javascript;base64,'+Buffer.from(raw.replace("import {createOperationsClient} from '../../src/Development/OperationsClient.mjs';",'const createOperationsClient=()=>{};')).toString('base64'));
+  const callback=()=>42;
+  for(const registry of [{existing:callback},new Map([['existing',callback]])]){
+    globalThis.window={__OS:'ANDROID',__YATRI_BR_DEVELOPMENT__:true,JBridge:{getDeviceInfo:()=>JSON.stringify({package_name:'in.juspay.nammayatripartner.debug'})},__PROXY_FN:registry,__PROXY_FN_MAP_TYPE:!(registry instanceof Map)};
+    ffi.prepareRuntime();
+    assert.equal(window.__PROXY_FN,registry);
+    const fn=window.__PROXY_FN_MAP_TYPE?registry.get('existing'):registry.existing;
+    assert.equal(fn(),42);
+    assert.equal(window.__PROXY_FN_MAP_TYPE,registry instanceof Map);
+  }
+});
 test('original Firebase callback is skipped only for the explicit BR driver debug package',async()=>{
   const source=await readFile(new URL('../ui-common/src/Engineering/Helpers/JBridge.js',import.meta.url),'utf8');
   const start=source.indexOf('export const setFCMToken =');

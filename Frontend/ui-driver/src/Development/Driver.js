@@ -9,6 +9,12 @@ export const enabled = () => {
 export const checkpoint = phase => () => {
   if (enabled()) window.__YATRI_DRIVER_STARTUP__ = {phase};
 };
+// PrestoDOM's legacy Core2 copies the parent's registry during module loading.
+// The driver entry initialized the Map flag earlier; resynchronize its type after
+// imports, preserving the registry and every callback already registered by SDK.
+export const prepareRuntime = () => {
+  if (enabled()) window.__PROXY_FN_MAP_TYPE = window.__PROXY_FN instanceof Map;
+};
 export const startupError = message => () => {
   if (!enabled()) return;
   const detail = String(message).replace(/\b[a-fA-F0-9]{64}\b/g,'[REDACTED_SESSION]')

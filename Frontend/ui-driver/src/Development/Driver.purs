@@ -29,6 +29,7 @@ import Data.Maybe (Maybe(..))
 import Effect.Unsafe (unsafePerformEffect)
 
 foreign import enabled :: Effect Boolean
+foreign import prepareRuntime :: Effect Unit
 foreign import checkpoint :: String -> Effect Unit
 foreign import startupError :: String -> Effect Unit
 foreign import availability :: Boolean -> (Boolean -> Effect Unit) -> (String -> Effect Unit) -> Effect Unit
@@ -45,6 +46,7 @@ main :: Event -> Effect Unit
 main _ = do
   allowed <- enabled
   when allowed $ launchAff_ do
+    liftEffect prepareRuntime
     liftEffect $ checkpoint "starting"
     result <- flowRunner defaultGlobalState $ runExceptT $ runBackT $ start
     case result of
@@ -97,7 +99,9 @@ eval (Original (Controller.CurrentLocation latitude longitude)) state = case fro
     _ <- pure $ unsafePerformEffect $ location lat lng
     continue state {data {currentDriverLat = lat, currentDriverLon = lng}}
   _, _ -> continue state
-eval (Original Controller.AfterRender) state = continue state {props {mapRendered = true}}
+eval (Original Controller.AfterRender) state = do
+  _ <- pure $ unsafePerformEffect $ checkpoint "dashboard-rendered"
+  continue state {props {mapRendered = true}}
 eval (Original (Controller.ShowMap _ _ _)) state = continue state
 eval (Original Controller.BackPressed) state = do
   _ <- pure $ JB.minimizeApp ""
