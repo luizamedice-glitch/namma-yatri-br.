@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import {createOperationsClient} from '../../src/Development/OperationsClient.mjs';
+import {createNativeFetch} from '../../src/Development/NativeTransport.mjs';
+import {callbackMapper} from 'presto-ui';
 let online, failure, timer, position, lastError;
 export const enabled = () => {
   try { return window.__OS === 'ANDROID' && window.__YATRI_BR_DEVELOPMENT__ === true &&
@@ -25,10 +27,15 @@ export const startupError = message => () => {
 function client() {
   if (!enabled()) throw Error('Operação restrita ao motorista BR debug.');
   return createOperationsClient({baseUrl:window.JBridge.getFromSharedPrefs('YATRI_DRIVER_BACKEND_URL'),
-    token:window.JBridge.getFromSharedPrefs('YATRI_DRIVER_SESSION')});
+    token:window.JBridge.getFromSharedPrefs('YATRI_DRIVER_SESSION'),
+    fetchImpl:createNativeFetch(window.JBridge,callbackMapper.map,id => {
+      const registry=window.__PROXY_FN;
+      if (registry instanceof Map) registry.delete(id); else if (registry) delete registry[id];
+    })});
 }
 function failed(error) {
   const message = error.message || 'Não foi possível conectar ao servidor operacional.';
+  window.__YATRI_DRIVER_OPERATIONS__ = {connected:false,error:message};
   if (failure && lastError !== message) failure(message)();
   lastError = message;
 }

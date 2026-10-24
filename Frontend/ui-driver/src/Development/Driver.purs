@@ -85,6 +85,9 @@ eval (Availability online) state = continue state {props {statusOnline = online,
 eval (Failed message) state = do
   _ <- pure $ unsafePerformEffect $ showToast message
   continue state
+eval (Original (Controller.SwitchDriverStatus Silent _)) state = do
+  _ <- pure $ unsafePerformEffect $ showToast "O modo silencioso não está disponível nesta versão de testes."
+  continue state
 eval (Original (Controller.SwitchDriverStatus status _)) state = do
   _ <- pure $ unsafePerformEffect $ availability (status /= Offline) (const $ pure unit) (const $ pure unit)
   continue state

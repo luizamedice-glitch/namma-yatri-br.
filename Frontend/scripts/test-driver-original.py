@@ -59,7 +59,7 @@ assert not any('Enter Mobile' in text or 'Enter OTP' in text for text in labels)
 assert any(re.search(r'online|offline|dispon.vel',text,re.I) for text in labels),'Painel operacional ausente'
 assert snapshot()['available'] is False
 # Prefer the original large online button, with a fallback to its original toggle.
-button=next((n for n in nodes if re.fullmatch(r'go online|ficar dispon.vel',n.get('text',''),re.I)),None)
+button=next((n for n in nodes if re.fullmatch(r'go online|ficar dispon.vel|ativar',n.get('text',''),re.I)),None)
 if button is None:raise AssertionError('Botão original de disponibilidade não encontrado')
 x1,y1,x2,y2=map(int,re.findall(r'\d+',button.get('bounds','')))
 adb('shell','input','tap',str((x1+x2)//2),str((y1+y2)//2))
