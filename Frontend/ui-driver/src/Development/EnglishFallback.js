@@ -14,4 +14,4 @@ const dashboard = {
   setting_you_offline:'Alterando para indisponível', ride_requests:'Solicitações de viagem'
 };
 export const getEn = enabled() ? Object.fromEntries(Object.entries(original).map(([key,value]) =>
-  [key, typeof value === 'string' && Object.hasOwn(dashboard,key) ? dashboard[key] : value])) : original;
+  [key, typeof value === 'string' && Object.prototype.hasOwnProperty.call(dashboard,key) ? dashboard[key] : value])) : original;

@@ -37,7 +37,7 @@ jobs:
       - name: Compilar apenas o painel original e suas dependencias em lotes
         env:
           GHCRTS: '-N1 -M512m'
-        run: python3 Frontend/scripts/diagnose-purescript.py --app motorista --compiler-version 0.15.14 --mode staged --target-module Development.Driver --batch-size 25 --heap 10g --timeout-seconds 600 --stall-seconds 300 --rss-limit-mib 12288 --label driver
+        run: python3 Frontend/scripts/diagnose-purescript.py --app motorista --compiler-version 0.15.14 --mode staged --target-module Development.Driver --warmup-module Resource.Localizable.StringsV2OG --batch-size 25 --heap 10g --timeout-seconds 600 --stall-seconds 300 --rss-limit-mib 12288 --label driver
       - name: Empacotar entrada de teste sem o fluxo indiano
         working-directory: Frontend/ui-driver
         env:

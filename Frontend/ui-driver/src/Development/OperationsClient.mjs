@@ -16,7 +16,7 @@ export function createOperationsClient({baseUrl, token, fetchImpl = fetch}) {
   }
   return {snapshot:async () => {
       const data = await call('/snapshot');
-      if (data.user?.role !== 'driver') throw Error('Esta sessão não pertence ao motorista.');
+      if ((!data.user || data.user.role !== 'driver')) throw Error('Esta sessão não pertence ao motorista.');
       return data;
     },
     location:(lat,lng) => {
