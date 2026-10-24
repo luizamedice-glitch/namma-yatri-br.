@@ -214,6 +214,11 @@ jobs:
           done
           echo "RIDE_DRIVER_ACTIVATION=$RUNNER_TEMP/ride-driver.json" >> "$GITHUB_ENV"
           echo "RIDE_PASSENGER_ACTIVATION=$RUNNER_TEMP/ride-passenger.json" >> "$GITHUB_ENV"
+      - name: Preparar ferramentas de aceite visual e leitura da WebView
+        run: |
+          python3 -m venv "$RUNNER_TEMP/ride-python"
+          "$RUNNER_TEMP/ride-python/bin/pip" install pillow websocket-client==1.8.0
+          echo "RIDE_PYTHON=$RUNNER_TEMP/ride-python/bin/python" >> "$GITHUB_ENV"
       - name: Habilitar KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -229,7 +234,7 @@ jobs:
           script: |
             adb install -g ride-apks/alce-yatri-passageiro-teste.apk
             adb install -g ride-apks/alce-yatri-motorista-teste.apk
-            python3 Frontend/scripts/test-ride-pair.py
+            "$RIDE_PYTHON" Frontend/scripts/test-ride-pair.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

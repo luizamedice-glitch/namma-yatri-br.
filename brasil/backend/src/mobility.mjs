@@ -181,13 +181,20 @@ export function mobilityService(pool, maps, { inviteCode, radiusMeters = 5000, a
       if (!['accepted','arrived'].includes(ride.status)) return {route:ride.route,leg:'trip'};
       requireThat(ride.driver_lat !== null && ride.driver_lng !== null &&
         Date.now()-Date.parse(ride.driver_location_at)<60000,409,'Localização do motorista desatualizada');
+      const distance=Math.hypot((ride.driver_lat-ride.origin.lat)*111000,
+        (ride.driver_lng-ride.origin.lng)*111000*Math.cos(ride.origin.lat*Math.PI/180));
+      if(distance<25)return {leg:'pickup',route:{distanceMeters:0,durationSeconds:0,encodedPolyline:''}};
       const previous=navigationCache.get(id);
-      if (previous && previous.until>Date.now()) return previous.value;
-      const route=await maps.route({lat:ride.driver_lat,lng:ride.driver_lng},ride.origin);
-      const value={route,leg:'pickup'};
+      if (previous && previous.until>Date.now()) return previous.promise;
       if(navigationCache.size>=128)navigationCache.delete(navigationCache.keys().next().value);
-      navigationCache.set(id,{until:Date.now()+30000,value});
-      return value;
+      const entry={until:Date.now()+30000};
+      entry.promise=maps.route({lat:ride.driver_lat,lng:ride.driver_lng},ride.origin)
+        .then(route=>({route,leg:'pickup'})).catch(error=>{
+          if(navigationCache.get(id)===entry)navigationCache.delete(id);
+          throw error;
+        });
+      navigationCache.set(id,entry);
+      return entry.promise;
     },
     async snapshot(user) {
       const rides = await pool.query(rideSelect + ` WHERE (r.passenger_id=$1 OR r.driver_id=$1) AND r.status IN ('searching','accepted','arrived','in_progress') ORDER BY r.created_at DESC`, [user.id]);

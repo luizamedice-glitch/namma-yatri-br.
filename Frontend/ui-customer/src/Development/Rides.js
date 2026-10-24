@@ -32,7 +32,7 @@ function rememberRide(owner,id){
 }
 function emit(owner,value){
   if(owner!==listener)return;
-  updateTripMap(value);
+  owner.value=value;updateTripMap(value);
   const serialized=JSON.stringify(value);
   if(serialized===owner.lastTrip)return;
   owner.changed(value)();
@@ -43,6 +43,7 @@ function emit(owner,value){
 function fail(owner,error){
   if(owner!==listener)return;
   owner.errors++;
+  if(owner.value)emit(owner,{...owner.value,gpsFresh:false,tracking:'Sem atualização — verificando conexão'});
   owner.error(error.message||'Não foi possível atualizar a viagem.')();
   diagnostics(owner);
 }
@@ -52,7 +53,7 @@ async function present(owner,ride,current){
       owner.navAt=Date.now();owner.navPhase=ride.status;
       try{owner.nav=await client().navigation(ride.id);}catch(error){owner.nav=null;if(current())fail(owner,error);}
     }
-    if(owner.nav)ride={...ride,route:{...ride.route,encodedPolyline:owner.nav.route.encodedPolyline}};
+    ride={...ride,route:{...ride.route,encodedPolyline:owner.nav?owner.nav.route.encodedPolyline:''}};
   }else{owner.nav=null;owner.navPhase=ride.status;}
   if(current())emit(owner,tripView(ride));
 }

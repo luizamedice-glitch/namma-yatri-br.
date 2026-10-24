@@ -5,12 +5,13 @@ import {callbackMapper} from 'presto-ui';
 import {updateTripMap,releaseTripMap} from '../../../ui-common/src/Development/TripMapRuntime.js';
 import {tripView} from '../../../ui-common/src/Development/PilotTrip.mjs';
 let online, failure, timer, position, lastError, changed, lastAvailable, lastTrip, actionBusy=false;
-let nav=null,navAt=0,navPhase;
+let nav=null,navAt=0,navPhase,published;
 let snapshotRevision=0,lastRide=null,lastPhase='idle';
 const rideKey='YATRI_DRIVER_ACTIVE_RIDE';
 const emptyTrip=()=>({id:'',phase:'idle',origin:'',destination:'',fare:'',distance:'',passenger:'',driver:'',vehicle:'',polyline:'',driverLat:0,driverLng:0,gpsFresh:false,tracking:''});
 function rememberRide(id){lastRide=id;window.JBridge.setInSharedPrefs(rideKey,id||'');}
 function publishTrip(trip){
+  published=trip;
   if(trip.phase==='idle')releaseTripMap();else updateTripMap(trip);
   const serialized=JSON.stringify(trip);
   if(changed&&serialized!==lastTrip){
@@ -50,6 +51,7 @@ function client() {
     })});
 }
 function failed(error) {
+  if(published&&published.phase!=='idle')publishTrip({...published,gpsFresh:false,tracking:'Sem atualização — verificando conexão'});
   const message = error.message || 'Não foi possível conectar ao servidor operacional.';
   window.__YATRI_DRIVER_OPERATIONS__ = {connected:false,error:message};
   if (failure && lastError !== message) failure(message)();
@@ -72,7 +74,7 @@ async function snapshot() {
         navAt=Date.now();navPhase=ride.status;
         try{nav=await api.navigation(ride.id);}catch(error){nav=null;if(owner===changed&&revision===snapshotRevision)failed(error);}
       }
-      if(nav)ride={...ride,route:{...ride.route,encodedPolyline:nav.route.encodedPolyline}};
+      ride={...ride,route:{...ride.route,encodedPolyline:nav?nav.route.encodedPolyline:''}};
     }else{nav=null;navPhase=ride&&ride.status;}
     if(owner!==changed||revision!==snapshotRevision)return;
     publishTrip(ride?tripView(ride,phase):emptyTrip());

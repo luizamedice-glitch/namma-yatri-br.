@@ -91,6 +91,52 @@ def select_place(query,match,source):
     assert found is not None,'Google Places nao apresentou endereco real'
     tap(found);home()
 
+def map_state(role):
+    # Read only this debug diagnostic; never collect page HTML, tokens or requests.
+    import websocket
+    pid=adb('shell','pidof',packages[role]).decode().strip().split()[0]
+    adb('forward','tcp:9222','localabstract:webview_devtools_remote_'+pid)
+    with urllib.request.urlopen('http://127.0.0.1:9222/json',timeout=8) as response:targets=json.load(response)
+    for target in targets:
+        if not target.get('webSocketDebuggerUrl'):continue
+        ws=websocket.create_connection(target['webSocketDebuggerUrl'],timeout=5,suppress_origin=True)
+        try:
+            contexts=[];counter=0
+            def command(method,params=None):
+                nonlocal counter
+                counter+=1;request_id=counter
+                ws.send(json.dumps({'id':request_id,'method':method,'params':params or {}}))
+                while True:
+                    message=json.loads(ws.recv())
+                    if message.get('method')=='Runtime.executionContextCreated':contexts.append(message['params']['context']['id'])
+                    if message.get('id')==request_id:return message
+            command('Runtime.enable')
+            for context in contexts:
+                result=command('Runtime.evaluate',{'expression':'JSON.stringify(window.__YATRI_TRIP_MAP__||null)','contextId':context,'returnByValue':True})
+                raw=result.get('result',{}).get('result',{}).get('value')
+                if raw:
+                    value=json.loads(raw)
+                    if value:return value
+        finally:ws.close()
+    return {}
+
+def check_map(role,name,expected_lat=None):
+    from PIL import Image
+    from io import BytesIO
+    for _ in range(12):
+        state=map_state(role)
+        if state.get('ready') and state.get('routePoints',0)>2 and (expected_lat is None or state.get('gpsFresh') and abs(state.get('driverLat',0)-expected_lat)<0.0001):break
+        time.sleep(2)
+    else:raise AssertionError('Mapa/rota/GPS não confirmados: '+role)
+    # Save only the upper map area, excluding the private vehicle card entirely.
+    image=Image.open(BytesIO(adb('exec-out','screencap','-p'))).convert('RGB')
+    safe=image.crop((0,int(image.height*.12),image.width,int(image.height*.40)))
+    purple=sum(1 for r,g,b in safe.getdata() if abs(r-116)<6 and abs(g-52)<6 and abs(b-84)<6)
+    assert purple>30,'Traçado da rota não apareceu no mapa nativo de '+role
+    safe.save(out/(name+'-mapa.png'))
+    return state
+
+
 try:
     adb('shell','settings','put','secure','location_mode','3')
     adb('emu','geo','fix','-46.63','-23.55')
@@ -98,7 +144,7 @@ try:
     select_place('Avenida Paulista Sao Paulo','paulista',False)
     select_place('Praca da Se Sao Paulo','praca da se',True)
     tap(wait_label('Ver estimativa'));wait_label('Solicitar viagem')
-    capture('passageiro-estimativa')
+    capture('passageiro-estimativa');check_map('passenger','passageiro-estimativa')
     pair('driver')
     assert not call('driver','/snapshot')['rides'],'Há uma viagem ativa do motorista'
     driver_touched=True
@@ -122,7 +168,7 @@ try:
     start('driver');wait_label('Nova solicitação')
     offer=call('driver','/snapshot')['offers'][0]
     assert offer['id']==ride_id,'A oferta nao corresponde ao pedido do passageiro'
-    capture('motorista-oferta')
+    capture('motorista-oferta');check_map('driver','motorista-oferta')
     tap(wait_label('Aceitar viagem'))
     for _ in range(12):
         assigned=call('passenger','/rides/'+ride_id)
@@ -146,6 +192,18 @@ try:
     ride_id=active[0]['id'];assert active[0]['status']=='searching'
     start('driver');wait_label('Nova solicitação');tap(wait_label('Aceitar viagem'))
     wait_label('Cheguei ao embarque');assert call('driver','/rides/'+ride_id)['status']=='accepted'
+    check_map('driver','motorista-embarque')
+    # Simulated Android GPS movement enters through the real driver app/HTTP/DB.
+    for lat,lng in [(-23.551,-46.631),(-23.552,-46.632)]:
+        adb('emu','geo','fix',str(lng),str(lat))
+        for _ in range(15):
+            location=call('passenger','/rides/'+ride_id)
+            if abs((location.get('driver_lat') or 0)-lat)<0.0001:break
+            time.sleep(2)
+        else:raise AssertionError('GPS do Android não chegou ao servidor')
+        start('passenger');wait_label('Motorista a caminho')
+        check_map('passenger','passageiro-acompanhamento-'+str(abs(lat)),lat)
+        start('driver');wait_label('Cheguei ao embarque')
     tap(wait_label('Cheguei ao embarque'));wait_label('No local de embarque')
     assert call('driver','/rides/'+ride_id)['status']=='arrived'
     start('passenger');wait_label('Motorista no embarque')
@@ -155,6 +213,7 @@ try:
     assert label(nodes(),'Cancelar viagem') is None,'Não deve oferecer cancelamento de uma viagem iniciada'
     start('passenger');wait_label('Viagem em andamento')
     assert call('passenger','/rides/'+ride_id)['status']=='in_progress'
+    check_map('passenger','passageiro-viagem')
     assert label(nodes(),'Cancelar viagem') is None
     # Recreate each process: backend state and private ride IDs must restore the UI.
     adb('shell','am','force-stop',packages['driver']);start('driver');wait_label('Viagem em andamento')
@@ -176,7 +235,9 @@ try:
       'offer_same_ride':True,'driver_accept_persisted':True,'passenger_received_driver_and_vehicle':True,
       'ride_id':ride_id,'initial_cancel_scenario_passed':True,'arrive_persisted':True,'start_persisted':True,
       'complete_persisted':True,'both_apps_display_all_trip_states':True,'process_recreation_restores_trip':True,
-      'driver_returns_to_dashboard':True,
+      'driver_returns_to_dashboard':True,'native_route_drawn_both_apps':True,
+      'pickup_route_google_real':True,'android_gps_movement_received_by_passenger':True,
+      'gps_source':'emulator_location_provider',
       'driver_offline_after_test':True}
     (out/'acceptance.json').write_text(json.dumps(result,indent=2))
 finally:
