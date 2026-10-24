@@ -21,7 +21,7 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: br-driver-original-${{ github.ref }}
+  group: br-driver-original-${{ github.ref }}-${{ inputs.apk_run_id || 'build' }}
   cancel-in-progress: true
 jobs:
   original:
