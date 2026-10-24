@@ -5,6 +5,10 @@ on:
     paths: ['.github/workflows/br-driver-original.yml']
   workflow_dispatch:
     inputs:
+      passenger_bundle_run_id:
+        description: 'Reutilizar bundle passageiro aprovado quando suas fontes estao identicas'
+        type: string
+        required: false
       ride_pair:
         description: 'Compilar e testar a chamada entre os dois APKs originais'
         type: boolean
@@ -34,6 +38,7 @@ jobs:
     secrets: inherit
     with:
       apk_run_id: ${{ inputs.apk_run_id || '' }}
+      passenger_bundle_run_id: ${{ inputs.passenger_bundle_run_id || '' }}
   original:
     if: ${{ !inputs.ride_pair && !inputs.bundle_run_id && !inputs.apk_run_id }}
     runs-on: ubuntu-latest

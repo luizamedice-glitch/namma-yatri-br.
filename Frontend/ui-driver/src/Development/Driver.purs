@@ -138,9 +138,11 @@ eval (StartTrip PB.OnClick) state = do
 eval (CompleteTrip PB.OnClick) state = do
   _ <- pure $ unsafePerformEffect $ act "complete" state.trip.id
   continue state
-eval (DismissTrip PB.OnClick) state = do
-  _ <- pure $ unsafePerformEffect dismissTrip
-  continue state
+eval (DismissTrip PB.OnClick) state
+  | state.trip.phase=="completed" || state.trip.phase=="cancelled" = do
+      _ <- pure $ unsafePerformEffect dismissTrip
+      continue state {trip=Trip.emptyTrip}
+  | otherwise = continue state
 eval (Availability online) state = continue state {home {props {statusOnline = online, driverStatusSet = if online then Online else Offline}}}
 eval (Failed message) state = do
   _ <- pure $ unsafePerformEffect $ showToast message

@@ -33,7 +33,9 @@ test('driver discards stale snapshots and retains the persisted completed trip u
     assert.equal(prefs.YATRI_DRIVER_ACTIVE_RIDE,id);
     cleanup();ffi=await import(url+'#recreated');cleanup=subscribe(ffi);await tick();
     assert.equal(phases.at(-1),'completed');
-    ffi.dismissTrip();await tick();assert.equal(phases.at(-1),'idle');assert.equal(prefs.YATRI_DRIVER_ACTIVE_RIDE,'');
+    const beforeDismiss=phases.length;ffi.dismissTrip();
+    assert.equal(phases.length,beforeDismiss,'A click must not emit a reentrant screen event before its own state is committed');
+    await tick();assert.equal(phases.at(-1),'idle');assert.equal(prefs.YATRI_DRIVER_ACTIVE_RIDE,'');
     assert.deepEqual(errors,[]);
   }finally{
     if(cleanup)cleanup();globalThis.setInterval=interval;globalThis.clearInterval=clear;

@@ -90,7 +90,9 @@ export const act = action => id => () => {
 };
 export const dismissTrip=()=>{
   if(!enabled()||!['completed','cancelled'].includes(lastPhase))return;
-  rememberRide(null);snapshotRevision++;publishTrip(emptyTrip());snapshot();
+  // The controller commits its local close action. Never push synchronously
+  // back into PrestoDOM's state scan while that same click is being evaluated.
+  rememberRide(null);snapshotRevision++;lastTrip=undefined;lastPhase='idle';snapshot();
 };
 export const location = lat => lng => () => {
   if (!enabled()) return;

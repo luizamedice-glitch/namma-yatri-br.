@@ -34,7 +34,7 @@ def wait_label(text,attempts=12):
 def wait_driver_panel():
     for _ in range(12):
         ns=nodes()
-        if all(label(ns,text) is None for text in ['Voltar ao painel','Viagem concluída','Viagem cancelada','Nova solicitação']):return
+        if label(ns,'Disponível') is not None and label(ns,'Início') is not None and all(label(ns,text) is None for text in ['Voltar ao painel','Viagem concluída','Viagem cancelada','Nova solicitação']):return
         time.sleep(2)
     raise AssertionError('O motorista não retornou ao painel')
 def start(role):
