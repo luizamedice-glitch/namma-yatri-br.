@@ -76,7 +76,7 @@ async function tick(owner){
 export const subscribe=origin=>destination=>changed=>error=>()=>{
   if(listener)listener.stop();
   const saved=window.JBridge.getFromSharedPrefs(rideKey);
-  const owner={origin,destination,changed,error,revision:0,ticks:0,reads:0,errors:0,busy:false,polling:false,
+  const owner={origin,destination,changed,error,session:window.JBridge.getFromSharedPrefs('YATRI_PASSENGER_SESSION'),revision:0,ticks:0,reads:0,errors:0,busy:false,polling:false,
     rideId:/^[a-f0-9-]{36}$/.test(saved||'')?saved:null};
   listener=owner;
   const wake=()=>{Promise.resolve().then(()=>tick(owner));};
@@ -103,7 +103,13 @@ export const request=()=>{
       if(owner!==listener)return;
       emit(owner,tripView(owner.quote,'requesting'));
       const created=await client().requestRide(owner.quote.id);
-      if(owner!==listener)return;
+      if(owner!==listener){
+        // A committed request may outlive its screen. Preserve only an empty
+        // private receipt slot for the same session; never overwrite a newer ride.
+        if(enabled()&&window.JBridge.getFromSharedPrefs('YATRI_PASSENGER_SESSION')===owner.session&&
+            !window.JBridge.getFromSharedPrefs(rideKey))window.JBridge.setInSharedPrefs(rideKey,created.id);
+        return;
+      }
       rememberRide(owner,created.id);await refresh(owner);
     }catch(error){fail(owner,error);if(owner===listener&&!owner.rideId)emit(owner,tripView(owner.quote,'quoted'));}
     finally{owner.busy=false;diagnostics(owner);}

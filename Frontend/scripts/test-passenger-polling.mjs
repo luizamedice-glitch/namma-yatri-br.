@@ -23,7 +23,7 @@ async function harness(run){
   const ffi=await import('data:text/javascript;base64,'+Buffer.from('const {createOperationsClient,createNativeFetch,callbackMapper,tripView}=globalThis.passengerHarness;'+source).toString('base64')+'#'+Math.random());
   const subscribe=()=>ffi.subscribe({})({})(trip=>()=>phases.push(trip.phase))(e=>()=>errors.push(e))();
   let cleanup=subscribe();
-  try{await tick();await run({ffi,api,ride,prefs,phases,errors,poll:()=>poll(),subscribe:()=>{cleanup();cleanup=subscribe();},offline:v=>{offline=v;},reads:()=>reads,events});}
+  try{await tick();await run({ffi,api,ride,prefs,phases,errors,poll:()=>poll(),subscribe:()=>{cleanup();cleanup=subscribe();},offline:v=>{offline=v;},reads:()=>reads,events,close:()=>cleanup()});}
   finally{cleanup();assert.equal(window.onResumeListeners.length,0);assert.equal(events.size,0);globalThis.setInterval=interval;globalThis.clearInterval=clear;delete globalThis.window;delete globalThis.passengerHarness;}
 }
 test('passenger polling follows every backend state without resubscribe, including completion and reconnection',()=>harness(async h=>{
@@ -69,3 +69,21 @@ test('unchanged snapshots do not rerender and online/resume refresh immediately 
   h.ride.status='arrived';h.events.get('online')();await tick();assert.equal(h.phases.at(-1),'arrived');
   h.subscribe();await tick();assert.equal(window.onResumeListeners.length,1);assert.equal(h.events.size,1);
 }));
+
+test('a confirmed request receipt remains recoverable when the passenger leaves before the response',()=>harness(async h=>{
+  let resolve;
+  h.api.requestRide=()=>new Promise(r=>{resolve=r;});
+  h.ffi.request();await tick();h.close();
+  resolve({id:h.ride.id});await tick();
+  assert.equal(h.prefs.YATRI_PASSENGER_ACTIVE_RIDE,h.ride.id);
+}));
+test('a late request receipt cannot overwrite a newer trip or cross a renewed session',async()=>{
+  for(const changed of ['ride','session'])await harness(async h=>{
+    let resolve;h.api.requestRide=()=>new Promise(r=>{resolve=r;});
+    h.ffi.request();await tick();h.close();
+    if(changed==='ride')h.prefs.YATRI_PASSENGER_ACTIVE_RIDE='87654321-1234-4234-8234-123456789abc';
+    else h.prefs.YATRI_PASSENGER_SESSION='b'.repeat(64);
+    const before=h.prefs.YATRI_PASSENGER_ACTIVE_RIDE;
+    resolve({id:h.ride.id});await tick();assert.equal(h.prefs.YATRI_PASSENGER_ACTIVE_RIDE,before);
+  });
+});
