@@ -2,6 +2,10 @@ name: BR - Motorista no Lightsail
 on:
   workflow_dispatch:
     inputs:
+      delivery_public_key:
+        description: 'Chave publica RSA opcional para esta entrega, sem trocar a chave do operador'
+        type: string
+        required: false
       provision:
         description: 'Cadastrar o motorista com o perfil criptografado aprovado'
         type: boolean
@@ -109,7 +113,18 @@ jobs:
           AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
           YATRI_DRIVER_OPERATION: activate
           YATRI_PILOT_ROLE: ${{ inputs.role || 'driver' }}
-        run: bash brasil/backend/ops/driver-ssh-operation.sh
+          ACTIVATION_PUBLIC_KEY: ${{ inputs.delivery_public_key }}
+        run: |
+          set -euo pipefail
+          set +x
+          umask 077
+          if [[ -n "$ACTIVATION_PUBLIC_KEY" ]]; then
+            export YATRI_DRIVER_PUBLIC_FILE="$RUNNER_TEMP/activation-delivery.pub"
+            printf '%s\n' "$ACTIVATION_PUBLIC_KEY" > "$YATRI_DRIVER_PUBLIC_FILE"
+            openssl pkey -pubin -in "$YATRI_DRIVER_PUBLIC_FILE" -noout >/dev/null
+          fi
+          unset ACTIVATION_PUBLIC_KEY
+          bash brasil/backend/ops/driver-ssh-operation.sh
       - uses: actions/upload-artifact@v4
         with:
           name: motorista-ativacao-criptografada
