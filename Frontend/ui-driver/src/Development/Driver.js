@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import {createOperationsClient} from './OperationsClient.mjs';
+import {createOperationsClient} from '../../src/Development/OperationsClient.mjs';
 let online, failure, timer, position, lastError;
 export const enabled = () => {
   try { return window.__OS === 'ANDROID' && window.__YATRI_BR_DEVELOPMENT__ === true &&

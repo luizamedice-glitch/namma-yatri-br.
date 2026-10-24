@@ -13,7 +13,7 @@ test('reject configuration, invalid coordinates, forbidden actions before issuin
 });
 test('runtime gate fails closed for production, passenger, missing native bridge and web', async () => {
   const raw=await readFile(new URL('../ui-driver/src/Development/Driver.js',import.meta.url),'utf8');
-  const ffi=await import('data:text/javascript;base64,'+Buffer.from(raw.replace("import {createOperationsClient} from './OperationsClient.mjs';",'const createOperationsClient=()=>{};')).toString('base64'));
+  const ffi=await import('data:text/javascript;base64,'+Buffer.from(raw.replace("import {createOperationsClient} from '../../src/Development/OperationsClient.mjs';",'const createOperationsClient=()=>{};')).toString('base64'));
   for(const [name,flag,os,expected] of [
     ['in.juspay.nammayatripartner',true,'ANDROID',false],
     ['in.juspay.nammayatri.debug',true,'ANDROID',false],

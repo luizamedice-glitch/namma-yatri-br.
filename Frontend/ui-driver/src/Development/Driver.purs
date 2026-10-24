@@ -39,7 +39,7 @@ instance logAction :: Loggable Action where
 main :: Event -> Effect Unit
 main _ = do
   allowed <- enabled
-  when allowed $ launchAff_ $ flowRunner defaultGlobalState $ void $ runExceptT $ runBackT $ start
+  when allowed $ launchAff_ $ void $ flowRunner defaultGlobalState $ runExceptT $ runBackT $ start
 
 start :: FlowBT String Unit
 start = do
