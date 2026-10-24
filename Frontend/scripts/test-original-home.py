@@ -208,6 +208,12 @@ try:
         time.sleep(2)
         nodes = capture(stage)
         assert any(expected in (n.get('text', '') + n.get('content-desc', '')) for n in nodes), 'Conteúdo ausente: ' + label
+        if label != 'Início':
+            adb('shell', 'input', 'keyevent', 'KEYCODE_BACK')
+            time.sleep(2)
+            nodes = capture(stage + '-system-back')
+            assert where(nodes) is not None, 'Voltar não retornou ao Início: ' + label
+
     assert not any(n.get('content-desc') in ('Navigation : Button', 'Navegação: botão') for n in nodes), 'Menu antigo continua visível'
     if places_evidence['acceptance'] == 'passed':
         tap(where(nodes))

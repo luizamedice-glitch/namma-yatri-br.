@@ -32,6 +32,7 @@ final class BrHeaderBranding {
                 params.height = Math.round(44 * density);
                 view.setLayoutParams(params);
                 hideLegacyMenu((ViewGroup) logoGroup.getParent());
+                logoGroup.setPadding(Math.round(16 * density), 0, 0, 0);
                 Log.i("YatriBrandHeader", "logo_resized_" + widthDp + "x44dp");
                 return;
             }
