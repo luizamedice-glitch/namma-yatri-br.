@@ -1,6 +1,9 @@
 name: BR - Motorista no Lightsail
 on:
   workflow_dispatch:
+  push:
+    branches: [codex/issue-1-purescript-memory]
+    paths: ['.github/workflows/br-driver-lightsail.yml']
 permissions:
   contents: read
 concurrency:
