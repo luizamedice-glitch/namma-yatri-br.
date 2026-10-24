@@ -13,7 +13,7 @@ const dashboard = {
   yes:'Sim', no:'Não', profile:'Perfil', total_rides:'Total de viagens', total_earnings:'Ganhos totais',
   setting_you_offline:'Alterando para indisponível', ride_requests:'Solicitações de viagem',
   todays_earnings_str:'Ganhos de hoje', home:'Início', earnings:'Ganhos', plans:'Planos', benefits:'Benefícios',
-  alerts:'Avisos', no_location_update:'Sem atualização de localização', silent:'Silencioso', silent_:'Silencioso', booking_options:'Preferências de viagem',
+  alerts:'Avisos', no_location_update:'Sem atualização', silent:'Silencioso', silent_:'Silencioso', booking_options:'Preferências de viagem',
   report_issue:'Relatar problema', add_alternate_number:'Telefone alternativo'
 };
 export const getEn = enabled() ? Object.fromEntries(Object.entries(original).map(([key,value]) =>
