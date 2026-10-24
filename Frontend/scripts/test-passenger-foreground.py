@@ -69,26 +69,31 @@ def safe_webview():
     adb('forward','tcp:9222','localabstract:webview_devtools_remote_'+pid)
     with urllib.request.urlopen('http://127.0.0.1:9222/json',timeout=8) as r:targets=json.load(r)
     states=[]
-    for target in targets:
+    for target_index,target in enumerate(targets):
         if not target.get('webSocketDebuggerUrl'):continue
-        ws=websocket.create_connection(target['webSocketDebuggerUrl'],timeout=5,suppress_origin=True)
+        stage='connect';ws=None
         try:
+            ws=websocket.create_connection(target['webSocketDebuggerUrl'],timeout=3,suppress_origin=True)
             contexts=[]
             def evaluate(method,params=None):
                 evaluate.counter+=1;request_id=evaluate.counter
                 ws.send(json.dumps({'id':request_id,'method':method,'params':params or {}}))
-                for _ in range(200):
+                deadline=time.monotonic()+15
+                while time.monotonic()<deadline:
                     msg=json.loads(ws.recv())
                     if msg.get('method')=='Runtime.executionContextCreated':contexts.append(msg['params']['context']['id'])
                     if msg.get('id')==request_id:return msg
-                raise TimeoutError('CDP read')
+                raise TimeoutError('CDP read deadline')
             evaluate.counter=0
-            evaluate('Runtime.enable')
-            for context in contexts:
+            stage='enable';evaluate('Runtime.enable')
+            for context in list(contexts):
+                stage='evaluate'
                 result=evaluate('Runtime.evaluate',{'expression':"JSON.stringify({phase:window.__YATRI_PASSENGER_RIDE__&&window.__YATRI_PASSENGER_RIDE__.phase,diagnostics:window.__YATRI_PASSENGER_POLL__||null,hidden:document.hidden,visibility:document.visibilityState})",'contextId':context,'returnByValue':True})
                 value=result.get('result',{}).get('result',{}).get('value')
                 if value:states.append(json.loads(value))
-        finally:ws.close()
+        except Exception as e:states.append({'target':target_index,'stage':stage,'error':type(e).__name__})
+        finally:
+            if ws:ws.close()
     (out/'webview-phases.json').write_text(json.dumps(states))
 
 def same_foreground(pid):
@@ -127,10 +132,6 @@ try:
     for elapsed in range(0,idle,30):
         time.sleep(min(30,idle-elapsed));same_foreground(pid)
         print('Passageiro mantido em primeiro plano:',min(elapsed+30,idle),'s',flush=True)
-    try:
-        safe_webview()
-        (out/'webview-idle.json').write_bytes((out/'webview-phases.json').read_bytes())
-    except Exception as e:(out/'cdp-idle-error.txt').write_text(type(e).__name__)
     for action,phase,heading in [('accept','accepted','Motorista a caminho'),('arrive','arrived','Motorista no embarque'),('start','in_progress','Viagem em andamento'),('complete','completed','Viagem concluída')]:
         same_foreground(pid);started=time.monotonic()
         reconnect=action=='arrive' and os.environ.get('PASSENGER_RECONNECT')=='true'
