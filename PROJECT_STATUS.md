@@ -234,3 +234,10 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - COMPILADO/TESTADO EM ANDROID: commit `a181256b8e`, run **40057802186** aprovado. Zero módulos PureScript recompilados; Gradle 174,94 s. Emulador API 29: `portuguese-acceptance.json` aprovado com 1.789 mensagens, Home e busca em português; seleção Google real de Av. Paulista/Praça da Sé e persistência aprovadas. Capturas da Home e resultados conferidas visualmente, marca preservada.
 - APK: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40057802186/artifacts/12546092608 . SHA256 `66b601fcbb2713d3b0662615e637b2109e99380832f9b24f0f8b337fc3b56b60`. Evidências **12546645793**. Relatório: `Frontend/build-reports/passageiro-portugues/40057802186.json`.
 - Limites: tiles ausentes na captura Home revisada; busca/seleção real aprovada não comprova renderização dos tiles. Android 12 não repetido neste incremento. Revisão contextual das traduções automáticas secundárias permanece pendente.
+
+## Navegação inferior do passageiro — em desenvolvimento
+
+- Barra em PureScript/PrestoDOM no controlador exclusivo de desenvolvimento: Início, Carteira, Perfil. Home original e estado de origem/destino preservados; rodapé oculto durante pesquisa.
+- Perfil reutiliza a view original sem registrar seus eventos globais de autenticação/API. Nome local de teste já existente; edição sinalizada como indisponível.
+- Carteira sem serviço financeiro: informa indisponibilidade, sem saldo ou movimentações simuladas.
+- Compilação e aceite Android pendentes; alteração concentrada em Development.Passenger para evitar recompilar HomeScreen.View/Flow, cujo pico de memória já foi documentado.

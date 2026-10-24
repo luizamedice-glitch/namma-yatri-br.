@@ -7,6 +7,7 @@ import Components.PrimaryButton.Controller as PrimaryButton
 import Components.SourceToDestination.Controller as SourceToDestination
 import Components.SearchLocationModel.Controller as Search
 import Components.SettingSideBar.Controller as Sidebar
+import Components.GenericHeader.Controller as Header
 import Control.Monad.Except.Trans (lift)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Array (null)
@@ -21,7 +22,11 @@ import Engineering.Helpers.Commons (getVersionByKey, getNewIDWithTag)
 import Engineering.Helpers.Utils (showToast)
 import Helpers.PrestoUtils (initUIWrapper)
 import JBridge as JB
-import PrestoDOM (Eval, Screen, continue, continueWithCmd, exit)
+import PrestoDOM (Eval, Screen, PrestoDOM, Length(..), Orientation(..), Gravity(..), Padding(..), Visibility(..), linearLayout, imageView, textView, height, width, weight, orientation, gravity, padding, background, color, text, textSize, imageWithFallback, onClick, accessibilityHint, visibility, continue, continueWithCmd, exit)
+import Screens.MyProfileScreen.View as ProfileView
+import Screens.MyProfileScreen.ScreenData as ProfileData
+import Screens.MyProfileScreen.Controller as Profile
+import Helpers.Utils (FetchImageFrom(..), fetchImage)
 import PrestoDOM.Core.Types.Language.Flow (runScreen)
 import PrestoDOM.Types.Core (class Loggable)
 import Screens.HomeScreen.Controllers.Types (Action(..)) as Home
@@ -32,7 +37,9 @@ import Screens.Types (HomeScreenState, Stage(..), SearchLocationModelType(..), L
 import Storage (KeyStore(..), setValueToLocalStore, updateLocalStage)
 import Types.App (FlowBT)
 
-data Action = Original Home.Action
+data Route = HomeRoute HomeScreenState | WalletRoute HomeScreenState | ProfileRoute HomeScreenState
+
+data Action = SelectHome | SelectWallet | SelectProfile | ProfileAction Profile.Action | Original Home.Action
   | SuggestionsLoaded Boolean (Array Places.Suggestion)
   | PlaceLoaded Boolean Places.Place
   | PlacesFailed String
@@ -65,12 +72,48 @@ start initialize = do
 loop :: HomeScreenState -> FlowBT String Unit
 loop state = do
   next <- lift $ lift $ runScreen $ screen state
-  loop next
+  case next of
+    HomeRoute home -> loop home
+    WalletRoute home -> section false home
+    ProfileRoute home -> section true home
 
-screen :: HomeScreenState -> Screen Action HomeScreenState HomeScreenState
+section :: Boolean -> HomeScreenState -> FlowBT String Unit
+section profile home = do
+  next <- lift $ lift $ runScreen
+    { initialState: home
+    , name: if profile then "BrProfile" else "BrWallet"
+    , globalEvents: []
+    , view: \push state -> shell push (if profile then "Perfil" else "Carteira")
+        (if profile then ProfileView.view (push <<< ProfileAction)
+          (ProfileData.initData {data {name = state.data.settingSideBar.name}, props {profileLoaded = true}})
+         else linearLayout [width MATCH_PARENT, height MATCH_PARENT, orientation VERTICAL, padding (Padding 24 32 24 24), background "#FFFFFF"]
+           [textView [text "Carteira", textSize 24, color "#242424"]
+           ,textView [text "A carteira ainda não está disponível. Pagamentos e movimentações financeiras não estão habilitados nesta versão.", textSize 16, color "#666666", padding (PaddingTop 24)]])
+    , eval
+    }
+  case next of
+    HomeRoute state -> loop state
+    WalletRoute state -> section false state
+    ProfileRoute state -> section true state
+
+shell :: forall w. (Action -> Effect Unit) -> String -> PrestoDOM (Effect Unit) w -> PrestoDOM (Effect Unit) w
+shell push selected content = linearLayout
+  [width MATCH_PARENT, height MATCH_PARENT, orientation VERTICAL, background "#FFFFFF"]
+  [linearLayout [width MATCH_PARENT, height (V 0), weight 1.0] [content]
+  ,linearLayout [width MATCH_PARENT, height (V 64), orientation HORIZONTAL, background "#FFFFFF"]
+    (map (\item -> linearLayout
+      [width (V 0), weight 1.0, height MATCH_PARENT, orientation VERTICAL, gravity CENTER
+      ,onClick push (const item.action), accessibilityHint item.label]
+      [imageView [width (V 24), height (V 24), imageWithFallback (fetchImage FF_ASSET item.icon)]
+      ,textView [text item.label, textSize 12, color (if selected == item.label then "#111111" else "#858585"), padding (PaddingTop 4)]])
+      [{label: "Início", icon: "ny_ic_home", action: SelectHome}
+      ,{label: "Carteira", icon: "ny_ic_wallet", action: SelectWallet}
+      ,{label: "Perfil", icon: "ny_ic_profile_image", action: SelectProfile}])]
+
+screen :: HomeScreenState -> Screen Action HomeScreenState Route
 screen initialState =
   { initialState
-  , view: \push -> HomeView.view (push <<< Original)
+  , view: \push state -> if state.props.currentStage == HomeScreen then shell push "Início" (HomeView.view (push <<< Original) state) else HomeView.view (push <<< Original) state
   , name: "HomeScreen"
   , globalEvents:
       [ \push -> do
@@ -82,7 +125,16 @@ screen initialState =
   , eval
   }
 
-eval :: Action -> HomeScreenState -> Eval Action HomeScreenState HomeScreenState
+eval :: Action -> HomeScreenState -> Eval Action Route HomeScreenState
+eval SelectHome state = exit (HomeRoute state)
+eval SelectWallet state = exit (WalletRoute state)
+eval SelectProfile state = exit (ProfileRoute state)
+eval (ProfileAction (Profile.BackPressed _)) state = exit (HomeRoute state)
+eval (ProfileAction (Profile.GenericHeaderActionController Header.PrefixImgOnClick)) state = exit (HomeRoute state)
+eval (ProfileAction (Profile.EditProfile _)) state = do
+  _ <- pure $ unsafePerformEffect $ showToast "Edição de perfil indisponível no modo de teste sem autenticação."
+  continue state
+eval (ProfileAction _) state = continue state
 eval (Original action) state = evalHome action state
 eval (SuggestionsLoaded field suggestions) state
   | state.props.currentStage /= SearchLocationModel || state.props.isSource /= Just field = continue state
@@ -122,7 +174,7 @@ suggestionItem item =
   , locationScore: Nothing, dynamicAction: Nothing, types: Nothing
   }
 
-evalHome :: Home.Action -> HomeScreenState -> Eval Action HomeScreenState HomeScreenState
+evalHome :: Home.Action -> HomeScreenState -> Eval Action Route HomeScreenState
 -- No profile, saved-address, offers, safety, scheduled-ride, analytics or push polling is started here.
 evalHome (Home.UpdateCurrentLocation latitude longitude) state = position state latitude longitude
 evalHome (Home.CurrentLocation latitude longitude) state = position state latitude longitude
@@ -195,7 +247,7 @@ evalHome (Home.SearchLocationModelActionController Search.DestinationClear) stat
 evalHome (Home.SearchLocationModelActionController Search.SetCurrentLocation) state = do
   _ <- pure $ unsafePerformEffect Places.cancel
   _ <- pure $ updateLocalStage HomeScreen
-  exit state {data {source = "Localização atual", sourceAddress = HomeData.dummyAddress}, props {sourcePlaceId = Nothing, sourceLat = 0.0, sourceLong = 0.0, isSource = Just true, currentStage = HomeScreen}}
+  exit (HomeRoute (state {data {source = "Localização atual", sourceAddress = HomeData.dummyAddress}, props {sourcePlaceId = Nothing, sourceLat = 0.0, sourceLong = 0.0, isSource = Just true, currentStage = HomeScreen}}))
 evalHome (Home.SearchLocationModelActionController Search.RecenterCurrentLocation) state = evalHome Home.RecenterCurrentLocation state
 evalHome (Home.SearchLocationModelActionController (Search.DebounceCallBack value field)) state
   | field /= fromMaybe false state.props.isSource = continue state
@@ -227,12 +279,12 @@ evalHome (Home.SearchLocationModelActionController (Search.PrimaryButtonActionCo
 -- Rendering callbacks and optional features cannot start network/authentication flows.
 evalHome _ state = continue state
 
-unavailable :: HomeScreenState -> Eval Action HomeScreenState HomeScreenState
+unavailable :: HomeScreenState -> Eval Action Route HomeScreenState
 unavailable state = do
   _ <- pure $ unsafePerformEffect $ showToast "Corridas ainda não conectadas ao backend de desenvolvimento."
   continue state
 
-position :: HomeScreenState -> String -> String -> Eval Action HomeScreenState HomeScreenState
+position :: HomeScreenState -> String -> String -> Eval Action Route HomeScreenState
 position state latitude longitude = case fromString latitude, fromString longitude of
   Just lat, Just lng | lat >= -90.0 && lat <= 90.0 && lng >= -180.0 && lng <= 180.0 && (lat /= 0.0 || lng /= 0.0) -> do
     let label = latitude <> ", " <> longitude
