@@ -99,9 +99,9 @@ section profile home = do
 shell :: forall w. (Action -> Effect Unit) -> String -> PrestoDOM (Effect Unit) w -> PrestoDOM (Effect Unit) w
 shell push selected content = linearLayout
   ([width MATCH_PARENT, height MATCH_PARENT, orientation VERTICAL, background "#FFFFFF"]
-    <> if selected == "Início" then [] else [onBackPressed push (const SelectHome)])
+    <> if selected == "Início" || selected == "" then [] else [onBackPressed push (const SelectHome)])
   [linearLayout [width MATCH_PARENT, height (V 0), weight 1.0] [content]
-  ,linearLayout [width MATCH_PARENT, height (V 64), orientation HORIZONTAL, background "#FFFFFF"]
+  ,linearLayout [width MATCH_PARENT, height (V 64), orientation HORIZONTAL, background "#FFFFFF", visibility (if selected == "" then GONE else VISIBLE)]
     (map (\item -> linearLayout
       [width (V 0), weight 1.0, height MATCH_PARENT, orientation VERTICAL, gravity CENTER
       ,onClick push (const item.action), accessibilityHint item.label]
@@ -114,7 +114,7 @@ shell push selected content = linearLayout
 screen :: HomeScreenState -> Screen Action HomeScreenState Route
 screen initialState =
   { initialState
-  , view: \push state -> if state.props.currentStage == HomeScreen then shell push "Início" (HomeView.view (push <<< Original) state) else HomeView.view (push <<< Original) state
+  , view: \push state -> shell push (if state.props.currentStage == HomeScreen then "Início" else "") (HomeView.view (push <<< Original) state)
   , name: "HomeScreen"
   , globalEvents:
       [ \push -> do
