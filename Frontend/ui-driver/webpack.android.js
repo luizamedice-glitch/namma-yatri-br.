@@ -17,6 +17,9 @@ module.exports = (env, argv) => {
         __VERSION__: JSON.stringify(packageJSON.version),
         "window.configEnv": JSON.stringify(env)
       })]
+  if (process.env.YATRI_DRIVER_TEST_BUILD === 'true') {
+    plugins.push(new webpack.NormalModuleReplacementPlugin(/^\.\/output\/Main$/, path.resolve(__dirname, 'output/Development.Driver/index.js')));
+  }
   return merge(common(env), {
     output: {
       filename: getOutputFileLocation(argv.mode),

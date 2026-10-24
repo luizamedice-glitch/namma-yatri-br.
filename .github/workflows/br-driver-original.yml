@@ -1,0 +1,91 @@
+name: BR - Motorista original sem login
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: br-driver-original-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  original:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18.20.8'
+      - run: npm install --global purescript@0.15.14 spago@0.21.0
+      - uses: actions/cache/restore@v4
+        id: cache
+        with:
+          path: |
+            Frontend/ui-driver/.spago
+            Frontend/ui-driver/output
+            ~/.cache/dhall
+          key: purs-driver-original-v1-${{ runner.os }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/ui-driver/spago.dhall') }}-${{ github.run_id }}
+          restore-keys: purs-driver-original-v1-${{ runner.os }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/ui-driver/spago.dhall') }}-
+      - name: Instalar dependencias historicas sem alterar manifestos
+        working-directory: Frontend/ui-driver
+        run: |
+          npm install --legacy-peer-deps
+          spago -j 2 install
+      - name: Compilar apenas o painel original e suas dependencias em lotes
+        env:
+          GHCRTS: '-N1 -M512m'
+        run: python3 Frontend/scripts/diagnose-purescript.py --app motorista --compiler-version 0.15.14 --mode staged --target-module Development.Driver --batch-size 25 --heap 10g --timeout-seconds 600 --stall-seconds 300 --rss-limit-mib 12288 --label driver
+      - name: Empacotar entrada de teste sem o fluxo indiano
+        working-directory: Frontend/ui-driver
+        env:
+          YATRI_DRIVER_TEST_BUILD: 'true'
+          NODE_OPTIONS: '--openssl-legacy-provider --max-old-space-size=6144'
+        run: |
+          npm run bundle:android
+          node --check dist/android/index_bundle.js
+      - uses: actions/cache/save@v4
+        if: always() && steps.cache.outcome == 'success'
+        with:
+          path: |
+            Frontend/ui-driver/.spago
+            Frontend/ui-driver/output
+            ~/.cache/dhall
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: motorista-original-diagnostico
+          path: purescript-diagnostics/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: motorista-original-bundle
+          path: Frontend/ui-driver/dist/android/
+  android:
+    needs: original
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: motorista-original-bundle
+          path: Frontend/ui-driver/dist/android
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Integrar bundle original e compilar APK de motorista BR
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.Google_Maps_API_Key }}
+        working-directory: Frontend
+        run: |
+          cp ui-driver/dist/android/index_bundle.js android-native/app/src/driver/nammaYatriPartner/assets/juspay/index_bundle.js
+          bash driverJuspayAssets.sh nammaYatriPartner
+          cp android-native/local-temp.properties android-native/local.properties
+          cd android-native
+          bash gradlew :app:assembleNyDriverProdDebug -PbrTestMode=true --no-daemon --max-workers=2 --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alce-yatri-motorista-original-apk
+          path: Frontend/android-native/app/build/outputs/apk/nyDriverProd/debug/*.apk
+          if-no-files-found: error

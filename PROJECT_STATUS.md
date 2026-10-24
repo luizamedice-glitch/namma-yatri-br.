@@ -252,3 +252,11 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - Compilação em lotes/cache do run 40062877489: apenas Development.Passenger e Main recompilados, 242,98 s e pico RSS 8,32 GiB. HomeScreen.View/Flow preservados. Build final reutiliza esse bundle sem repetir PureScript.
 - APK: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40063516106/artifacts/12548038010 . SHA256 `8f45bc57acad0738a048b8e241b197236775753bafe9e9d544ec3751913d3e38`. Evidências **12547754406**. Relatório `Frontend/build-reports/passageiro-navegacao/40063516106.json`.
 - Limites: navegação nova exclusiva de BR debug; carteira financeira, persistência/edição de perfil e validação Android 12 desta alteração permanecem pendentes. APK debug pode exigir desinstalar a versão anterior por diferença de assinatura.
+
+## Motorista original de testes — auditoria e implementação inicial
+
+- Painel original PureScript/PrestoDOM reutilizado via Development.Driver, entrada Webpack de teste separada, sem alterar Main/Flow de produção. Conta local de apresentação Giselo, inicialização Offline; disponibilidade só muda após resposta real do backend.
+- Cliente operacional com sessões válidas provisionadas no armazenamento privado do dispositivo, nunca incorporadas ao APK: snapshot, disponibilidade, GPS e ações de corrida. Sem servidor/sessão configurados, erro explícito; nenhum saldo, oferta ou corrida fabricada.
+- Isolado o pedido de token Firebase feito pelo afterRender original, apenas no pacote motorista BR debug. Configurações nativas/identidade separadas do passageiro.
+- Backend remoto atual permite apenas mapas de teste; rotas operacionais continuam bloqueadas. Integração remota ainda não validada e nenhuma rota pública foi alterada.
+- Workflow dedicado compila a dependência transitiva de Development.Driver em lotes de 25, separando módulos pesados, com timeout/guard de RSS e cache recuperável. Flow indiano não entra no bundle de teste. Compilação/Android e ofertas no layout original ainda pendentes.

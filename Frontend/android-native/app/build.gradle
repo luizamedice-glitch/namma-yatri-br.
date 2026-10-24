@@ -265,6 +265,9 @@ android {
             maybeCreate('nyUserProdDebug').assets.srcDir 'src/brTest/passenger/assets'
             maybeCreate('nyUserProdDebug').manifest.srcFile 'src/brTest/passenger/AndroidManifest.xml'
             maybeCreate('nyUserProdDebug').res.srcDir 'src/brTest/res'
+            maybeCreate('nyDriverProdDebug').manifest.srcFile 'src/brTest/driver/AndroidManifest.xml'
+            maybeCreate('nyDriverProdDebug').res.srcDir 'src/brTest/driver/res'
+            maybeCreate('nyDriverProdDebug').assets.srcDir 'src/brTest/driver/assets'
         }
         nyUser.setRoot('src/user/nammaYatri')
         myUser.setRoot('src/user/manaYatri')

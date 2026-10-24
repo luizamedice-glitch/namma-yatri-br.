@@ -54,7 +54,7 @@ def stop_group(process):
 def dependency_batches(graph, ordered, size):
     """Bound new targets; include only their transitive imports, never prior unrelated targets."""
     batches, targets = [], []
-    heavy = {'Screens.HomeScreen.Controller', 'Screens.HomeScreen.View', 'Flow', 'Main', 'Development.Passenger'}
+    heavy = {'Screens.HomeScreen.Controller', 'Screens.HomeScreen.View', 'Flow', 'Main', 'Development.Passenger', 'Development.Driver'}
     def flush():
         if not targets:
             return
@@ -91,6 +91,7 @@ def main():
     parser.add_argument('--mode', choices=['full', 'module', 'staged'], default='full')
     parser.add_argument('--codegen', choices=['js', 'corefn'], default='js')
     parser.add_argument('--module', default='Resources.LocalizableV2.Strings')
+    parser.add_argument('--target-module', help='Limit staged compilation to one module dependency closure')
     parser.add_argument('--batch-size', type=int, default=1)
     parser.add_argument('--warmup-module', action='append', default=[], help='Additional module closure to compile first')
     parser.add_argument('--no-default-warmup', action='store_true', help='Reproduce plain topological batches')
@@ -168,7 +169,9 @@ def main():
                 parser.error(f'warmup module absent from graph: {name}')
             visit(name)
         metadata['warmup_modules'] = warmups
-        for name in sorted(graph):
+        if args.target_module and args.target_module not in graph:
+            parser.error('target module absent from graph')
+        for name in ([args.target_module] if args.target_module else sorted(graph)):
             visit(name)
         batches = dependency_batches(graph, ordered, args.batch_size)
         metadata['batches'] = batches
