@@ -1,5 +1,8 @@
 name: BR - Motorista original sem login
 on:
+  push:
+    branches: [codex/issue-1-purescript-memory]
+    paths: ['.github/workflows/br-driver-original.yml']
   workflow_dispatch:
 permissions:
   contents: read
