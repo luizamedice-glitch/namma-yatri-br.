@@ -51,6 +51,7 @@ try:
                 placesDiagnostics:window.__YATRI_BR_PLACES_STATE__||null,
                 driverOperations:window.__YATRI_DRIVER_OPERATIONS__||null,
                 driverStartup:window.__YATRI_DRIVER_STARTUP__||null,
+                driverConfiguration:(()=>{const r={};for(const method of ['getFromSharedPrefs','getKeysInSharedPref']){try{r[method]={url:window.JBridge[method]('YATRI_DRIVER_BACKEND_URL')==='http://127.0.0.1:8080',session:/^[a-f0-9]{64}$/.test(window.JBridge[method]('YATRI_DRIVER_SESSION'))};}catch(e){r[method]={error:e.name};}}return r;})(),
                 hasRegistrationToken:(()=>{try{const t=window.JBridge.getKeysInSharedPref('REGISTERATION_TOKEN');return !!t && !['__failed','(null)','null'].includes(t);}catch(_){return null;}})(),
                 josType:typeof window.JOS,josSelf:window.JOS&&window.JOS.self,bridgeType:typeof window.JBridge,
                 version:window.version||null,merchant:window.merchantID,

@@ -19,6 +19,16 @@ def capture(name):
             time.sleep(2)
 def diagnostics():
     try:
+        subprocess.run([os.environ.get('CDP_PYTHON','python3'),'Frontend/scripts/inspect-original-webview.py',str(out),package],timeout=90,check=False)
+        stores={}
+        names=adb('shell','run-as',package,'ls','shared_prefs').decode().split()
+        for name in names:
+            if not re.fullmatch(r'[a-zA-Z0-9._-]+\.xml',name):continue
+            try:
+                root=ET.fromstring(adb('shell','run-as',package,'cat','shared_prefs/'+name))
+                stores[name]=[child.get('name') for child in root]
+            except Exception:pass
+        (out/'preference-keys.json').write_text(json.dumps(stores))
         raw=adb('logcat','-d').decode(errors='replace')
         raw=re.sub(r'AIza[0-9A-Za-z_-]{20,}','[REDACTED_GOOGLE_KEY]',raw)
         raw=re.sub(r'\b[a-fA-F0-9]{64}\b','[REDACTED_SESSION]',raw)
