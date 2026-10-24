@@ -26,3 +26,16 @@ test('runtime gate fails closed for production, passenger, missing native bridge
   delete globalThis.window.JBridge;
   assert.equal(ffi.enabled(),false);
 });
+test('original Firebase callback is skipped only for the explicit BR driver debug package',async()=>{
+  const source=await readFile(new URL('../ui-common/src/Engineering/Helpers/JBridge.js',import.meta.url),'utf8');
+  const start=source.indexOf('export const setFCMToken =');
+  const end=source.indexOf('export const setFCMTokenWithTimeOut',start);
+  const factory=new Function('window','callbackMapper',source.slice(start,end).replace('export const','const')+'\nreturn setFCMToken;');
+  for(const [pkg,flag,expected] of [['in.juspay.nammayatripartner.debug',true,0],
+    ['in.juspay.nammayatripartner',true,1],['in.juspay.nammayatri.debug',true,1],['in.juspay.nammayatripartner.debug',false,1]]){
+    let calls=0;
+    const bridge={getDeviceInfo:()=>JSON.stringify({package_name:pkg}),setFCMToken:()=>{calls++;}};
+    factory({__YATRI_BR_DEVELOPMENT__:flag,JBridge:bridge},{map:f=>f})(()=>()=>{})(x=>x)();
+    assert.equal(calls,expected);
+  }
+});
