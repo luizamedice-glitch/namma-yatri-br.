@@ -79,16 +79,13 @@ test('resynchronize stale callback registry type after original Core2 imports, p
     assert.equal(window.__PROXY_FN_MAP_TYPE,registry instanceof Map);
   }
 });
-test('original Firebase callback is skipped only for the explicit BR driver debug package',async()=>{
-  const source=await readFile(new URL('../ui-common/src/Engineering/Helpers/JBridge.js',import.meta.url),'utf8');
-  const start=source.indexOf('export const setFCMToken =');
-  const end=source.indexOf('export const setFCMTokenWithTimeOut',start);
-  const factory=new Function('window','callbackMapper',source.slice(start,end).replace('export const','const')+'\nreturn setFCMToken;');
-  for(const [pkg,flag,expected] of [['in.juspay.nammayatripartner.debug',true,0],
-    ['in.juspay.nammayatripartner',true,1],['in.juspay.nammayatri.debug',true,1],['in.juspay.nammayatripartner.debug',false,1]]){
+test('driver-only bridge adapter preserves the original Firebase call outside the explicit gate',async()=>{
+  let source=await readFile(new URL('../ui-driver/src/Development/LocalJBridge.js',import.meta.url),'utf8');
+  source=source.replace(/^export \* from .*;$/gm,'').replace(/^import .*;$/gm,'');
+  const factory=new Function('enabled','originalSetFCMToken',source.replace('export const','const')+';return setFCMToken;');
+  for(const enabled of [true,false]){
     let calls=0;
-    const bridge={getDeviceInfo:()=>JSON.stringify({package_name:pkg}),setFCMToken:()=>{calls++;}};
-    factory({__YATRI_BR_DEVELOPMENT__:flag,JBridge:bridge},{map:f=>f})(()=>()=>{})(x=>x)();
-    assert.equal(calls,expected);
+    factory(()=>enabled,cb=>action=>()=>{calls++;})(()=>()=>{})(x=>x)();
+    assert.equal(calls,enabled?0:1);
   }
 });

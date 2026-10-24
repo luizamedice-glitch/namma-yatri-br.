@@ -506,13 +506,6 @@ export const datePicker = function (label) {
 export const setFCMToken = function (cb) {
   return function (action) {
     return function () {
-      // Original driver view asks for a push token; BR driver tests do not use Firebase.
-      if (window.__YATRI_BR_DEVELOPMENT__ === true) {
-        try {
-          if (JSON.parse(window.JBridge.getDeviceInfo()).package_name === 'in.juspay.nammayatripartner.debug') return;
-        } catch (_) { }
-      }
-
       if (window.JBridge.setFCMToken) {
         const callback = callbackMapper.map(function (id) {
           cb(action(id))();

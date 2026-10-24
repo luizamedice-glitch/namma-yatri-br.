@@ -36,9 +36,9 @@ jobs:
             Frontend/${{ env.DIR }}/.spago
             Frontend/${{ env.DIR }}/output
             ~/.cache/dhall
-          key: ride-${{ matrix.app }}-${{ runner.os }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: ride-v2-${{ matrix.app }}-${{ runner.os }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            ride-${{ matrix.app }}-${{ runner.os }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-
+            ride-v2-${{ matrix.app }}-${{ runner.os }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-
             ${{ matrix.app == 'passageiro' && format('purs-0.15.14-v2-{0}-passageiro-{1}-40062877489-', runner.os, hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall')) || format('purs-driver-original-v1-{0}-{1}-', runner.os, hashFiles('Frontend/packages.dhall', 'Frontend/ui-driver/spago.dhall')) }}
       - name: Exigir cache quente
         env:

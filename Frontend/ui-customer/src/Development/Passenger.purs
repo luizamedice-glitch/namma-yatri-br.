@@ -15,7 +15,7 @@ import Effect (Effect)
 import Development.Places as Places
 import Development.Rides as Rides
 import Development.PilotTrip as Trip
-import PrestoDOM as DOM
+import Development.Booking as Booking
 import Components.LocationListItem.Controller as LocationItem
 import Data.Number (fromString)
 import Data.String.CodeUnits as String
@@ -46,8 +46,7 @@ data Action = SelectHome | SelectWallet | SelectProfile | ProfileAction Profile.
   | SuggestionsLoaded Boolean (Array Places.Suggestion)
   | PlaceLoaded Boolean Places.Place
   | PlacesFailed String
-  | OpenBooking | TripUpdated Trip.Trip | RideError String
-  | RequestRide PrimaryButton.Action | CancelRide PrimaryButton.Action | ReturnBooking PrimaryButton.Action
+  | OpenBooking
 
 instance showDevelopmentAction :: Show Action where
   show _ = ""
@@ -105,44 +104,9 @@ section profile home = do
 
 booking :: HomeScreenState -> FlowBT String Unit
 booking home = do
-  next <- lift $ lift $ runScreen
-    {initialState: Trip.emptyTrip, name: "BrBooking"
-    ,globalEvents: [\push -> Rides.subscribe
-        {lat:home.props.sourceLat,lng:home.props.sourceLong,address:home.data.source}
-        {lat:home.props.destinationLat,lng:home.props.destinationLong,address:home.data.destination}
-        (push <<< TripUpdated) (push <<< RideError)]
-    ,view: \push trip -> linearLayout [width MATCH_PARENT,height MATCH_PARENT,orientation VERTICAL,background "#FFFFFF",onBackPressed push (const $ ReturnBooking PrimaryButton.OnClick)]
-       [Trip.heading (case trip.phase of
-          "quoted" -> "Estimativa da viagem"
-          "requesting" -> "Solicitando viagem…"
-          "searching" -> "Procurando motorista"
-          "accepted" -> "Motorista a caminho"
-          "cancelled" -> "Viagem cancelada"
-          "error" -> "Não foi possível calcular a viagem"
-          _ -> "Calculando estimativa…")
-       ,Trip.card push (Original Home.NoAction) trip
-       ,textView [text trip.driver,textSize 20,padding (Padding 20 8 20 8),color "#242424"]
-       ,textView [text trip.vehicle,textSize 16,padding (Padding 20 0 20 12),color "#666666"]
-       ,linearLayout [width MATCH_PARENT,height WRAP_CONTENT,visibility (if trip.phase=="quoted" then VISIBLE else GONE)]
-          [Trip.button (push <<< RequestRide) "Solicitar viagem" true]
-       ,linearLayout [width MATCH_PARENT,height WRAP_CONTENT,visibility (if trip.phase=="searching" || trip.phase=="accepted" then VISIBLE else GONE)]
-          [Trip.button (push <<< CancelRide) "Cancelar viagem" true]
-       ,Trip.button (push <<< ReturnBooking) "Voltar ao início" (trip.phase/="requesting")]
-    ,eval: \action trip -> case action of
-       TripUpdated updated -> continue updated
-       RideError message -> do
-         _ <- pure $ unsafePerformEffect $ showToast message
-         continue (if trip.phase=="idle" then trip {phase="error"} else trip)
-       RequestRide PrimaryButton.OnClick -> do
-         _ <- pure $ unsafePerformEffect Rides.request
-         continue trip
-       CancelRide PrimaryButton.OnClick -> do
-         _ <- pure $ unsafePerformEffect Rides.cancel
-         continue trip
-       ReturnBooking PrimaryButton.OnClick -> exit home
-       _ -> continue trip
-    }
-  loop next
+  Booking.start {lat:home.props.sourceLat,lng:home.props.sourceLong,address:home.data.source}
+    {lat:home.props.destinationLat,lng:home.props.destinationLong,address:home.data.destination}
+  loop home
 
 homeContent :: forall w. (Action -> Effect Unit) -> HomeScreenState -> PrestoDOM (Effect Unit) w
 homeContent push state = linearLayout [width MATCH_PARENT,height MATCH_PARENT,orientation VERTICAL]
