@@ -78,7 +78,27 @@ def main(source,sha):
     expected={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted((source/'migrations').glob('*.sql'))}
     if hashes!=expected:raise RuntimeError('MIGRATIONS_DIFFER')
     image='yatri-driver-pilot:'+sha
-    run(['docker','build','--build-arg','YATRI_REVISION='+sha,'-t',image,str(source)],timeout=240)
+    installed=json.loads(run(['docker','exec',api,'node','-e',
+        'console.log(JSON.stringify({node:process.version,lock:require("/app/package-lock.json")}));']))
+    wanted=json.loads((source/'package-lock.json').read_text())
+    def dependencies(lock):
+        packages=dict(lock.get('packages',{}));root=packages.pop('',{})
+        return {'packages':packages,'dependencies':root.get('dependencies',{})}
+    if installed['node'].startswith('v22.') and dependencies(installed['lock'])==dependencies(wanted):
+        # Reuse the already installed, byte-identified runtime when dependencies
+        # match the lockfile. No pull/npm/network and no running container changes.
+        parent='yatri-driver-runtime:'+sha
+        run(['docker','image','tag',metadata['Image'],parent])
+        dockerfile=source/'Dockerfile.driver-pilot'
+        dockerfile.write_text('FROM '+parent+'\nUSER root\nWORKDIR /app\n'
+            'RUN rm -rf /app/src /app/migrations\n'
+            'COPY --chown=node:node src ./src\nCOPY --chown=node:node migrations ./migrations\n'
+            'COPY --chown=node:node server.mjs package.json package-lock.json ./\n'
+            'LABEL org.opencontainers.image.revision='+sha+'\nUSER node\n'
+            'HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=3 CMD node -e "fetch(\'http://127.0.0.1:\'+(process.env.PORT||8082)+\'/health\').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"\n')
+        run(['docker','build','-f',str(dockerfile),'-t',image,str(source)],timeout=120)
+    else:
+        run(['docker','build','--build-arg','YATRI_REVISION='+sha,'-t',image,str(source)],timeout=240)
     env=ROOT/'secrets/driver-pilot.env';override=ROOT/'compose.driver-pilot.json'
     work=ROOT/'driver-pilot';work.mkdir(mode=0o700,exist_ok=True)
     until=(datetime.now(timezone.utc)+timedelta(days=7)-timedelta(minutes=1)).isoformat()
