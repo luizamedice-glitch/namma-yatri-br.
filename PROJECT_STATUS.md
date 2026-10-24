@@ -321,3 +321,9 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - Evidências **12576283319**: acceptance.json, diagnóstico resumido e capturas sem código/placa. Sem publicação de logcat bruto. Relatório: `Frontend/build-reports/ciclo-completo/40134223066.json`.
 - Backend continua nas fontes `5777475bd9`, implantadas no run `40131046069`, sem nova migration/conta/porta e sem renovar a janela (`2026-10-31T18:16:18.740028+00:00`). Ao terminar o teste, nenhuma viagem ativa e motorista indisponível.
 - Limites: aceite em um emulador alternando os APKs, sem teste de dois celulares físicos/Android 12+. Navegação/trajeto ao vivo, operação em segundo plano, menus secundários e indicador legado do horário GPS seguem pendentes. Sessão/ativação de desenvolvimento dura 24h; sem pagamento real. Não se declara plataforma de produção nem fidelidade exata à Play Store.
+
+### Entrega privada de conexão — 24/10/2026
+
+- A pedido do proprietário, emitidas novas ativações dos perfis motorista e passageiro nos runs `40136475509` e `40136477122`, ambos aprovados. Somente job activate; implantação e provisionamento não executados.
+- Entrega RSA por chave pública temporária opcional, sem substituir a pública do operador no repositório. Arquivos decifrados e chave privada permanecem fora do Git; nenhum código/sessão foi publicado em logs ou documentação. Formato, perfil e expiração conferidos sem consumir os códigos.
+- Validades UTC: motorista `2026-10-25T21:57:46.819Z`, passageiro `2026-10-25T21:58:05.108Z`. Códigos de uso único; arquivo privado disponibilizado diretamente ao proprietário. Não são credenciais SSH.

@@ -188,6 +188,14 @@ o código de ativação, sessão, dados pessoais ou chave privada em commits/log
 Se o operador não tiver mais a chave privada de entrega, gerar novo par e
 substituir somente a pública antes de emitir uma nova ativação.
 
+Alternativa sem substituir a chave do operador: o input opcional
+`delivery_public_key` do workflow aceita uma chave pública RSA de entrega
+temporária. Com `activate=true`, emite somente o código criptografado do perfil
+selecionado; não implanta nem altera configuração do servidor. A chave privada
+correspondente e os códigos decifrados devem ficar fora do Git, em arquivos
+privados. Códigos antigos não são recuperáveis pelo hash; emitir novos sem
+consumi-los durante a conferência da entrega.
+
 Continuação do piloto existente: as ações `arrive`, `start` e `complete` estão preparadas nas allowlists de API/Caddy, com autorização e máquina de estados existentes. A atualização recusa viagens ativas e preserva `YATRI_DRIVER_PILOT_UNTIL` (não renova a janela implicitamente). Sem mudanças de migrations, contas ou portas. O marco `40121323902` validou pedido/aceite/cancelamento; implantação e aceite Android do ciclo completo ainda precisam ser registrados após a execução correspondente.
 
 Atualização concluída: run **40131046069**, fontes `5777475bd9`, mantém o prazo em **2026-10-31T18:16:18.740028+00:00** e os serviços existentes. As três ações adicionais sem sessão retornaram 401; cadastro público permaneceu 403. Aceite Android **40134223066** aprovado contra o serviço real: duas contas ativadas privadamente, ciclo completo e recuperação dos processos; nenhuma viagem ativa e motorista indisponível ao encerrar. Não há produção, pagamento ou ativação anônima. A instrução anterior sobre implantação pendente fica superada por este registro.
