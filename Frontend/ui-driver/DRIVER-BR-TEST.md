@@ -14,6 +14,20 @@ nativo `godel`. Sem configuração ou GPS válido, a interface fica indisponíve
 informa o erro; o botão só confirma disponibilidade após resposta real.
 Localização e snapshot são atualizados a cada cinco segundos durante o painel.
 
+## Conectar pelo celular
+
+O APK do run 40116465299 abre **Conectar motorista** quando não há sessão
+configurada ou quando a sessão expira. Cole o código de uso único recebido
+privadamente e toque em **Conectar ao servidor**. A URL HTTPS é fixa e a sessão
+fica no armazenamento privado do Android. Não precisa de computador/ADB.
+Depois, permita localização e toque em **Ativar** no painel original.
+
+Código e sessão de testes têm validade de 24h; reinstalação/expiração requer
+nova ativação. O código consumido não pode ser reutilizado. Nenhuma chave de
+servidor, token ou credencial compartilhada é embutida no APK. Este mecanismo
+não aparece em produção nem no passageiro. O teste Android remoto 40117202534
+aprovou essa mesma tela contra o Lightsail real, com GPS do emulador.
+
 ## Operação local privada
 
 1. Inicie a stack PostgreSQL/API em `brasil/compose.yaml`, com as variáveis de

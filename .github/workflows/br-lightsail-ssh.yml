@@ -70,9 +70,6 @@ jobs:
           PY
           unset AWS_SSH_KEY
           chmod 600 "$ssh_dir/key"
-          # Only the public half is exported for encrypted operator configuration.
-          ssh-keygen -y -P '' -f "$ssh_dir/key" > "$ssh_dir/public"
-          ssh-keygen -e -m PKCS8 -f "$ssh_dir/public"
           # Recusa chaves inválidas ou com senha, sem imprimir conteúdo nem pedir entrada.
           if ! ssh-keygen -y -P '' -f "$ssh_dir/key" > /dev/null 2>&1; then
             echo '::error::AWS_SSH_KEY deve conter uma chave privada SSH válida sem senha.'

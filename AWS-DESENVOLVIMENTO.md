@@ -156,3 +156,34 @@ os dados, emitir sessão privada e provisionar o dispositivo; nunca publicar
 o arquivo de sessão, incorporar token ao APK ou imprimir os valores.
 Aceite Android autenticado contra Lightsail: **NÃO VALIDADO**, aguarda cadastro
 e provisionamento. Relatório: `brasil/backend/reports/driver-lightsail-2026-10-24.json`.
+
+
+## Motorista ativado pelo celular — configuração e teste concluídos
+
+O bloqueio de cadastro foi resolvido com os dados reais fornecidos pelo
+proprietário. Run **40115687810** implantou a versão `4945995630` e cadastrou
+Giselo/veículo privadamente, sem contas automáticas recorrentes ou migrations.
+Janela vigente: **2026-10-31T17:25:38.646713+00:00**.
+
+POST `/v1/driver/pair` é a única operação adicional pública do piloto. Requer um
+código aleatório de 128 bits, uso único, 24h; armazena somente hash com namespace
+separado e emite sessão de 24h por transação. Código não funciona como Bearer.
+Rate limit de 10 tentativas/minuto, limite de corpo existente e expiração global
+do piloto continuam aplicados. Login/cadastro e POST de corridas seguem bloqueados.
+
+APK **40116465299**/artefato **12569640452** abre uma tela nativa de conexão
+somente no motorista BR debug sem sessão vigente. Aceite Android remoto
+**40117202534**, evidência **12569606867**, aprovou ativação pela interface,
+GPS do emulador e disponibilidade na API/PostgreSQL Lightsail por HTTPS.
+Conta devolvida a indisponível ao terminar. Não é aceite em celular físico
+nem integração de corridas passageiro–motorista.
+
+Workflow `br-driver-lightsail.yml`: `provision=true` aplica perfil criptografado
+autorizado; `activate=true` apenas emite código criptografado, sem reimplantar.
+O envelope do veículo é RSA-OAEP/SHA-256 para a chave SSH já configurada; o
+perfil em texto existe apenas em diretório temporário privado do runner e no
+stdin do comando remoto. A entrega da ativação usa chave RSA pública de operador
+`ops/driver-delivery-public.pem`; a chave privada fica fora do Git. Nunca publicar
+o código de ativação, sessão, dados pessoais ou chave privada em commits/logs.
+Se o operador não tiver mais a chave privada de entrega, gerar novo par e
+substituir somente a pública antes de emitir uma nova ativação.

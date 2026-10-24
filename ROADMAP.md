@@ -74,3 +74,13 @@ Frontend/build-reports/motorista-original/40111273590.json. A Fase 5 continua
 aberta: faltam ligar ofertas e ações de viagem às views originais, integrar
 solicitação do passageiro, sincronizar os dois APKs e validar backend remoto
 com sessões privadas provisionadas. Não há alteração do Lightsail neste marco.
+
+
+### Motorista — conexão remota do painel validada
+
+Em 24/10/2026, cadastro real privado de Giselo/veículo e conexão pelo celular
+via código de uso único concluídos. APK 40116465299; aceite Android API 29
+contra Lightsail 40117202534 aprovado: tela nativa de ativação, GPS do emulador
+e disponibilidade confirmados na API/PostgreSQL reais. A Fase 5 permanece
+aberta para ofertas e ações de viagem nas views originais, solicitação pelo
+passageiro e sincronização dos dois APKs.
