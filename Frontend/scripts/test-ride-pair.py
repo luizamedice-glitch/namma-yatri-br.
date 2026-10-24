@@ -6,7 +6,7 @@ import json,os,re,subprocess,time,unicodedata,urllib.request,xml.etree.ElementTr
 out=Path('ride-pair-evidence');out.mkdir(exist_ok=True)
 base='https://52-67-246-31.sslip.io'
 packages={'passenger':'in.juspay.nammayatri.debug','driver':'in.juspay.nammayatripartner.debug'}
-sessions={};ride_id=None
+sessions={};ride_id=None;driver_touched=False
 def adb(*args):return subprocess.check_output(['adb',*args],timeout=40)
 def nodes():
     for attempt in range(3):
@@ -91,6 +91,7 @@ try:
     capture('passageiro-estimativa')
     pair('driver')
     assert not call('driver','/snapshot')['rides'],'Há uma viagem ativa do motorista'
+    driver_touched=True
     call('driver','/driver/availability',{'available':False})
     tap(wait_label('Ativar'))
     for _ in range(12):
@@ -153,8 +154,10 @@ try:
     assert call('passenger','/rides/'+ride_id)['status']=='completed'
     adb('shell','am','force-stop',packages['driver']);start('driver');wait_label('Viagem concluída')
     tap(wait_label('Voltar ao painel'))
+    capture('motorista-painel-final')
     adb('shell','am','force-stop',packages['passenger']);start('passenger');home()
     tap(wait_label('Acompanhar viagem'));wait_label('Viagem concluída');tap(wait_label('Voltar ao início'));home()
+    capture('passageiro-home-concluida')
     assert not call('passenger','/snapshot')['rides'] and not call('driver','/snapshot')['rides']
     call('driver','/driver/availability',{'available':False})
     result={'acceptance':'passed','backend':'lightsail_https','two_original_apks':True,'foreground_switching':True,
@@ -171,11 +174,14 @@ finally:
             if current['status'] in ['searching','accepted','arrived']:call('passenger','/rides/'+ride_id+'/cancel',{})
             elif current['status']=='in_progress' and 'driver' in sessions:call('driver','/rides/'+ride_id+'/complete',{})
         except Exception:pass
-    if 'driver' in sessions:
+    if driver_touched and 'driver' in sessions:
         try:call('driver','/driver/availability',{'available':False})
         except Exception:pass
-    # Redact activation, session and real registration identifiers from diagnostics.
+    # Native transports may encode whole responses; regex redaction cannot prove
+    # raw logcat contains no credentials/vehicle data. Publish only counters.
     raw=adb('logcat','-d').decode(errors='replace')
-    for pattern in [r'AIza[0-9A-Za-z_-]{20,}',r'\b[a-fA-F0-9]{64}\b',r'\b[a-fA-F0-9]{32}\b',r'\b[A-Z]{3}[ -]?[0-9][A-Z0-9][0-9]{2}\b']:
-        raw=re.sub(pattern,'[REDACTED]',raw)
-    (out/'logcat.txt').write_text(raw)
+    diagnostics={'fatal_exception_count':raw.count('FATAL EXCEPTION'),
+      'driver_anr_count':raw.count('ANR in '+packages['driver']),
+      'passenger_anr_count':raw.count('ANR in '+packages['passenger']),
+      'raw_logcat_published':False}
+    (out/'android-diagnostics.json').write_text(json.dumps(diagnostics,indent=2))
