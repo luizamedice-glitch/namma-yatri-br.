@@ -125,6 +125,7 @@ def check_map(role,name,expected_lat=None):
     from io import BytesIO
     for _ in range(12):
         state=map_state(role)
+        (out/(name+'-mapa.json')).write_text(json.dumps({key:state.get(key) for key in ['ready','routePoints','gpsFresh','phase','error']}))
         if state.get('ready') and state.get('routePoints',0)>2 and (expected_lat is None or state.get('gpsFresh') and abs(state.get('driverLat',0)-expected_lat)<0.0001):break
         time.sleep(2)
     else:raise AssertionError('Mapa/rota/GPS não confirmados: '+role)
@@ -135,8 +136,8 @@ def check_map(role,name,expected_lat=None):
         purple=sum(1 for r,g,b in safe.getdata() if abs(r-116)<6 and abs(g-52)<6 and abs(b-84)<6)
         if purple>30:break
         time.sleep(1)
-    assert purple>30,'Traçado da rota não apareceu no mapa nativo de '+role
     safe.save(out/(name+'-mapa.png'))
+    assert purple>30,'Traçado da rota não apareceu no mapa nativo de '+role
     return state
 
 
