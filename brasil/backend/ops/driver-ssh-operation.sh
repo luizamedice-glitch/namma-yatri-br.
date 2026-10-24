@@ -23,7 +23,7 @@ case "$YATRI_DRIVER_OPERATION" in
     ssh "${args[@]}" "$target" "$remote src/provision-driver-pilot.mjs /dev/stdin" < "$work/profile.json"
     ;;
   activate)
-    ssh "${args[@]}" "$target" "$remote src/issue-driver-pairing.mjs" < brasil/backend/ops/driver-delivery-public.pem > "$RUNNER_TEMP/driver-activation.enc"
+    ssh "${args[@]}" "$target" "$remote src/issue-driver-pairing.mjs" < "${YATRI_DRIVER_PUBLIC_FILE:-brasil/backend/ops/driver-delivery-public.pem}" > "$RUNNER_TEMP/driver-activation.enc"
     test -s "$RUNNER_TEMP/driver-activation.enc"
     echo 'Ativacao gerada e criptografada para entrega privada.'
     ;;

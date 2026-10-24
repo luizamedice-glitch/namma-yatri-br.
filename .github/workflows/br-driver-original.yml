@@ -5,6 +5,10 @@ on:
     paths: ['.github/workflows/br-driver-original.yml']
   workflow_dispatch:
     inputs:
+      remote_test:
+        description: 'Conectar pelo codigo no Android e validar contra Lightsail real'
+        type: boolean
+        default: false
       apk_run_id:
         description: 'Repetir aceite Android usando APK original já compilado'
         type: string
@@ -194,6 +198,7 @@ jobs:
           github-token: ${{ github.token }}
       - run: npm ci --prefix brasil/backend
       - name: Iniciar API e contas persistidas do aceite isolado
+        if: ${{ !inputs.remote_test }}
         run: |
           node Frontend/scripts/serve-driver-acceptance.mjs > "$RUNNER_TEMP/driver-api.log" 2>&1 &
           for attempt in $(seq 1 30); do
@@ -201,6 +206,22 @@ jobs:
             sleep 1
           done
           test -s "$DRIVER_ACCEPTANCE_SESSION_FILE"
+      - name: Preparar ativacao privada do aceite remoto
+        if: ${{ inputs.remote_test }}
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+          YATRI_DRIVER_OPERATION: activate
+        run: |
+          umask 077
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out "$RUNNER_TEMP/test-delivery.key" 2>/dev/null
+          openssl pkey -in "$RUNNER_TEMP/test-delivery.key" -pubout -out "$RUNNER_TEMP/test-delivery.pub"
+          export YATRI_DRIVER_PUBLIC_FILE="$RUNNER_TEMP/test-delivery.pub"
+          bash brasil/backend/ops/driver-ssh-operation.sh
+          base64 -d "$RUNNER_TEMP/driver-activation.enc" > "$RUNNER_TEMP/test-activation.bin"
+          openssl pkeyutl -decrypt -inkey "$RUNNER_TEMP/test-delivery.key" -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -in "$RUNNER_TEMP/test-activation.bin" -out "$RUNNER_TEMP/test-activation.json"
+          echo 'DRIVER_REMOTE=true' >> "$GITHUB_ENV"
+          echo "DRIVER_REMOTE_ACTIVATION_FILE=$RUNNER_TEMP/test-activation.json" >> "$GITHUB_ENV"
       - name: Habilitar KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
