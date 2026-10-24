@@ -47,12 +47,23 @@ aprovou essa mesma tela contra o Lightsail real, com GPS do emulador.
 4. Abra o APK, conceda localização e aguarde GPS válido. Alterne disponibilidade
    e confira os estados no banco/API. Nunca compartilhe o arquivo de sessão.
 
-Atualização de 24/10/2026: o Lightsail libera as três operações do painel por
-HTTPS autenticado via serviço driver-pilot separado; cadastro e corridas
-continuam bloqueados. Giselo/veículo ainda precisam ser cadastrados com os
-dados reais solicitados ao operador. O aceite Android remoto aguarda a sessão
-privada e o provisionamento. Consulte AWS-DESENVOLVIMENTO.md; não use a função
-compartilhada do Alce.
+Atualização de 24/10/2026: Giselo, seu veículo real e Fagner já estão cadastrados
+privadamente no piloto Lightsail. A primeira abertura dos APKs do piloto recebe
+um código de conexão de uso único e guarda a sessão no store privado; não há
+login, OTP, KYC ou credencial estática no APK. Ativação e sessão duram 24 horas.
+O workflow `br-driver-lightsail.yml` com `activate=true` emite uma ativação
+criptografada para o operador, sem imprimir seu conteúdo. Nunca publique códigos
+ou envie a chave privada no chat. O provisionamento ADB acima é uma alternativa
+para desenvolvimento local.
+
+O serviço `driver-pilot` é separado da API principal e tem expiração explícita.
+Cadastro público e login continuam bloqueados. O run `40121323902` aprovou nos
+dois APKs Places/Routes reais, pedido, oferta, aceite e cancelamento via HTTPS.
+As ações de chegada/início/conclusão foram implantadas no piloto no run
+`40131046069`, com sessões e máquina de estados validadas no backend; o aceite
+Android desse incremento ainda está em andamento. Atualizações recusam viagens
+ativas e preservam o prazo existente, sem migrations ou alterações de contas.
+Consulte AWS-DESENVOLVIMENTO.md; não use a função compartilhada do Alce.
 
 ## Verificações e limites
 
@@ -62,11 +73,18 @@ compartilhada do Alce.
   `node --test Frontend/scripts/test-driver-backend.integration.mjs`.
   Exercita o cliente usado no APK contra API/banco reais e o ciclo completo;
   somente Google Routes usa fixture declarada neste teste de contrato.
-- O aceite Android usa API/PostgreSQL reais locais e GPS do emulador, sem
-  fabricar rotas/ofertas: testa abertura, GPS e disponibilidade do painel original.
-- O cliente tem chamadas de aceitar/recusar/chegar/iniciar/concluir, mas a ligação
-  de ofertas e viagens aos layouts originais ainda requer implementação/aceite.
-  O passageiro atual ainda está no modo de mapas e não solicita corridas reais.
+- O aceite Android dos dois APKs usa Google e API/PostgreSQL Lightsail reais.
+  As capturas públicas cobrem somente telas sem placa ou código de conexão.
+- A adaptação de viagem usa os componentes PureScript `SourceToDestination` e
+  `PrimaryButton` já presentes; a Home original é preservada. Isso não comprova
+  equivalência visual exata com a versão atual da Play Store.
+- Chegada/início/conclusão e recuperação após recriar os processos estão
+  implementadas e em validação Android. A confirmação final consulta o registro
+  persistido, pois o snapshot retorna somente viagens ativas. O passageiro pode
+  usar “Acompanhar viagem” na Home após reabrir o processo.
+- Navegação curva a curva, desenho/acompanhamento da rota durante a viagem,
+  indicador legado de horário GPS e menus secundários não são aprovados por
+  esse teste de estados. Não há pagamento real.
 - Apenas os termos centrais do painel recebem tradução manual nesta primeira
   versão; catálogo completo do motorista e funcionalidades paralelas não estão
   aprovados. Não declarar integração passageiro–motorista pelo build de um APK.

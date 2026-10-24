@@ -19,9 +19,21 @@ test('passenger operations stay disabled outside the configured BR passenger deb
     ['in.juspay.nammayatri.debug',false,'ANDROID','x',false],
     ['in.juspay.nammayatri.debug',true,'WEB','x',false],
     ['in.juspay.nammayatri.debug',true,'ANDROID','',false],
+    ['in.juspay.nammayatri.debug',true,'ANDROID','__failed',false],
     ['in.juspay.nammayatri.debug',true,'ANDROID','a'.repeat(64),true]]){
     globalThis.window={__OS:os,__YATRI_BR_DEVELOPMENT__:flag,JBridge:{getDeviceInfo:()=>JSON.stringify({package_name:pkg}),getFromSharedPrefs:()=>session}};
     assert.equal(ffi.enabled(),expected);
   }
+  delete globalThis.window;
+});
+test('passenger can resume a stored trip without a new place selection, only with its own debug session',async()=>{
+  const source=(await readFile(new URL('../ui-customer/src/Development/Rides.js',import.meta.url),'utf8')).replace(/^import .*;$/gm,'');
+  const ffi=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+  const values={YATRI_PASSENGER_SESSION:'a'.repeat(64),YATRI_PASSENGER_ACTIVE_RIDE:'12345678-1234-4234-8234-123456789abc'};
+  globalThis.window={__OS:'ANDROID',__YATRI_BR_DEVELOPMENT__:true,JBridge:{getDeviceInfo:()=>JSON.stringify({package_name:'in.juspay.nammayatri.debug'}),getFromSharedPrefs:key=>values[key]||''}};
+  assert.equal(ffi.hasStoredRide(),true);
+  values.YATRI_PASSENGER_ACTIVE_RIDE='';assert.equal(ffi.hasStoredRide(),false);
+  values.YATRI_PASSENGER_ACTIVE_RIDE='12345678-1234-4234-8234-123456789abc';
+  values.YATRI_PASSENGER_SESSION='__failed';assert.equal(ffi.hasStoredRide(),false);
   delete globalThis.window;
 });

@@ -9,8 +9,9 @@ function rememberRide(id){rideId=id;window.JBridge.setInSharedPrefs(rideKey,id||
 export const enabled=()=>{
   try{return window.__OS==='ANDROID'&&window.__YATRI_BR_DEVELOPMENT__===true&&
     JSON.parse(window.JBridge.getDeviceInfo()).package_name==='in.juspay.nammayatri.debug'&&
-    Boolean(window.JBridge.getFromSharedPrefs('YATRI_PASSENGER_SESSION'));}catch(_){return false;}
+    /^[a-f0-9]{64}$/.test(window.JBridge.getFromSharedPrefs('YATRI_PASSENGER_SESSION'));}catch(_){return false;}
 };
+export const hasStoredRide=()=>enabled()&&/^[a-f0-9-]{36}$/.test(window.JBridge.getFromSharedPrefs(rideKey)||'');
 function client(){
   if(!enabled())throw Error('Conecte o passageiro ao servidor de testes.');
   return createOperationsClient({role:'passenger',baseUrl:window.JBridge.getFromSharedPrefs('YATRI_PASSENGER_BACKEND_URL'),

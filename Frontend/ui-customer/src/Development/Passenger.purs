@@ -114,10 +114,11 @@ homeContent push state = linearLayout [width MATCH_PARENT,height MATCH_PARENT,or
   ,linearLayout [width MATCH_PARENT,height WRAP_CONTENT,visibility (if ready then VISIBLE else GONE)]
     [Trip.button (\action -> case action of
         PrimaryButton.OnClick -> push OpenBooking
-        _ -> pure unit) "Ver estimativa" true]]
+        _ -> pure unit) (if storedRide then "Acompanhar viagem" else "Ver estimativa") true]]
   where
-  ready = state.props.currentStage==HomeScreen && state.props.destinationPlaceId/=Nothing
-    && (state.props.sourceLat/=0.0 || state.props.sourceLong/=0.0) && unsafePerformEffect Rides.enabled
+  storedRide = unsafePerformEffect Rides.hasStoredRide
+  ready = state.props.currentStage==HomeScreen && unsafePerformEffect Rides.enabled
+    && (storedRide || (state.props.destinationPlaceId/=Nothing && (state.props.sourceLat/=0.0 || state.props.sourceLong/=0.0)))
 
 shell :: forall w. (Action -> Effect Unit) -> String -> PrestoDOM (Effect Unit) w -> PrestoDOM (Effect Unit) w
 shell push selected content = linearLayout

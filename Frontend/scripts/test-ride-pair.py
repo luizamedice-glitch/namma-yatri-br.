@@ -154,7 +154,7 @@ try:
     adb('shell','am','force-stop',packages['driver']);start('driver');wait_label('Viagem concluída')
     tap(wait_label('Voltar ao painel'))
     adb('shell','am','force-stop',packages['passenger']);start('passenger');home()
-    tap(wait_label('Ver estimativa'));wait_label('Viagem concluída');tap(wait_label('Voltar ao início'));home()
+    tap(wait_label('Acompanhar viagem'));wait_label('Viagem concluída');tap(wait_label('Voltar ao início'));home()
     assert not call('passenger','/snapshot')['rides'] and not call('driver','/snapshot')['rides']
     call('driver','/driver/availability',{'available':False})
     result={'acceptance':'passed','backend':'lightsail_https','two_original_apks':True,'foreground_switching':True,
