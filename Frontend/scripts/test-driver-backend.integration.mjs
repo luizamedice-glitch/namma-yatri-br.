@@ -12,6 +12,7 @@ import { migrate } from '../../brasil/backend/src/migrate.mjs';
 import { developmentAccounts } from '../../brasil/backend/src/development.mjs';
 import { mobilityService } from '../../brasil/backend/src/mobility.mjs';
 import { createApi } from '../../brasil/backend/src/http.mjs';
+import { createDriverPilot } from '../../brasil/backend/src/driver-pilot.mjs';
 import { createOperationsClient } from '../ui-driver/src/Development/OperationsClient.mjs';
 
 test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo por HTTP', { timeout: 30000 }, async t => {
@@ -84,6 +85,20 @@ test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo po
   await driverClient.location(-23.55, -46.63);
   assert.equal((await driverClient.availability(true)).available, true);
   assert.equal((await driverClient.snapshot()).user.name, 'Giselo');
+  const pilot=createDriverPilot({pool,enabled:true,nodeEnv:'development',until:new Date(Date.now()+3600000).toISOString()});
+  await new Promise(resolve=>pilot.listen(0,'127.0.0.1',resolve));
+  try {
+    const pilotBase='http://127.0.0.1:'+pilot.address().port;
+    const pilotClient=createOperationsClient({baseUrl:pilotBase,token:deviceSession.token});
+    await pilotClient.location(-23.55,-46.63);
+    assert.equal((await pilotClient.availability(true)).available,true);
+    assert.equal((await pilotClient.snapshot()).user.name,'Giselo');
+    const passengerAccess=await fetch(pilotBase+'/v1/snapshot',{headers:{Authorization:'Bearer '+passenger.token}});
+    assert.equal(passengerAccess.status,403);
+    assert.equal((await fetch(pilotBase+'/v1/development/session',{method:'POST'})).status,404);
+  } finally {
+    pilot.closeAllConnections();await new Promise(resolve=>pilot.close(resolve));
+  }
   const quote = await call('/quotes', passenger.token, { origin: { lat: -23.55, lng: -46.63, address: 'Origem do teste automatizado' }, destination: { lat: -23.56, lng: -46.64, address: 'Destino do teste automatizado' } });
   const ride = await call('/rides', passenger.token, { quoteId: quote.id });
   assert.equal((await call('/snapshot', driver.token)).offers[0].passenger_name, 'Fagner');

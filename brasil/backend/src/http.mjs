@@ -15,7 +15,7 @@ export async function readBody(req) {
   return parsed;
 }
 
-export function createApi({ service, maps, pool, allowedOrigin = '', rateLimit = 120, development = null }) {
+export function createApi({ service, maps, pool, allowedOrigin = '', rateLimit = 120, development = null, allowedRoutes = null }) {
   const buckets = new Map();
   const connections = new Set();
   function reply(res, status, data) {
@@ -40,6 +40,7 @@ export function createApi({ service, maps, pool, allowedOrigin = '', rateLimit =
       const ip = req.socket.remoteAddress;
       if (!buckets.has(ip)) buckets.set(ip, { count: 0, until: now + 60000 });
       requireThat(++buckets.get(ip).count <= rateLimit, 429, 'Muitas requisições; tente novamente em um minuto');
+      if (allowedRoutes) requireThat(allowedRoutes.includes(req.method + ' ' + url.pathname), 404, 'Rota não encontrada');
       if (req.method === 'POST' && ['/v1/auth/register', '/v1/auth/login', '/v1/development/session'].includes(url.pathname)) {
         // Separate low limit for expensive password hashing.
         const key = 'auth:' + ip;
