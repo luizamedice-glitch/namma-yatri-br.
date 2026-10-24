@@ -14,6 +14,7 @@ END='# END YATRI DRIVER PILOT'
 
 def run(args,timeout=120):
     # Never forward command output containing Docker environment values.
+    run.last_command=args[:2]
     return subprocess.run(args,stdin=subprocess.DEVNULL,capture_output=True,text=True,check=True,timeout=timeout).stdout.strip()
 
 def write(path,text,mode=0o600):
@@ -67,7 +68,10 @@ def main(source,sha):
     if len(networks)!=1:raise RuntimeError('DATABASE_NETWORK_NOT_UNIQUE')
     current_env=dict(v.split('=',1) for v in metadata['Config']['Env'] if '=' in v)
     if not current_env.get('DATABASE_URL'):raise RuntimeError('DATABASE_NOT_CONFIGURED')
-    before={name:run(base+['ps','-q',name]) for name in ['api','postgres','maps-test']}
+    def service_id(name):
+        return run(['docker','ps','-q','--filter','label=com.docker.compose.project='+project,
+            '--filter','label=com.docker.compose.service='+name])
+    before={name:service_id(name) for name in ['api','postgres','maps-test']}
     # No migration command is run. Require byte-identical SQL first.
     hashes=json.loads(run(['docker','exec',api,'node','-e',
         'const fs=require("fs"),c=require("crypto");console.log(JSON.stringify(Object.fromEntries(fs.readdirSync("/app/migrations").filter(n=>n.endsWith(".sql")).sort().map(n=>[n,c.createHash("sha256").update(fs.readFileSync("/app/migrations/"+n)).digest("hex")]))));']))
@@ -110,7 +114,7 @@ def main(source,sha):
         for method,path in [('POST','/v1/auth/register'),('POST','/v1/development/session'),('POST','/v1/rides'),('GET','/v1/events')]:
             if status('https://'+HOST+path,method)!=403:raise RuntimeError('UNRELATED_ROUTE_EXPOSED')
         if status('https://'+HOST+'/health')!=200:raise RuntimeError('MAIN_HEALTH_FAILED')
-        if before!={name:run(base+['ps','-q',name]) for name in before}:raise RuntimeError('EXISTING_SERVICES_CHANGED')
+        if before!={name:service_id(name) for name in before}:raise RuntimeError('EXISTING_SERVICES_CHANGED')
         print(json.dumps({'driverPilotDeployed':True,'revision':sha,'expiresAt':until,
             'anonymousOperationsRejected':True,'unrelatedRoutesBlocked':True,'existingServicesUnchanged':True,
             'authenticatedAndroidAcceptance':'pending_provisioning'}))
@@ -130,5 +134,6 @@ if __name__=='__main__':
     try:main(Path(sys.argv[1]),sys.argv[2])
     except Exception as e:
         # Subprocess errors may include environment arguments: never print them.
-        print(json.dumps({'driverPilotDeployed':False,'reason':str(e) if isinstance(e,RuntimeError) else type(e).__name__}),file=sys.stderr)
+        print(json.dumps({'driverPilotDeployed':False,'reason':str(e) if isinstance(e,RuntimeError) else type(e).__name__,
+            'command':getattr(run,'last_command',[])}),file=sys.stderr)
         sys.exit(1)

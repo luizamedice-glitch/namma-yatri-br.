@@ -13,6 +13,7 @@ import { developmentAccounts } from '../../brasil/backend/src/development.mjs';
 import { mobilityService } from '../../brasil/backend/src/mobility.mjs';
 import { createApi } from '../../brasil/backend/src/http.mjs';
 import { createDriverPilot } from '../../brasil/backend/src/driver-pilot.mjs';
+import { provisionDriverPilot } from '../../brasil/backend/src/provision-driver-pilot.mjs';
 import { createOperationsClient } from '../ui-driver/src/Development/OperationsClient.mjs';
 
 test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo por HTTP', { timeout: 30000 }, async t => {
@@ -25,6 +26,8 @@ test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo po
   const config = { enabled: true, passengerKey: randomBytes(32).toString('hex'), driverKey: randomBytes(32).toString('hex'),
     vehicle: { plate: 'TST1A23', model: 'Veículo cadastrado de testes', color: 'Prata' } };
   const development = await developmentAccounts(pool, config);
+  await provisionDriverPilot(pool,config.vehicle);
+  await assert.rejects(provisionDriverPilot(pool,{...config.vehicle,plate:'TST9Z99'}),/EXISTING_VEHICLE_DIFFERS/);
   const maps = { route: async () => ({ distanceMeters: 1200, durationSeconds: 240, encodedPolyline: 'fixture-only', fareCents: 740 }) };
   const service = mobilityService(pool, maps, { allowDevelopmentAccounts: true });
   const server = createApi({ pool, maps, service, development });
