@@ -12,7 +12,7 @@ export function createOperationsClient({baseUrl, token, fetchImpl = fetch,role='
         ...(body === undefined ? {} : {body:JSON.stringify(body)}), signal:abort.signal});
       if (!response.ok) {
         let detail;try{detail=await response.json();}catch(_){}
-        throw Error(response.status === 401 ? 'Sessão de teste expirada ou inválida.' : typeof detail?.error==='string' ? detail.error.slice(0,180) : 'Servidor operacional recusou a operação (' + response.status + ').');
+        throw Error(response.status === 401 ? 'Sessão de teste expirada ou inválida.' : detail && typeof detail.error==='string' ? detail.error.slice(0,180) : 'Servidor operacional recusou a operação (' + response.status + ').');
       }
       return await response.json();
     } finally { clearTimeout(timer); }
