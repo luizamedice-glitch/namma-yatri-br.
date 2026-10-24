@@ -27,12 +27,16 @@ test('native HTTP transport preserves request and handles real bridge response f
 test('local optional configuration uses explicit defaults only in the driver test variant',async()=>{
   const source=await readFile(new URL('../ui-driver/src/Development/LocalRemoteConfig.js',import.meta.url),'utf8');
   const raw=source.replace("import * as original from '../../output/Common.RemoteConfig.Utils/foreign.js?br-driver-original-config';",'const original={fetchRemoteConfigString:key=>"original:"+key,isWhiteListed:()=>false};')
+    .replace("import dashboardDefaults from './DashboardDefaults.json';",'const dashboardDefaults='+await readFile(new URL('../ui-driver/src/Development/DashboardDefaults.json',import.meta.url),'utf8')+';')
     .replace("import {enabled} from './Driver.js';",'const enabled=()=>globalThis.driverConfigTestEnabled;');
   const adapter=await import('data:text/javascript;base64,'+Buffer.from(raw).toString('base64'));
   globalThis.driverConfigTestEnabled=true;
   const perf=JSON.parse(adapter.fetchRemoteConfigString('perf_config'));
   assert.equal(perf.default.mapRecenter,true);
   assert.equal(JSON.parse(adapter.fetchRemoteConfigString('events_config')).enabled,false);
+  assert.equal(JSON.parse(adapter.fetchRemoteConfigString('enable_otp_ride_config')).default.enableOtpRide,false);
+  assert.equal(JSON.parse(adapter.fetchRemoteConfigString('pet_rides_feature_config')).default.enablePetRidesFeature,false);
+  assert.equal(JSON.parse(adapter.fetchRemoteConfigString('ride_assigned_audio')).default.oneWay,null);
   assert.equal(adapter.fetchRemoteConfigString('other'),'original:other');
   globalThis.driverConfigTestEnabled=false;
   assert.equal(adapter.fetchRemoteConfigString('perf_config'),'original:perf_config');

@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import * as original from '../../output/Common.RemoteConfig.Utils/foreign.js?br-driver-original-config';
 import {enabled} from './Driver.js';
+import dashboardDefaults from './DashboardDefaults.json';
 // Explicit local configuration, copied from the original PureScript defaults.
 // Optional Indian operational features remain disabled; these are not API data.
 const local = {
+  ...dashboardDefaults,
   perf_config:{default:{disableBannerAnimation:false,mapRecenter:true}},
   profile_completion_reminder:{reminderDuration:86400},
   stop_validation_distance_threshold:{distance:200,enableStopValidation:true},
