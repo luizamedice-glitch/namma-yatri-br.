@@ -15,6 +15,7 @@
 
 module Screens.OnBoardingFlow.EnterMobileNumberScreen.ComponentConfig where
 
+import Services.Config as ServiceConfig
 import Common.Types.App
 
 import Common.Types.App (LazyCheck(..))
@@ -125,9 +126,9 @@ mobileNumberEditTextConfig state = let
       , type = "number"
       , height = V 54
       , margin = MarginTop 30
-      , showErrorLabel = (not state.props.isValidMobileNumber)
+      , showErrorLabel = (not state.props.isValidMobileNumber) || ServiceConfig.getBaseUrl "" == ""
       , errorLabel
-        { text = (getString INVALID_MOBILE_NUMBER)
+        { text = if ServiceConfig.getBaseUrl "" == "" then "Backend de testes não configurado." else (getString INVALID_MOBILE_NUMBER)
         , margin = MarginBottom 1
         }
       , showCountryCodeField= true

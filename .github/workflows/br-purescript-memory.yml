@@ -1,0 +1,405 @@
+name: BR - Diagnostico PureScript original
+
+on:
+  push:
+    branches: [passageiro-pt-br]
+    paths:
+      - '.github/workflows/br-purescript-memory.yml'
+      - '.github/workflows/br-passageiro-original-emulator.yml'
+      - 'Frontend/android-native/**'
+      - 'Frontend/scripts/test-original-passenger.sh'
+      - 'Frontend/scripts/diagnose-purescript.py'
+      - 'Frontend/packages.dhall'
+      - 'Frontend/ui-customer/**'
+      - 'Frontend/ui-common/**'
+  pull_request:
+    branches: [passageiro-pt-br]
+    paths:
+      - '.github/workflows/br-purescript-memory.yml'
+      - '.github/workflows/br-passageiro-original-emulator.yml'
+      - 'Frontend/android-native/**'
+      - 'Frontend/scripts/test-original-passenger.sh'
+      - 'Frontend/scripts/diagnose-purescript.py'
+      - 'Frontend/ui-customer/package.json'
+      - 'Frontend/ui-customer/src/**'
+      - 'Frontend/ui-common/**'
+      - 'Frontend/packages.dhall'
+  workflow_dispatch:
+    inputs:
+      maps_test_mode:
+        description: 'APK debug sem login para o motor de mapas de teste na AWS'
+        type: boolean
+        default: false
+      ffi_only:
+        description: 'Reusar output PureScript validado quando somente JavaScript/configuração Android mudou'
+        type: boolean
+        default: false
+      bundle_run_id:
+        description: 'Opcional: reutilizar bundle de run anterior com os mesmos fontes PureScript, compilando apenas Android'
+        required: false
+        type: string
+      cache_run_id:
+        description: 'Opcional: recuperar cache de um job PureScript bem-sucedido, validando novamente os fontes atuais'
+        required: false
+        type: string
+      compilador:
+        description: '0.15.14 inclui correcoes oficiais de memoria; 0.15.4 reproduz o historico'
+        type: choice
+        options: ['0.15.14', '0.15.4']
+        default: '0.15.14'
+      aplicativo:
+        type: choice
+        options: [passageiro, motorista]
+        default: passageiro
+      modo:
+        type: choice
+        options: [full, staged, module]
+        default: full
+      heap:
+        description: 'Limite GHC, com margem para RSS e sistema (ex.: 2500m ou 10g)'
+        default: '10g'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: purescript-memory-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  passageiro-original:
+    if: ${{ !inputs.bundle_run_id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 105
+    env:
+      APP: ${{ inputs.aplicativo || 'passageiro' }}
+      MODE: ${{ inputs.modo || 'full' }}
+      PURS_VERSION: ${{ inputs.compilador || '0.15.14' }}
+      HEAP: ${{ inputs.heap || '10g' }}
+      GHCRTS: '-N1 -M512m'
+    steps:
+      - uses: actions/checkout@v4
+        # Build the actual PR/selected ref, never a hard-coded older branch.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18.20.8'
+      - name: Instalar ferramentas com versoes fixas
+        env:
+          FFI_ONLY: ${{ inputs.ffi_only && 'true' || 'false' }}
+        run: |
+          if [[ "$FFI_ONLY" != true ]]; then
+            npm install --global --ignore-scripts=false "purescript@$PURS_VERSION" spago@0.21.0
+            sudo apt-get update -qq
+            sudo apt-get install -y time
+            purs --version
+            spago --version
+          fi
+          free -h
+          if [[ "$APP" == motorista ]]; then DIR=ui-driver; else DIR=ui-customer; fi
+          echo "APP_DIR=Frontend/$DIR" >> "$GITHUB_ENV"
+      - name: Testar adaptador de enderecos BR
+        run: node --test Frontend/scripts/test-development-places.mjs
+      - name: Verificar Google Places real quando configurado
+        continue-on-error: true
+        env:
+          GOOGLE_MAPS_SERVER_KEY: ${{ secrets.GOOGLE_MAPS_SERVER_KEY }}
+        run: node Frontend/scripts/verify-places-provider.mjs
+      - name: Validar compilacao de referencia do cache
+        if: inputs.cache_run_id
+        id: cache_reference
+        uses: actions/github-script@v7
+        env:
+          CACHE_RUN_ID: ${{ inputs.cache_run_id }}
+        with:
+          script: |
+            const value = process.env.CACHE_RUN_ID;
+            if (!/^[1-9][0-9]*$/.test(value)) throw new Error('cache_run_id invalido');
+            const run_id = Number(value);
+            if (!Number.isSafeInteger(run_id)) throw new Error('cache_run_id fora do intervalo');
+            const {data: run} = await github.rest.actions.getWorkflowRun({...context.repo, run_id});
+            if (run.path !== '.github/workflows/br-purescript-memory.yml') throw new Error('Workflow de cache invalido');
+            const {data} = await github.rest.actions.listJobsForWorkflowRun({...context.repo, run_id});
+            if (!data.jobs.some(j => j.name === 'passageiro-original' && j.conclusion === 'success')) {
+              throw new Error('Cache de referencia nao possui compilacao PureScript validada');
+            }
+            core.setOutput('sha', run.head_sha);
+      - name: Exigir fontes PureScript e contratos FFI idênticos para reuso sem compilador
+        if: inputs.ffi_only
+        env:
+          SOURCE_SHA: ${{ steps.cache_reference.outputs.sha }}
+        run: |
+          test -n "$SOURCE_SHA" || { echo 'ffi_only exige cache_run_id validado'; exit 1; }
+          git cat-file -e "$SOURCE_SHA^{commit}" || git fetch --depth 1 origin "$SOURCE_SHA"
+          git diff --exit-code "$SOURCE_SHA" HEAD -- 'Frontend/**/*.purs' 'Frontend/**/spago.dhall' Frontend/packages.dhall \
+            'Frontend/ui-customer/src/**/*.js' 'Frontend/ui-common/src/**/*.js' \
+            Frontend/ui-customer/package.json 'Frontend/ui-customer/webpack*.js' 'Frontend/ui-customer/webpack*.cjs' \
+            ':!Frontend/ui-customer/src/Localization/*.js' ':!Frontend/ui-customer/webpack.android.js' \
+            ':!Frontend/ui-customer/webpack.br-portuguese.cjs' ':!Frontend/ui-customer/webpack.br-portuguese-babel.cjs'
+          python3 Frontend/scripts/validate-portuguese-webpack.py "$SOURCE_SHA"
+      - uses: actions/cache/restore@v4
+        id: cache
+        with:
+          path: |
+            Frontend/${{ env.APP == 'motorista' && 'ui-driver' || 'ui-customer' }}/.spago
+            Frontend/${{ env.APP == 'motorista' && 'ui-driver' || 'ui-customer' }}/output
+            ~/.cache/dhall
+          key: purs-${{ env.PURS_VERSION }}-v2-${{ runner.os }}-${{ env.APP }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            purs-${{ env.PURS_VERSION }}-v2-${{ runner.os }}-${{ env.APP }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-${{ inputs.cache_run_id }}-
+            purs-${{ env.PURS_VERSION }}-v2-${{ runner.os }}-${{ env.APP }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-
+      - name: Exigir o cache de referencia solicitado
+        if: inputs.cache_run_id
+        env:
+          CACHE_RUN_ID: ${{ inputs.cache_run_id }}
+          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
+        run: |
+          [[ "$MATCHED_KEY" == *-"$CACHE_RUN_ID"-* ]] || { echo 'Cache solicitado indisponivel; interrompendo para evitar compilacao fria inesperada'; exit 1; }
+      - name: Instalar dependencias sem atualizar manifestos
+        env:
+          FFI_ONLY: ${{ inputs.ffi_only && 'true' || 'false' }}
+        run: |
+          mkdir -p purescript-diagnostics
+          set -o pipefail
+          cd "$APP_DIR"
+          npm install --legacy-peer-deps --ignore-scripts=false 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/npm-install.log"
+          if [[ "$FFI_ONLY" != true ]]; then
+            spago -j 2 install 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/spago-install.log"
+          else
+            test -s output/Main/index.js
+            cmp src/Development/Places.js output/Development.Places/foreign.js
+          fi
+      - name: Validar planejamento dos lotes
+        if: ${{ !inputs.ffi_only }}
+        run: python3 Frontend/scripts/test-purescript-batches.py
+      - name: Testar isolamento do modo de desenvolvimento
+        run: node Frontend/scripts/test-development-mode.mjs
+      - name: Testar diagnosticos do FFI real em desenvolvimento e release
+        run: node Frontend/scripts/test-development-config-diagnostics.mjs
+      - name: Testar validacao brasileira compilada em PureScript
+        if: ${{ !inputs.ffi_only }}
+        run: python3 Frontend/scripts/test-brazilian-mobile-number.py
+      - name: Medir compilacao original e retomada por cache
+        if: ${{ !inputs.ffi_only }}
+        timeout-minutes: 80
+        run: |
+          # Compile in resumable dependency-closure batches: one monolithic purs call may stall.
+          # Keep MODE=full for the existing bundle/APK publishing conditions.
+          BUILD_MODE="$MODE"
+          if [[ "$APP" == "passageiro" && "$MODE" == "full" ]]; then BUILD_MODE=staged; fi
+          python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode "$BUILD_MODE" --batch-size 25 --heap "$HEAP" --label measured --timeout-seconds 600 --stall-seconds 300 --rss-limit-mib 12288
+          python3 Frontend/scripts/diagnose-purescript.py --compiler-version "$PURS_VERSION" --app "$APP" --mode full --heap "$HEAP" --label incremental --timeout-seconds 120 --stall-seconds 60 --rss-limit-mib 12288 --require-cache
+      - name: Verificar comando npm original com PSA
+        if: ${{ !inputs.ffi_only }}
+        shell: bash
+        run: |
+          set -o pipefail
+          export GHCRTS="-N1 -M$HEAP"
+          cd "$APP_DIR"
+          /usr/bin/time -v -o "$GITHUB_WORKSPACE/purescript-diagnostics/npm-entrypoint.time" npm run compile:purs 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/npm-entrypoint.log"
+      - name: Validar adaptador Android no Webpack real
+        env:
+          NODE_OPTIONS: '--openssl-legacy-provider'
+        run: node Frontend/scripts/test-development-config-webpack.cjs
+      - name: Validar catálogo e integração pt-BR no Webpack real
+        run: |
+          python3 Frontend/scripts/validate-portuguese-catalog.py
+          node --test Frontend/scripts/test-portuguese-localization.mjs
+          NODE_OPTIONS=--openssl-legacy-provider node Frontend/scripts/test-portuguese-webpack.cjs
+      - name: Conferir FFI atual dentro do output compilado
+        run: cmp Frontend/ui-common/src/DecodeUtil/DecodeUtil.js Frontend/ui-customer/output/DecodeUtil/foreign.js
+      - name: Empacotar frontend original para Android
+        if: env.APP == 'passageiro' && env.MODE == 'full'
+        working-directory: Frontend/ui-customer
+        env:
+          NODE_OPTIONS: '--openssl-legacy-provider --max-old-space-size=6144'
+        run: |
+          set -o pipefail
+          /usr/bin/time -v -o "$GITHUB_WORKSPACE/purescript-diagnostics/webpack.time" npm run bundle:android 2>&1 | tee "$GITHUB_WORKSPACE/purescript-diagnostics/webpack.log"
+          test -s dist/android/index_bundle.js
+          node --check dist/android/index_bundle.js
+          grep -Fq YATRI_BR_CONFIG_DIAGNOSTICS dist/android/index_bundle.js
+          sha256sum dist/android/index_bundle.js > dist/android/SHA256SUMS
+      - name: Publicar bundle Android original
+        if: env.APP == 'passageiro' && env.MODE == 'full'
+        uses: actions/upload-artifact@v4
+        with:
+          name: yatri-passageiro-bundle-original
+          path: Frontend/ui-customer/dist/android/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Preservar cache inclusive em caso de falha
+        if: always() && steps.cache.outcome == 'success' && !inputs.ffi_only
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            Frontend/${{ env.APP == 'motorista' && 'ui-driver' || 'ui-customer' }}/.spago
+            Frontend/${{ env.APP == 'motorista' && 'ui-driver' || 'ui-customer' }}/output
+            ~/.cache/dhall
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+      - name: Publicar evidencias, inclusive em caso de falha
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: purescript-memory-${{ env.APP }}-${{ env.PURS_VERSION }}-${{ github.run_attempt }}
+          path: purescript-diagnostics/
+          retention-days: 14
+          if-no-files-found: warn
+
+  android-passageiro-original:
+    needs: passageiro-original
+    if: always() && !cancelled() && (inputs.bundle_run_id || needs.passageiro-original.result == 'success') && (inputs.aplicativo == '' || inputs.aplicativo == 'passageiro') && (inputs.modo == '' || inputs.modo == 'full')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+          log-accepted-android-sdk-licenses: false
+      - name: Validar origem do bundle reutilizado
+        if: inputs.bundle_run_id
+        id: bundle_source
+        uses: actions/github-script@v7
+        env:
+          BUNDLE_RUN_ID: ${{ inputs.bundle_run_id }}
+        with:
+          script: |
+            const id = Number(process.env.BUNDLE_RUN_ID);
+            if (!Number.isSafeInteger(id) || id <= 0) throw new Error('bundle_run_id invalido');
+            const {data: run} = await github.rest.actions.getWorkflowRun({...context.repo, run_id: id});
+            if (run.path !== '.github/workflows/br-purescript-memory.yml') throw new Error('Workflow de origem invalido');
+            const {data} = await github.rest.actions.listJobsForWorkflowRun({...context.repo, run_id: id});
+            if (!data.jobs.some(j => j.name === 'passageiro-original' && j.conclusion === 'success')) {
+              throw new Error('Compilacao PureScript de origem nao foi validada');
+            }
+            core.setOutput('sha', run.head_sha);
+      - name: Exigir os mesmos fontes PureScript do bundle
+        if: inputs.bundle_run_id
+        env:
+          SOURCE_SHA: ${{ steps.bundle_source.outputs.sha }}
+        run: |
+          git cat-file -e "$SOURCE_SHA^{commit}" || git fetch origin "$SOURCE_SHA"
+          git diff --exit-code "$SOURCE_SHA" HEAD -- Frontend/ui-customer Frontend/ui-common Frontend/packages.dhall
+      - uses: actions/download-artifact@v4
+        with:
+          name: yatri-passageiro-bundle-original
+          path: Frontend/ui-customer/dist/android
+          run-id: ${{ inputs.bundle_run_id || github.run_id }}
+          github-token: ${{ github.token }}
+      - name: Integrar bundle aos recursos originais
+        working-directory: Frontend
+        run: |
+          cd ui-customer
+          sha256sum -c dist/android/SHA256SUMS
+          cd ..
+          cp ui-customer/dist/android/index_bundle.js android-native/app/src/user/nammaYatri/assets/juspay/index_bundle.js
+          bash userJuspayAssets.sh nammaYatri
+          python3 -m json.tool android-native/app/src/user/nammaYatri/assets/juspay/juspay_assets.json > /dev/null
+          cp android-native/local-temp.properties android-native/local.properties
+      - name: Compilar container Android original do passageiro
+        working-directory: Frontend/android-native
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.Google_Maps_API_Key }}
+          YATRI_BACKEND_URL: ${{ vars.YATRI_BACKEND_URL || (inputs.maps_test_mode && 'https://52-67-246-31.sslip.io') || '' }}
+          YATRI_MAPS_TEST_MODE: ${{ inputs.maps_test_mode && 'true' || 'false' }}
+          YATRI_PASSENGER_DEV_KEY: ${{ secrets.YATRI_PASSENGER_DEV_KEY }}
+        run: |
+          set -o pipefail
+          python3 - <<'PYCONFIG'
+          import json, os
+          from pathlib import Path
+          status = {name: bool(os.environ.get(name)) for name in
+                    ('GOOGLE_MAPS_API_KEY', 'YATRI_BACKEND_URL', 'YATRI_PASSENGER_DEV_KEY')}
+          Path('android-config-status.json').write_text(json.dumps(status, indent=2) + '\n')
+          print('Configuracoes presentes (sem valores):', status)
+          PYCONFIG
+          /usr/bin/time -v -o android-build.time bash gradlew :app:assembleNyUserProdDebug -PbrTestMode=true --no-daemon --max-workers=2 --stacktrace 2>&1 | tee android-build.log
+      - name: Confirmar bundle recompilado dentro do APK
+        env:
+          MAPS_TEST_MODE: ${{ inputs.maps_test_mode && 'true' || 'false' }}
+        run: |
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import hashlib
+          bundle = Path('Frontend/ui-customer/dist/android/index_bundle.js').read_bytes()
+          apks = list(Path('Frontend/android-native/app/build/outputs/apk').rglob('*.apk'))
+          if len(apks) != 1:
+              raise SystemExit(f'Esperado exatamente um APK; encontrados {len(apks)}')
+          with ZipFile(apks[0]) as apk:
+              embedded = apk.read('assets/juspay/index_bundle.js')
+              entry = apk.read('assets/juspay/becknbase.html')
+              if __import__('os').environ['MAPS_TEST_MODE'] == 'true':
+                  config = __import__('json').loads(apk.read('assets/juspay/yatri_places_config.json'))
+                  if config.get('mapsTestMode') is not True or config.get('passengerCredential'):
+                      raise SystemExit('APK de mapas deve dispensar sessão e credencial embutida')
+                  if not config.get('backendUrl', '').startswith('https://'):
+                      raise SystemExit('APK de mapas exige backend HTTPS')
+          if entry != Path('Frontend/android-native/app/src/brTest/assets/juspay/becknbase.html').read_bytes():
+              raise SystemExit('APK nao contem o entrypoint local do modo BR')
+          if embedded != bundle:
+              raise SystemExit('APK nao contem o bundle recompilado desta execucao')
+          import xml.etree.ElementTree as ET
+          manifests = list(Path('Frontend/android-native/app/build/intermediates/merged_manifests').rglob('AndroidManifest.xml'))
+          if len(manifests) != 1:
+              raise SystemExit('Nao foi encontrado um manifesto final unico')
+          android = '{http://schemas.android.com/apk/res/android}'
+          root = ET.parse(manifests[0]).getroot()
+          metadata = {n.get(android + 'name'): n.get(android + 'value') for n in root.iter('meta-data')}
+          if 'com.google.firebase.components:com.google.firebase.crashlytics.CrashlyticsRegistrar' in metadata:
+              raise SystemExit('Crashlytics ainda registrado no modo BR')
+          if metadata.get('firebase_crashlytics_collection_enabled') != 'false':
+              raise SystemExit('Coleta Crashlytics nao esta desativada')
+          print('Manifesto BR: Crashlytics nao registrado, coleta desativada')
+          print('Bundle conferido:', hashlib.sha256(bundle).hexdigest())
+          print('APK:', apks[0], 'SHA256:', hashlib.sha256(apks[0].read_bytes()).hexdigest())
+          PYTHON
+      - name: Publicar APK original
+        uses: actions/upload-artifact@v4
+        with:
+          name: yatri-brasil-passageiro-original-apk
+          path: Frontend/android-native/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Sanitizar diagnosticos Android
+        if: always()
+        run: |
+          python3 - <<'PYREDACT'
+          from pathlib import Path
+          import re
+          root = Path('Frontend/android-native')
+          files = [root / 'android-build.log']
+          files += list((root / 'app/build/reports').rglob('*'))
+          for path in files:
+              if not path.is_file() or path.suffix.lower() not in {'.txt', '.html', '.json', '.xml', '.log'}:
+                  continue
+              text = path.read_text(errors='replace')
+              text = re.sub(r'AIza[0-9A-Za-z_-]{20,}', '[REDACTED_GOOGLE_KEY]', text)
+              text = re.sub(r'\b[a-fA-F0-9]{64}\b', '[REDACTED_SESSION_OR_HASH]', text)
+              path.write_text(text)
+          PYREDACT
+      - name: Publicar diagnostico Android
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yatri-passageiro-android-diagnostico
+          path: |
+            Frontend/android-native/android-build.log
+            Frontend/android-native/android-build.time
+            Frontend/android-native/android-config-status.json
+            Frontend/android-native/app/build/reports/
+          if-no-files-found: warn
+          retention-days: 14
+
+  abertura-passageiro-original:
+    if: always() && !cancelled() && needs.android-passageiro-original.result == 'success'
+    needs: android-passageiro-original
+    uses: ./.github/workflows/br-passageiro-original-emulator.yml
+    with:
+      run_id: ${{ format('{0}', github.run_id) }}
+      require_places: ${{ inputs.maps_test_mode || false }}

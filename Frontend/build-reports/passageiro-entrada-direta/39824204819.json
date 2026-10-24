@@ -1,0 +1,41 @@
+{
+  "run_id": 39824204819,
+  "source_sha": "b62ef7c97d23455e67dec02f9f1480e1e3635c28",
+  "reference_cache_run": 39785756375,
+  "compiler": "0.15.14",
+  "graph_modules": 1192,
+  "compiled_modules": [
+    "Development.Passenger",
+    "Engineering.Helpers.DevelopmentMode",
+    "Main"
+  ],
+  "backend_modified": false,
+  "android_status": "success",
+  "emulator_status": "failed: incomplete test selector, then missing fresh XML during typing",
+  "compiler_artifact_id": 12447165646,
+  "bundle_artifact_id": 12446886289,
+  "measured": {
+    "invocations": 55,
+    "seconds": 369.84,
+    "peak_sampled_rss_kib": 8244840,
+    "all_exit_zero": true
+  },
+  "incremental": {
+    "invocations": 1,
+    "seconds": 41.39,
+    "peak_sampled_rss_kib": 6989084,
+    "all_exit_zero": true
+  },
+  "webpack_wall_time": "4:57.34",
+  "apk_artifact_id": 12447121268,
+  "apk": {
+    "size_bytes": 126298495,
+    "sha256": "110dffc6ab64a3335e21752adaa98032edcaa32a26857d1d2821b64a44c87d3e",
+    "signer_certificate_sha256": "6d075b3ef485e7e93fdea1d33f60b904505b7b4dbf029961b9779bfc65d483a5",
+    "signer_certificate_sha1": "9483df9445db6c025ea0fc56d20f03efa8fdfce6"
+  },
+  "first_emulator_result": "failure: test expected Where To but original new-home uses Where are you going?",
+  "first_emulator_artifact_id": 12447810747,
+  "emulator_retest_run_id": 39827816189,
+  "superseded_by_run_id": 39835346434
+}

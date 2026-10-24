@@ -1,0 +1,191 @@
+{
+  "source_commit": "87ac794971abf67f60dae1d6acfe56598076cbe2",
+  "workflow_run_id": 39890948539,
+  "apk_artifact_id": 12474108786,
+  "apk_sha256": "3eccf4987964f52ef082678cfd591c358e85ae45cf87c9d0b09aafd21f2740df",
+  "apk_bytes": 128052971,
+  "purescript_recompiled": false,
+  "pngs_checked": [
+    {
+      "resource": "res/drawable-nodpi-v4/br_logo.png",
+      "size": [
+        1536,
+        1380
+      ],
+      "source_sha256": "2fb070147162ee1d09ed9211b76e649940681201ebef3907e31014d24d5e17fb",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/drawable-nodpi-v4/br_logo_transparent.png",
+      "size": [
+        1932,
+        715
+      ],
+      "source_sha256": "a234a519c3bbfbd15fb2d997a18eb99cc4391d89557278544521cee6b1683bf0",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/drawable-nodpi-v4/br_splash.png",
+      "size": [
+        1080,
+        2400
+      ],
+      "source_sha256": "484a6affb976dc71fd1451641fe788816561780d84011b3005e5bd4c2a833f2a",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-hdpi-v4/br_launcher_foreground.png",
+      "size": [
+        162,
+        162
+      ],
+      "source_sha256": "f4d1bd40cd21a679160bae0c0d3f4fca14b1d4d0e8ef692cda56f8483f74afe0",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-hdpi-v4/ic_launcher_debug.png",
+      "size": [
+        72,
+        72
+      ],
+      "source_sha256": "4ae9fba0647112351366ffab58dac6bac39f0000e4b05228829fc728910c4cd0",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-hdpi-v4/ic_launcher_debug_round.png",
+      "size": [
+        72,
+        72
+      ],
+      "source_sha256": "4ae9fba0647112351366ffab58dac6bac39f0000e4b05228829fc728910c4cd0",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-mdpi-v4/br_launcher_foreground.png",
+      "size": [
+        108,
+        108
+      ],
+      "source_sha256": "02809d8f2aea27054e739f43059d29fd509588cf4a660dd79a209ebbca4536ec",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-mdpi-v4/ic_launcher_debug.png",
+      "size": [
+        48,
+        48
+      ],
+      "source_sha256": "b5dda47159183906f78687bdeebfd4cfdefe331ed50d6d751aa7d25763611efa",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-mdpi-v4/ic_launcher_debug_round.png",
+      "size": [
+        48,
+        48
+      ],
+      "source_sha256": "b5dda47159183906f78687bdeebfd4cfdefe331ed50d6d751aa7d25763611efa",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xhdpi-v4/br_launcher_foreground.png",
+      "size": [
+        216,
+        216
+      ],
+      "source_sha256": "80cfa62ac8c598e419f3237a42a83c87460a2aa5438ef594d962fd0079cb936e",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xhdpi-v4/ic_launcher_debug.png",
+      "size": [
+        96,
+        96
+      ],
+      "source_sha256": "51cb4e1d6e59b425920b26b54a2598e682e4b745e43c7848d0dd2fd4eae23985",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xhdpi-v4/ic_launcher_debug_round.png",
+      "size": [
+        96,
+        96
+      ],
+      "source_sha256": "51cb4e1d6e59b425920b26b54a2598e682e4b745e43c7848d0dd2fd4eae23985",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xxhdpi-v4/br_launcher_foreground.png",
+      "size": [
+        324,
+        324
+      ],
+      "source_sha256": "85b2c1d0aca104cc7bd935567e5f7d2d138d1b3687ed9a55633108772a603a6a",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xxhdpi-v4/ic_launcher_debug.png",
+      "size": [
+        144,
+        144
+      ],
+      "source_sha256": "75972299296e8c54c92096c36e38549b784a2c08522c7e78b9cec8b944cc2da1",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xxhdpi-v4/ic_launcher_debug_round.png",
+      "size": [
+        144,
+        144
+      ],
+      "source_sha256": "75972299296e8c54c92096c36e38549b784a2c08522c7e78b9cec8b944cc2da1",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xxxhdpi-v4/br_launcher_foreground.png",
+      "size": [
+        432,
+        432
+      ],
+      "source_sha256": "ab0c491ee865b3d4689579f6c8883abcac7c2293278444874aa5461913347601",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xxxhdpi-v4/ic_launcher_debug.png",
+      "size": [
+        192,
+        192
+      ],
+      "source_sha256": "6cf06382faf4af8c1cd64d6029e36000d4530e21930ce080e16eee32d6390faa",
+      "identical_pixels": true
+    },
+    {
+      "resource": "res/mipmap-xxxhdpi-v4/ic_launcher_debug_round.png",
+      "size": [
+        192,
+        192
+      ],
+      "source_sha256": "6cf06382faf4af8c1cd64d6029e36000d4530e21930ce080e16eee32d6390faa",
+      "identical_pixels": true
+    }
+  ],
+  "android_validation": "passed",
+  "native_build_seconds": 195.68,
+  "apk_signer_certificate_sha256": "04cb595842fe5fc26eca85f511df778ef23be953eb095abdf85ce892b9c89bd9",
+  "workflow_conclusion": "success",
+  "android_api_level": 29,
+  "emulator": "Pixel 2 / google_apis / x86_64",
+  "screenshots_artifact_id": 12474822465,
+  "manual_visual_review": {
+    "launcher": "updated road/pin icon present",
+    "splash": "full blue background; no previous rectangular image boundary; logo and pin visible",
+    "home": "transparent text logo in original header"
+  },
+  "home_result": "PASS: HomeScreen original sem token, offline/online, busca editavel e retorno; nenhuma corrida ou sessao simulada.",
+  "map_tiles": "not confirmed: reviewed Home screenshot has blank map area; map not changed in this task",
+  "screenshots": {
+    "branding-launcher.png": "92ef2626596d7efe30642df7679b9bc123b162cc754f934d2d30c71bc7656492",
+    "branding-start-4.png": "5e2625bd566d9ba33a307932a8fb9202e200553962c8fdaa817934b22e3130a3",
+    "home-online-1.png": "69e5ec9511c665735b3c97bd9519803821a95bd7474c0c73550a6479293e1633"
+  }
+}

@@ -124,6 +124,9 @@ import in.juspay.mobility.common.utils.Utils;
 
 
 public class MainActivity extends AppCompatActivity {
+    @Override protected void attachBaseContext(Context context) {
+        super.attachBaseContext(BrLocale.wrap(context));
+    }
 
     private static final String LOG_TAG = "MAIN_ACTIVITY";
     private static final int REQUEST_CODE_UPDATE_APP = 587;
@@ -441,7 +444,9 @@ public class MainActivity extends AppCompatActivity {
         mobilityAppUpdate.checkAndUpdateApp(remoteConfigs);
 
         updateConfigURL();
-        mFirebaseAnalytics.setUserProperty("ct_objectId", Objects.requireNonNull(CleverTapAPI.getDefaultInstance(context)).getCleverTapID());
+        if (!BuildConfig.BR_TEST_MODE) {
+            mFirebaseAnalytics.setUserProperty("ct_objectId", Objects.requireNonNull(CleverTapAPI.getDefaultInstance(context)).getCleverTapID());
+        }
 
         JSONObject results = new JSONObject();
         try {
@@ -600,16 +605,19 @@ public class MainActivity extends AppCompatActivity {
         String clientId = context.getResources().getString(R.string.client_id);
 
         mFirebaseAnalytics.logEvent(isMigrated ?"migrate_local_store_success" : "migrate_local_store_failed",new Bundle());
-        CleverTapAPI cleverTap = CleverTapAPI.getDefaultInstance(context);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CleverTapAPI.createNotificationChannel(context,clientId,"Promotion","Notifications Related to promotion",NotificationManager.IMPORTANCE_MAX, "4_promotional",true);
-            CleverTapAPI.createNotificationChannel(context,"nammayatriHindi","nammayatriHindi","notification",NotificationManager.IMPORTANCE_MAX,true,"clevertap_custom_notification.mp3");
-        }else{
-            CleverTapAPI.createNotificationChannel(context,clientId,"Promotion","Notifications Related to promotion",NotificationManager.IMPORTANCE_MAX,true);
+        // External analytics and promotional notifications are optional in BR tests.
+        if (!BuildConfig.BR_TEST_MODE) {
+            CleverTapAPI cleverTap = CleverTapAPI.getDefaultInstance(context);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                CleverTapAPI.createNotificationChannel(context,clientId,"Promotion","Notifications Related to promotion",NotificationManager.IMPORTANCE_MAX, "4_promotional",true);
+                CleverTapAPI.createNotificationChannel(context,"nammayatriHindi","nammayatriHindi","notification",NotificationManager.IMPORTANCE_MAX,true,"clevertap_custom_notification.mp3");
+            }else{
+                CleverTapAPI.createNotificationChannel(context,clientId,"Promotion","Notifications Related to promotion",NotificationManager.IMPORTANCE_MAX,true);
+            }
+            CleverTapAPI.setDebugLevel(CleverTapAPI.LogLevel.VERBOSE);
+            cleverTap.enableDeviceNetworkInfoReporting(true);
+            CleverTapAPI.setNotificationHandler((NotificationHandler)new PushTemplateNotificationHandler());
         }
-        CleverTapAPI.setDebugLevel(CleverTapAPI.LogLevel.VERBOSE);
-        cleverTap.enableDeviceNetworkInfoReporting(true);
-        CleverTapAPI.setNotificationHandler((NotificationHandler)new PushTemplateNotificationHandler());
         // Crashlytics is disabled in offline debug builds; keep production behavior.
         if (!BuildConfig.DEBUG) {
             FirebaseCrashlytics crashlytics = FirebaseCrashlytics.getInstance();
@@ -637,9 +645,12 @@ public class MainActivity extends AppCompatActivity {
         Window window = this.getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        window.setStatusBarColor(this.getResources().getColor(R.color.colorPrimaryDark, getTheme()));
+        window.setStatusBarColor(findViewById(R.id.splash) instanceof BrandVideoSplash
+                ? 0xFFFF00BE : this.getResources().getColor(R.color.colorPrimaryDark, getTheme()));
         countAppUsageDays();
         startForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> handleGlResp(result, MainActivity.this));
+        BrDriverSetupActivity.openIfNeeded(this);
+        BrPassengerSetupActivity.openIfNeeded(this);
     }
 
     private void startApp() {
@@ -698,6 +709,12 @@ public class MainActivity extends AppCompatActivity {
     private void handleSplashScreen() {
         try {
             setContentView(R.layout.activity_main);
+            // Only the Brazilian passenger overlay contains this local video view.
+            if (findViewById(R.id.splash) instanceof BrandVideoSplash) {
+                BrHeaderBranding.install(findViewById(R.id.cl_dui_container));
+                findViewById(R.id.splash).setVisibility(View.VISIBLE);
+                return;
+            }
             boolean skipDefaultSplash = false;
             String city = "__failed";
             if (sharedPref != null) {
@@ -1188,6 +1205,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void hideSplash() {
+        View splash = findViewById(R.id.splash);
+        if (splash instanceof BrandVideoSplash) {
+            ((BrandVideoSplash) splash).finishWhenReady(this::hideSplashNow);
+            return;
+        }
+        hideSplashNow();
+    }
+
+    private void hideSplashNow() {
+        if (findViewById(R.id.splash) instanceof BrandVideoSplash) {
+            getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark, getTheme()));
+            // Presto screens contain transparent regions: the launch pink must not leak into Home.
+            getWindow().setBackgroundDrawableResource(android.R.color.white);
+            getWindow().setNavigationBarColor(0xFF000000);
+        }
         View v = findViewById(in.juspay.mobility.app.R.id.cl_dui_container);
         if (v != null) {
             findViewById(in.juspay.mobility.app.R.id.cl_dui_container).setVisibility(View.VISIBLE);

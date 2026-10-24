@@ -1,0 +1,30 @@
+  59,838,727,408 bytes allocated in the heap
+  18,730,314,696 bytes copied during GC
+   4,281,606,696 bytes maximum residency (15 sample(s))
+      17,055,192 bytes maximum slop
+            8569 MiB total memory in use (0 MB lost due to fragmentation)
+
+                                     Tot time (elapsed)  Avg pause  Max pause
+  Gen  0     14129 colls,     0 par    8.632s   8.655s     0.0006s    0.0013s
+  Gen  1        15 colls,     0 par   11.646s  11.647s     0.7764s    4.7034s
+
+  TASKS: 5 (1 bound, 4 peak workers (4 total), using -N1)
+
+  SPARKS: 1189 (0 converted, 0 overflowed, 0 dud, 55 GC'd, 1134 fizzled)
+
+  INIT    time    0.001s  (  0.001s elapsed)
+  MUT     time   19.626s  ( 19.528s elapsed)
+  GC      time   20.278s  ( 20.302s elapsed)
+  EXIT    time    0.004s  (  0.010s elapsed)
+  Total   time   39.908s  ( 39.840s elapsed)
+
+  Alloc rate    3,049,002,695 bytes per MUT second
+
+  Productivity  49.2% of total user, 49.0% of total elapsed
+
+[info] Build succeeded.
+[warn] None of your project files import modules from some projects that are in the direct dependencies of your project.
+These dependencies are unused. To fix this warning, remove the following packages from the list of dependencies in your config:
+- js-uri
+- lite-decode
+- unfoldable

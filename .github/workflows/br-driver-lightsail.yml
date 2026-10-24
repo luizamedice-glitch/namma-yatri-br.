@@ -1,0 +1,117 @@
+name: BR - Motorista no Lightsail
+on:
+  workflow_dispatch:
+    inputs:
+      provision:
+        description: 'Cadastrar o motorista com o perfil criptografado aprovado'
+        type: boolean
+        default: false
+      provision_passenger:
+        description: 'Cadastrar Fagner privadamente no piloto'
+        type: boolean
+        default: false
+      role:
+        description: 'Perfil da ativacao privada'
+        type: choice
+        options: [driver, passenger]
+        default: driver
+      activate:
+        description: 'Somente emitir ativacao criptografada, sem implantar novamente'
+        type: boolean
+        default: false
+  push:
+    branches: [codex/issue-1-purescript-memory]
+    paths: ['.github/workflows/br-driver-lightsail.yml']
+permissions:
+  contents: read
+concurrency:
+  group: lightsail-ssh-test
+  cancel-in-progress: false
+jobs:
+  contracts:
+    if: ${{ !inputs.activate }}
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: yatri_test
+          POSTGRES_PASSWORD: fixture-only
+          POSTGRES_DB: driver_pilot
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U yatri_test" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://yatri_test:fixture-only@127.0.0.1:5432/driver_pilot
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix brasil/backend
+      - run: npm test --prefix brasil/backend
+      - run: npm run test:integration --prefix brasil/backend
+      - run: node --test brasil/backend/test/driver-pilot.test.mjs Frontend/scripts/test-driver-operations.mjs Frontend/scripts/test-driver-backend.integration.mjs
+      - run: python3 brasil/backend/test/driver-pilot-ops.test.py
+  deploy:
+    needs: contracts
+    if: github.ref == 'refs/heads/codex/issue-1-purescript-memory' && !inputs.activate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar piloto restrito sem recriar servicos existentes
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          umask 077
+          work=$(mktemp -d "$RUNNER_TEMP/yatri-driver.XXXXXX")
+          trap 'rm -rf -- "$work"' EXIT
+          printf '%s\n' "$AWS_SSH_KEY" > "$work/key"
+          unset AWS_SSH_KEY
+          touch "$work/known_hosts"
+          host_check=accept-new
+          if [[ -n "$AWS_SSH_KNOWN_HOSTS" ]]; then
+            printf '%s\n' "$AWS_SSH_KNOWN_HOSTS" > "$work/known_hosts"
+            host_check=yes
+          fi
+          args=(-i "$work/key" -o IdentitiesOnly=yes -o BatchMode=yes -o ForwardAgent=no -o ConnectTimeout=15 -o "StrictHostKeyChecking=$host_check" -o "UserKnownHostsFile=$work/known_hosts")
+          target=ubuntu@52.67.246.31
+          remote_dir=$(ssh "${args[@]}" "$target" 'mktemp -d /tmp/yatri-driver.XXXXXX')
+          [[ "$remote_dir" =~ ^/tmp/yatri-driver\.[a-zA-Z0-9]+$ ]]
+          git archive --format=tar.gz "$GITHUB_SHA" brasil/backend > "$work/backend.tar.gz"
+          scp "${args[@]}" "$work/backend.tar.gz" "$target:$remote_dir/"
+          ssh "${args[@]}" "$target" "tar -xzf '$remote_dir/backend.tar.gz' -C '$remote_dir' && sudo -n python3 '$remote_dir/brasil/backend/ops/deploy-driver-pilot.py' '$remote_dir/brasil/backend' '$GITHUB_SHA'"
+          ssh "${args[@]}" "$target" "rm -rf -- '$remote_dir'"
+  provision:
+    needs: deploy
+    if: ${{ (inputs.provision || inputs.provision_passenger) && !inputs.activate }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Aplicar perfil privado autorizado
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+          YATRI_DRIVER_OPERATION: ${{ inputs.provision_passenger && 'provision-passenger' || 'provision' }}
+        run: bash brasil/backend/ops/driver-ssh-operation.sh
+  activate:
+    if: ${{ inputs.activate && github.ref == 'refs/heads/codex/issue-1-purescript-memory' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Emitir ativacao sem expor codigo nos logs
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+          YATRI_DRIVER_OPERATION: activate
+          YATRI_PILOT_ROLE: ${{ inputs.role || 'driver' }}
+        run: bash brasil/backend/ops/driver-ssh-operation.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: motorista-ativacao-criptografada
+          path: ${{ runner.temp }}/driver-activation.enc
+          retention-days: 1

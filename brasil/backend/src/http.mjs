@@ -15,7 +15,7 @@ export async function readBody(req) {
   return parsed;
 }
 
-export function createApi({ service, maps, pool, allowedOrigin = '', rateLimit = 120, development = null }) {
+export function createApi({ service, maps, pool, allowedOrigin = '', rateLimit = 120, development = null, allowedRoutes = null, pairing = null }) {
   const buckets = new Map();
   const connections = new Set();
   function reply(res, status, data) {
@@ -40,6 +40,13 @@ export function createApi({ service, maps, pool, allowedOrigin = '', rateLimit =
       const ip = req.socket.remoteAddress;
       if (!buckets.has(ip)) buckets.set(ip, { count: 0, until: now + 60000 });
       requireThat(++buckets.get(ip).count <= rateLimit, 429, 'Muitas requisições; tente novamente em um minuto');
+      if (allowedRoutes) requireThat(typeof allowedRoutes==='function' ? allowedRoutes(req.method,url.pathname) : allowedRoutes.includes(req.method + ' ' + url.pathname), 404, 'Rota não encontrada');
+      if (pairing && req.method === 'POST' && ['/v1/driver/pair','/v1/passenger/pair'].includes(url.pathname)) {
+        const key='pair:'+ip;
+        if (!buckets.has(key)) buckets.set(key,{count:0,until:now+60000});
+        requireThat(++buckets.get(key).count<=10,429,'Aguarde um minuto antes de tentar conectar novamente');
+        return reply(res,200,await pairing(await readBody(req),url.pathname.includes('/passenger/')?'passenger':'driver'));
+      }
       if (req.method === 'POST' && ['/v1/auth/register', '/v1/auth/login', '/v1/development/session'].includes(url.pathname)) {
         // Separate low limit for expensive password hashing.
         const key = 'auth:' + ip;

@@ -1,0 +1,39 @@
+{
+  "apk_source_commit": "aa071bd55c4be8b782ebce80a8fb5deeca40873f",
+  "apk_build_run": 40116465299,
+  "apk_artifact": 12569640452,
+  "apk_zip_sha256": "7a345445a454ac281e5b5eb2b003adf36395774d2a94f54fee83b064e5b55621",
+  "remote_test_run": 40117202534,
+  "remote_evidence_artifact": 12569606867,
+  "backend_source_commit": "49459956300bd1fa0b0da4d3883dcb926714b18d",
+  "backend_provision_run": 40115687810,
+  "backend_url": "https://52-67-246-31.sslip.io",
+  "pilot_until": "2026-10-31T17:25:38.646713+00:00",
+  "checks": {
+    "build": "passed",
+    "local_android_regression": "passed",
+    "remote_android_acceptance": "passed",
+    "api_level": 29,
+    "native_mobile_pairing": true,
+    "one_time_code_consumed": true,
+    "https_real_api_and_database": true,
+    "emulator_gps_and_availability": true,
+    "map_tiles_visible": true,
+    "configuration_decode_warnings": 0,
+    "availability_reset_offline_after_test": true
+  },
+  "provisioning": {
+    "driver": "Giselo",
+    "vehicle_data": "Owner-provided real profile applied privately; values omitted.",
+    "code_delivery": "RSA-OAEP-SHA256 encrypted artifact; plaintext excluded from repository and workflow logs.",
+    "code_ttl_hours": 24,
+    "session_ttl_hours": 24,
+    "session_embedded_in_apk": false
+  },
+  "limits": [
+    "Physical phone installation and location permissions remain operator actions.",
+    "Offers and ride actions are not connected to the original views; passenger-driver ride flow not validated.",
+    "Legacy last-location timestamp is not wired to API acknowledgement.",
+    "Android 12+ and secondary navigation not validated in this increment."
+  ]
+}

@@ -1,0 +1,1005 @@
+{
+  "date_utc": "2026-10-22",
+  "original_source_commit": "2c0506ab5c0306d7a94049304d676b8f4fbfc9b9",
+  "scope_audit": {
+    "source_trees_unchanged": [
+      "Frontend/ui-customer/src",
+      "Frontend/ui-driver/src",
+      "Frontend/ui-common",
+      "Frontend/android-native",
+      "Frontend/packages.dhall",
+      "brasil/backend",
+      "Backend"
+    ],
+    "declared_npm_dependencies_unchanged": true,
+    "package_licenses_and_authors_unchanged": true,
+    "canonical_source_manifest_sha256": "a8edd26f3a3cf668487a982b8c9b20314934cd9603d3f0065c8b68d7833c59b3",
+    "npm_manifests_byte_identical_to_original": true,
+    "identical_input_run_count": 4,
+    "identical_purescript_module_count": 1189
+  },
+  "historical_cold_full": {
+    "compiler": "0.15.4",
+    "heap": "2500m",
+    "exit_code": 1,
+    "seconds": 251.32,
+    "max_rss_kib": 2720052,
+    "ghc_max_residency_bytes": 2578889552,
+    "ghc_allocated_bytes_cumulative": 113591887880,
+    "ghc_gc_elapsed_seconds": 204.048,
+    "ghc_total_elapsed_seconds": 250.64,
+    "kernel_oom_kills": 0,
+    "error": "Heap exhausted; maximum heap 2621440000 bytes"
+  },
+  "experiments": {
+    "staged-5500m": {
+      "compiler": "0.15.4",
+      "mode": "staged",
+      "heap": "5500m",
+      "runs": [
+        {
+          "step": 1,
+          "exit_code": 0,
+          "seconds": 3.01,
+          "timed_out": false,
+          "max_rss_kib_gnu_time": 84756,
+          "max_rss_kib_sampled": 82852
+        },
+        {
+          "step": 2,
+          "exit_code": 0,
+          "seconds": 6.02,
+          "timed_out": false,
+          "max_rss_kib_gnu_time": 202264,
+          "max_rss_kib_sampled": 180580
+        },
+        {
+          "step": 3,
+          "exit_code": 0,
+          "seconds": 12.05,
+          "timed_out": false,
+          "max_rss_kib_gnu_time": 663132,
+          "max_rss_kib_sampled": 662672
+        },
+        {
+          "step": 4,
+          "exit_code": 0,
+          "seconds": 8.03,
+          "timed_out": false,
+          "max_rss_kib_gnu_time": 612948,
+          "max_rss_kib_sampled": 508012
+        },
+        {
+          "step": 5,
+          "exit_code": 137,
+          "seconds": 909.15,
+          "timed_out": false,
+          "max_rss_kib_gnu_time": 5899688,
+          "max_rss_kib_sampled": 5899828
+        }
+      ],
+      "last_kernel_memory_events": "low 0\nhigh 0\nmax 36662\noom 0\noom_kill 0\noom_group_kill 0"
+    },
+    "original-strings-5500m": {
+      "compiler": "0.15.4",
+      "mode": "module",
+      "heap": "5500m",
+      "runs": [
+        {
+          "step": 1,
+          "exit_code": 0,
+          "seconds": 66.3,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 3988860,
+          "max_rss_kib_sampled": 3988256
+        }
+      ],
+      "last_kernel_memory_events": "low 0\nhigh 0\nmax 36662\noom 0\noom_kill 0\noom_group_kill 0"
+    },
+    "original-remote-utils-6500m": {
+      "compiler": "0.15.4",
+      "mode": "module",
+      "heap": "6500m",
+      "runs": [
+        {
+          "step": 1,
+          "exit_code": 0,
+          "seconds": 129.53,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 5428820,
+          "max_rss_kib_sampled": 5839184
+        }
+      ],
+      "last_kernel_memory_events": "low 0\nhigh 0\nmax 36662\noom 0\noom_kill 0\noom_group_kill 0"
+    },
+    "original-full-after-strings": {
+      "compiler": "0.15.4",
+      "mode": "full",
+      "heap": "5500m",
+      "runs": [
+        {
+          "step": 1,
+          "exit_code": 143,
+          "seconds": 134.54,
+          "timed_out": false,
+          "signal": 15,
+          "max_rss_kib_gnu_time": 111692,
+          "max_rss_kib_sampled": 5839884
+        }
+      ],
+      "last_kernel_memory_events": "low 0\nhigh 0\nmax 36662\noom 0\noom_kill 0\noom_group_kill 0"
+    },
+    "original-staged-isolated-6500m": {
+      "compiler": "0.15.4",
+      "mode": "staged",
+      "heap": "6500m",
+      "runs": [
+        {
+          "step": 1,
+          "exit_code": 0,
+          "seconds": 1.0,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 283736,
+          "max_rss_kib_sampled": 5980
+        },
+        {
+          "step": 2,
+          "exit_code": 0,
+          "seconds": 1.0,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 364504,
+          "max_rss_kib_sampled": 4016
+        },
+        {
+          "step": 3,
+          "exit_code": 0,
+          "seconds": 1.0,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 336984,
+          "max_rss_kib_sampled": 4604
+        },
+        {
+          "step": 4,
+          "exit_code": 0,
+          "seconds": 2.01,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 380376,
+          "max_rss_kib_sampled": 379284
+        },
+        {
+          "step": 5,
+          "exit_code": 143,
+          "seconds": 210.67,
+          "timed_out": false,
+          "signal": 15,
+          "max_rss_kib_gnu_time": 6807136,
+          "max_rss_kib_sampled": 6807324
+        }
+      ],
+      "last_kernel_memory_events": "low 0\nhigh 0\nmax 36662\noom 0\noom_kill 0\noom_group_kill 0"
+    },
+    "original-serial-6500m": {
+      "compiler": "0.15.4",
+      "mode": "staged",
+      "heap": "6500m",
+      "runs": [
+        {
+          "step": 1,
+          "exit_code": 0,
+          "seconds": 0.97,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 284120,
+          "max_rss_kib_sampled": 4224
+        },
+        {
+          "step": 2,
+          "exit_code": 0,
+          "seconds": 1.0,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 323928,
+          "max_rss_kib_sampled": 6032
+        },
+        {
+          "step": 3,
+          "exit_code": 0,
+          "seconds": 1.0,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 313304,
+          "max_rss_kib_sampled": 7044
+        },
+        {
+          "step": 4,
+          "exit_code": 0,
+          "seconds": 0.97,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 285016,
+          "max_rss_kib_sampled": 5824
+        },
+        {
+          "step": 5,
+          "exit_code": 0,
+          "seconds": 1.02,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 323800,
+          "max_rss_kib_sampled": 324100
+        },
+        {
+          "step": 6,
+          "exit_code": 0,
+          "seconds": 0.97,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 223576,
+          "max_rss_kib_sampled": 4772
+        },
+        {
+          "step": 7,
+          "exit_code": 0,
+          "seconds": 0.87,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 224472,
+          "max_rss_kib_sampled": 6096
+        },
+        {
+          "step": 8,
+          "exit_code": 0,
+          "seconds": 0.92,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 217560,
+          "max_rss_kib_sampled": 4244
+        },
+        {
+          "step": 9,
+          "exit_code": 0,
+          "seconds": 0.87,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 218200,
+          "max_rss_kib_sampled": 6164
+        },
+        {
+          "step": 10,
+          "exit_code": 0,
+          "seconds": 0.87,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 218840,
+          "max_rss_kib_sampled": 9508
+        },
+        {
+          "step": 11,
+          "exit_code": 0,
+          "seconds": 0.87,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 215896,
+          "max_rss_kib_sampled": 5252
+        },
+        {
+          "step": 12,
+          "exit_code": 0,
+          "seconds": 0.87,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 217304,
+          "max_rss_kib_sampled": 5248
+        },
+        {
+          "step": 13,
+          "exit_code": 0,
+          "seconds": 0.87,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 218456,
+          "max_rss_kib_sampled": 6000
+        },
+        {
+          "step": 14,
+          "exit_code": 0,
+          "seconds": 0.87,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 217176,
+          "max_rss_kib_sampled": 5892
+        },
+        {
+          "step": 15,
+          "exit_code": 0,
+          "seconds": 0.87,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 219352,
+          "max_rss_kib_sampled": 7004
+        },
+        {
+          "step": 16,
+          "exit_code": 0,
+          "seconds": 0.87,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 218968,
+          "max_rss_kib_sampled": 7032
+        },
+        {
+          "step": 17,
+          "exit_code": 0,
+          "seconds": 0.87,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 218968,
+          "max_rss_kib_sampled": 6836
+        },
+        {
+          "step": 18,
+          "exit_code": 0,
+          "seconds": 0.87,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 218456,
+          "max_rss_kib_sampled": 6788
+        },
+        {
+          "step": 19,
+          "exit_code": 0,
+          "seconds": 1.0,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 218584,
+          "max_rss_kib_sampled": 4924
+        },
+        {
+          "step": 20,
+          "exit_code": 0,
+          "seconds": 0.87,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 218840,
+          "max_rss_kib_sampled": 6024
+        },
+        {
+          "step": 21,
+          "exit_code": 0,
+          "seconds": 0.92,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 219352,
+          "max_rss_kib_sampled": 5256
+        },
+        {
+          "step": 22,
+          "exit_code": 0,
+          "seconds": 0.97,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 331864,
+          "max_rss_kib_sampled": 4928
+        },
+        {
+          "step": 23,
+          "exit_code": 0,
+          "seconds": 1.0,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 357464,
+          "max_rss_kib_sampled": 5244
+        },
+        {
+          "step": 24,
+          "exit_code": 0,
+          "seconds": 1.0,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 347352,
+          "max_rss_kib_sampled": 5152
+        },
+        {
+          "step": 25,
+          "exit_code": 0,
+          "seconds": 1.01,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 371032,
+          "max_rss_kib_sampled": 4900
+        },
+        {
+          "step": 26,
+          "exit_code": 0,
+          "seconds": 1.0,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 366424,
+          "max_rss_kib_sampled": 7176
+        },
+        {
+          "step": 27,
+          "exit_code": 0,
+          "seconds": 1.0,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 303704,
+          "max_rss_kib_sampled": 5256
+        },
+        {
+          "step": 28,
+          "exit_code": 0,
+          "seconds": 0.97,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 304600,
+          "max_rss_kib_sampled": 4376
+        },
+        {
+          "step": 29,
+          "exit_code": 0,
+          "seconds": 1.0,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 302552,
+          "max_rss_kib_sampled": 6772
+        },
+        {
+          "step": 30,
+          "exit_code": 0,
+          "seconds": 0.97,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 303704,
+          "max_rss_kib_sampled": 3864
+        },
+        {
+          "step": 31,
+          "exit_code": 0,
+          "seconds": 0.97,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 309080,
+          "max_rss_kib_sampled": 5108
+        },
+        {
+          "step": 32,
+          "exit_code": 0,
+          "seconds": 0.87,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 222552,
+          "max_rss_kib_sampled": 6184
+        },
+        {
+          "step": 33,
+          "exit_code": 0,
+          "seconds": 1.04,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 367576,
+          "max_rss_kib_sampled": 367928
+        },
+        {
+          "step": 34,
+          "exit_code": 0,
+          "seconds": 0.87,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 222680,
+          "max_rss_kib_sampled": 5292
+        },
+        {
+          "step": 35,
+          "exit_code": 0,
+          "seconds": 1.0,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 372824,
+          "max_rss_kib_sampled": 6156
+        },
+        {
+          "step": 36,
+          "exit_code": 0,
+          "seconds": 1.02,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 374744,
+          "max_rss_kib_sampled": 6932
+        },
+        {
+          "step": 37,
+          "exit_code": 0,
+          "seconds": 1.13,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 369624,
+          "max_rss_kib_sampled": 369692
+        },
+        {
+          "step": 38,
+          "exit_code": 0,
+          "seconds": 0.92,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 224600,
+          "max_rss_kib_sampled": 6796
+        },
+        {
+          "step": 39,
+          "exit_code": 0,
+          "seconds": 1.07,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 377176,
+          "max_rss_kib_sampled": 377284
+        },
+        {
+          "step": 40,
+          "exit_code": 0,
+          "seconds": 1.17,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 377824,
+          "max_rss_kib_sampled": 296004
+        },
+        {
+          "step": 41,
+          "exit_code": 0,
+          "seconds": 0.97,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 226904,
+          "max_rss_kib_sampled": 6528
+        },
+        {
+          "step": 42,
+          "exit_code": 0,
+          "seconds": 0.97,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 225752,
+          "max_rss_kib_sampled": 7256
+        },
+        {
+          "step": 43,
+          "exit_code": 0,
+          "seconds": 1.0,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 228312,
+          "max_rss_kib_sampled": 5280
+        },
+        {
+          "step": 44,
+          "exit_code": 0,
+          "seconds": 1.0,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 228184,
+          "max_rss_kib_sampled": 6712
+        },
+        {
+          "step": 45,
+          "exit_code": 0,
+          "seconds": 1.02,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 227928,
+          "max_rss_kib_sampled": 228172
+        },
+        {
+          "step": 46,
+          "exit_code": 0,
+          "seconds": 1.12,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 346072,
+          "max_rss_kib_sampled": 345980
+        },
+        {
+          "step": 47,
+          "exit_code": 0,
+          "seconds": 1.12,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 364248,
+          "max_rss_kib_sampled": 364184
+        },
+        {
+          "step": 48,
+          "exit_code": 0,
+          "seconds": 1.17,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 378456,
+          "max_rss_kib_sampled": 343952
+        },
+        {
+          "step": 49,
+          "exit_code": 0,
+          "seconds": 1.22,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 379736,
+          "max_rss_kib_sampled": 280884
+        },
+        {
+          "step": 50,
+          "exit_code": 0,
+          "seconds": 1.22,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 379096,
+          "max_rss_kib_sampled": 266968
+        },
+        {
+          "step": 51,
+          "exit_code": 0,
+          "seconds": 1.17,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 379224,
+          "max_rss_kib_sampled": 371152
+        },
+        {
+          "step": 52,
+          "exit_code": 0,
+          "seconds": 1.07,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 352216,
+          "max_rss_kib_sampled": 352232
+        },
+        {
+          "step": 53,
+          "exit_code": 0,
+          "seconds": 1.27,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 346972,
+          "max_rss_kib_sampled": 345308
+        },
+        {
+          "step": 54,
+          "exit_code": 0,
+          "seconds": 1.47,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 304344,
+          "max_rss_kib_sampled": 303048
+        },
+        {
+          "step": 55,
+          "exit_code": 0,
+          "seconds": 1.07,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 312280,
+          "max_rss_kib_sampled": 311740
+        },
+        {
+          "step": 56,
+          "exit_code": 0,
+          "seconds": 1.07,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 315736,
+          "max_rss_kib_sampled": 315176
+        },
+        {
+          "step": 57,
+          "exit_code": 0,
+          "seconds": 1.52,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 311528,
+          "max_rss_kib_sampled": 310064
+        },
+        {
+          "step": 58,
+          "exit_code": 0,
+          "seconds": 1.12,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 327260,
+          "max_rss_kib_sampled": 325932
+        },
+        {
+          "step": 59,
+          "exit_code": 0,
+          "seconds": 1.18,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 305368,
+          "max_rss_kib_sampled": 304364
+        },
+        {
+          "step": 60,
+          "exit_code": 0,
+          "seconds": 1.32,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 334556,
+          "max_rss_kib_sampled": 333092
+        },
+        {
+          "step": 61,
+          "exit_code": 0,
+          "seconds": 1.12,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 334172,
+          "max_rss_kib_sampled": 332840
+        },
+        {
+          "step": 62,
+          "exit_code": 0,
+          "seconds": 1.43,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 347624,
+          "max_rss_kib_sampled": 346596
+        },
+        {
+          "step": 63,
+          "exit_code": 124,
+          "seconds": 310.3,
+          "timed_out": true,
+          "signal": null,
+          "max_rss_kib_sampled": 6914976
+        }
+      ],
+      "last_kernel_memory_events": "low 0\nhigh 0\nmax 36662\noom 0\noom_kill 0\noom_group_kill 0"
+    },
+    "fixed-01514-cold-2500m": {
+      "compiler": "0.15.14",
+      "mode": "full",
+      "heap": "2500m",
+      "runs": [
+        {
+          "step": 1,
+          "exit_code": 143,
+          "seconds": 353.47,
+          "timed_out": false,
+          "signal": 15,
+          "max_rss_kib_gnu_time": 116160,
+          "max_rss_kib_sampled": 2942204
+        }
+      ],
+      "last_kernel_memory_events": "low 0\nhigh 0\nmax 36662\noom 0\noom_kill 0\noom_group_kill 0"
+    },
+    "fixed-01514-cold-6500m": {
+      "compiler": "0.15.14",
+      "mode": "full",
+      "heap": "6500m",
+      "runs": [
+        {
+          "step": 1,
+          "exit_code": 124,
+          "seconds": 910.3,
+          "timed_out": true,
+          "signal": null,
+          "max_rss_kib_gnu_time": 114112,
+          "max_rss_kib_sampled": 6127320
+        }
+      ],
+      "last_kernel_memory_events": "low 0\nhigh 0\nmax 52361\noom 0\noom_kill 0\noom_group_kill 0"
+    },
+    "fixed-01514-staged-6500m": {
+      "compiler": "0.15.14",
+      "mode": "staged",
+      "heap": "6500m",
+      "runs": [
+        {
+          "step": 1,
+          "exit_code": 0,
+          "seconds": 90.79,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 4020980,
+          "max_rss_kib_sampled": 4021192
+        },
+        {
+          "step": 2,
+          "exit_code": 0,
+          "seconds": 144.02,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 5447552,
+          "max_rss_kib_sampled": 5447080
+        },
+        {
+          "step": 3,
+          "exit_code": 0,
+          "seconds": 71.62,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 2909136,
+          "max_rss_kib_sampled": 2908400
+        },
+        {
+          "step": 4,
+          "exit_code": 0,
+          "seconds": 76.76,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 2459348,
+          "max_rss_kib_sampled": 2459412
+        },
+        {
+          "step": 5,
+          "exit_code": 0,
+          "seconds": 17.55,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 1353984,
+          "max_rss_kib_sampled": 1352888
+        },
+        {
+          "step": 6,
+          "exit_code": 0,
+          "seconds": 21.41,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 2163716,
+          "max_rss_kib_sampled": 2163896
+        },
+        {
+          "step": 7,
+          "exit_code": 0,
+          "seconds": 8.21,
+          "timed_out": false,
+          "signal": null,
+          "max_rss_kib_gnu_time": 1105160,
+          "max_rss_kib_sampled": 1104652
+        }
+      ],
+      "last_kernel_memory_events": "low 0\nhigh 0\nmax 52361\noom 0\noom_kill 0\noom_group_kill 0"
+    },
+    "timeout-check": {
+      "compiler": "0.15.4",
+      "mode": "module",
+      "heap": "2500m",
+      "runs": [
+        {
+          "step": 1,
+          "exit_code": 124,
+          "seconds": 3.62,
+          "timed_out": true,
+          "signal": null,
+          "max_rss_kib_gnu_time": 592236,
+          "max_rss_kib_sampled": 1553744
+        }
+      ],
+      "last_kernel_memory_events": "low 0\nhigh 0\nmax 36662\noom 0\noom_kill 0\noom_group_kill 0"
+    }
+  },
+  "manual_cutoffs": {
+    "utc": "2026-10-22T00:42:49.135581+00:00",
+    "staged-5500m": "Interrupted manually after approximately 15 minutes in stage 5; no completion or Heap exhausted claimed. Preserve successful 400-module cache.",
+    "corefn-1200m": "Profiling interrupted with SIGINT then SIGKILL after approximately 8 minutes; no completion or natural Heap exhausted claimed.",
+    "specialized-full-5500m": "Direct-field copied module experiment stopped after 2:28.96, no completion; not adopted.",
+    "specialized-all-full-5500m": "Expanded direct-field copied module experiment stopped after 2:08.42, no completion; not adopted.",
+    "modular-full-5500m": "Generated module split experiment stopped after 2:10.00, no completion; not adopted.",
+    "original-full-after-strings": "Stopped via helper SIGTERM after about 2 minutes; Strings already cached, unresolved Common.RemoteConfig.Utils identified separately.",
+    "fixed-01514-cold-2500m": "Controlled 2500 MiB compiler comparison stopped via helper SIGTERM after roughly 5.5 minutes in Common.RemoteConfig.Utils; not claimed as successful or natural heap failure.",
+    "fixed-01514-staged-6500m": "Stopped via SIGTERM after cold and incremental full CI passed; seven checkpoints completed, next stage in HomeScreen.Controller. No full local success claimed."
+  },
+  "validated_ci": {
+    "run_id": 39705578513,
+    "compiler": "0.15.14",
+    "node": "18.20.8",
+    "spago": "0.21.0",
+    "runner_ram_approx_gib": 16,
+    "heap": "10g",
+    "mode": "full",
+    "cache_restored": false,
+    "source_modules": 1189,
+    "artifact_id": 12395184363,
+    "runs": {
+      "measured": {
+        "exit_code": 0,
+        "seconds": 1587.21,
+        "max_rss_kib_gnu_time": 10843656,
+        "compiled_modules": 1189,
+        "last_progress": [
+          "[1188 of 1189] Compiling Flow",
+          "[1189 of 1189] Compiling Main"
+        ],
+        "ghc_max_residency_bytes": 7650447200,
+        "ghc_allocated_bytes_cumulative": 1821456689496,
+        "ghc_gc_elapsed_seconds": 963.44,
+        "ghc_total_elapsed_seconds": 1585.8
+      },
+      "incremental": {
+        "exit_code": 0,
+        "seconds": 41.07,
+        "max_rss_kib_gnu_time": 8804840,
+        "compiled_modules": 0,
+        "last_progress": []
+      }
+    }
+  },
+  "final_local_checkpoint_status": {
+    "heap": "6500m",
+    "runs": [
+      {
+        "step": 1,
+        "exit_code": 0,
+        "seconds": 90.79,
+        "timed_out": false,
+        "signal": null
+      },
+      {
+        "step": 2,
+        "exit_code": 0,
+        "seconds": 144.02,
+        "timed_out": false,
+        "signal": null
+      },
+      {
+        "step": 3,
+        "exit_code": 0,
+        "seconds": 71.62,
+        "timed_out": false,
+        "signal": null
+      },
+      {
+        "step": 4,
+        "exit_code": 0,
+        "seconds": 76.76,
+        "timed_out": false,
+        "signal": null
+      },
+      {
+        "step": 5,
+        "exit_code": 0,
+        "seconds": 17.55,
+        "timed_out": false,
+        "signal": null
+      },
+      {
+        "step": 6,
+        "exit_code": 0,
+        "seconds": 21.41,
+        "timed_out": false,
+        "signal": null
+      },
+      {
+        "step": 7,
+        "exit_code": 0,
+        "seconds": 8.21,
+        "timed_out": false,
+        "signal": null
+      },
+      {
+        "step": 8,
+        "exit_code": 143,
+        "seconds": 1212.41,
+        "timed_out": false,
+        "signal": 15
+      }
+    ],
+    "stopped_reason": "Stopped duplicate 8 GiB experiment after complete 16 GiB CI cold and incremental builds passed. No claim of full local success."
+  },
+  "psa_argument_note": "--censor-warnings is valid in PSA 0.8.2. Original npm scripts retained exactly. Direct purs rejection was not an application defect.",
+  "final_entrypoint_ci": {
+    "run_id": 39709751955,
+    "artifact_id": 12396094217,
+    "original_npm_script": "spago build --purs-args '--censor-warnings'",
+    "psa": "0.8.2",
+    "exit_code": 0,
+    "seconds": 43.28,
+    "max_rss_kib": 8093348,
+    "cold_reused_from_validated_cache": true,
+    "helper_measured_exit_code": 0,
+    "helper_incremental_exit_code": 0
+  }
+}

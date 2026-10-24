@@ -1,0 +1,184 @@
+{
+  "status": "passed",
+  "date_utc": "2026-10-24",
+  "owner_base_commit": "f0bfa4f4470e100545e6616d41a568b964684c5b",
+  "source_commit": "32d7e1d4963e2f890f3a009119b0ea256288a686",
+  "branch": "codex/issue-1-purescript-memory",
+  "workflow_run": 40134223066,
+  "workflow_url": "https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40134223066",
+  "apks": {
+    "passageiro": {
+      "artifact_id": 12576033149,
+      "url": "https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40134223066/artifacts/12576033149",
+      "file": "alce-yatri-passageiro-teste.apk",
+      "bytes": 127810223,
+      "apk_sha256": "eafe8f4b18668e6e0aa90242503f356c2394deea140197e631f91f9f132ca218",
+      "artifact_zip_sha256": "4acc9c55f2f582024b4dbe9a134b4db2e9da93d72895c5678abcb3178f9ba7db",
+      "bundle_sha256": "fc1dfd3857191a97a20fab26d880734645301137166b1bf6a031dcb2810c16da",
+      "abis": [
+        "arm64-v8a",
+        "armeabi-v7a",
+        "x86",
+        "x86_64"
+      ]
+    },
+    "motorista": {
+      "artifact_id": 12575763574,
+      "url": "https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40134223066/artifacts/12575763574",
+      "file": "alce-yatri-motorista-teste.apk",
+      "bytes": 270990271,
+      "apk_sha256": "7627dab851d31f5c3c1824b92367c5c91f08103410b7722d8a455fe61f8b1609",
+      "artifact_zip_sha256": "3cbce68d96502f51042ccee60b033e1c042cd72fcc664350e050562ea6440c1b",
+      "bundle_sha256": "cdc27acbf52f2fa6db5e6f7e98d5dc12e61124a6e735c4a5455313080c3049ec",
+      "abis": [
+        "arm64-v8a",
+        "armeabi-v7a",
+        "x86",
+        "x86_64"
+      ]
+    }
+  },
+  "backend": {
+    "source_commit": "5777475bd9bafc32d80b5505b6dfd3a1f5ab4ec9",
+    "deployment_run": 40131046069,
+    "transport": "HTTPS",
+    "storage": "existing PostgreSQL",
+    "pilot_until_utc": "2026-10-31T18:16:18.740028+00:00",
+    "migrations_changed": false,
+    "existing_services_preserved": true,
+    "anonymous_new_actions_http_status": 401,
+    "public_registration_http_status": 403
+  },
+  "compilation": {
+    "motorista": {
+      "compiler_seconds": 46.74,
+      "peak_sampled_rss_gib": 2.2,
+      "lots": 30,
+      "recompiled_modules": [
+        "Development.Driver"
+      ]
+    },
+    "passageiro": {
+      "bundle_reused_from_run": 40131968906,
+      "compiled_in_final_run": false,
+      "original_measurement": {
+        "compiler_seconds": 247.75,
+        "peak_sampled_rss_gib": 8.23,
+        "lots": 47,
+        "recompiled_modules": [
+          "Development.Booking",
+          "Development.Passenger",
+          "Development.Rides",
+          "Main"
+        ]
+      },
+      "asset_bytes_match_approved_apk": true
+    }
+  },
+  "android": {
+    "device": "Pixel 2 emulator",
+    "api_level": 29,
+    "two_physical_devices_tested": false,
+    "acceptance": {
+      "acceptance": "passed",
+      "backend": "lightsail_https",
+      "two_original_apks": true,
+      "foreground_switching": true,
+      "native_pairing_both_roles": true,
+      "google_places_and_routes_real": true,
+      "request_persisted": true,
+      "offer_same_ride": true,
+      "driver_accept_persisted": true,
+      "passenger_received_driver_and_vehicle": true,
+      "ride_id": "6ff253a0-724e-4348-8cd6-c858d5d494ce",
+      "initial_cancel_scenario_passed": true,
+      "arrive_persisted": true,
+      "start_persisted": true,
+      "complete_persisted": true,
+      "both_apps_display_all_trip_states": true,
+      "process_recreation_restores_trip": true,
+      "driver_returns_to_dashboard": true,
+      "driver_offline_after_test": true
+    },
+    "diagnostics": {
+      "fatal_exception_count": 0,
+      "driver_anr_count": 0,
+      "passenger_anr_count": 0,
+      "raw_logcat_published": false
+    },
+    "evidence_artifact_id": 12576283319,
+    "screenshots_visually_reviewed": [
+      "motorista-oferta.png",
+      "motorista-painel-final.png",
+      "passageiro-home-concluida.png"
+    ]
+  },
+  "tests": {
+    "frontend_unit_tests": 10,
+    "backend_basic_tests": 13,
+    "backend_integration_suites": 3,
+    "pilot_and_driver_http_postgresql_tests": 4,
+    "deployment_python_tests": 3,
+    "google_fixture_scope": "Only isolated HTTP/PostgreSQL contract tests; Android acceptance uses live Google Places/Routes and Lightsail."
+  },
+  "fixes": [
+    "Driver arrive/start/complete actions use existing authorized state machine.",
+    "Both apps show backend trip states and restore private trip IDs after process recreation.",
+    "Passenger Home can resume a saved trip without a new address selection.",
+    "Discard outdated driver snapshots.",
+    "Close terminal trip in controller state; no synchronous reentrant callback.",
+    "Pilot update refuses active trips and preserves its existing expiration."
+  ],
+  "dependencies": {
+    "kept": [
+      "Original PureScript/PrestoDOM/PrestoUI and native SDK ABI libraries",
+      "Existing PostgreSQL and Node backend",
+      "Google Maps SDK and Google Places/Routes"
+    ],
+    "outside_mandatory_test_flow": [
+      "Indian login/OTP/KYC and operational endpoints",
+      "Firebase Push and external collection",
+      "Payments"
+    ],
+    "production_auth_changed": false,
+    "licenses_preserved": true
+  },
+  "limitations": [
+    "No physical two-phone or Android 12+ acceptance in this increment.",
+    "Foreground polling: passenger 3s, driver 5s; background/off-screen operation is not approved.",
+    "Live trip polyline/driver marker tracking and turn-by-turn navigation remain pending.",
+    "Legacy driver GPS time indicator still shows Sem atualização independently of successful API GPS updates.",
+    "Secondary driver menus and complete driver localization are not approved.",
+    "Development pairing/session lasts 24h; pilot has the expiration shown above.",
+    "Debug SDK libraries and all four ABIs retained; APK size is not optimized.",
+    "Original Home and existing components reused; no claim of exact visual parity with current Play Store version."
+  ],
+  "files_changed_from_owner_base": [
+    ".github/workflows/br-driver-original.yml",
+    ".github/workflows/br-ride-pilot.yml",
+    "AGENTS.md",
+    "ARCHITECTURE.md",
+    "AWS-DESENVOLVIMENTO.md",
+    "Frontend/scripts/test-driver-backend.integration.mjs",
+    "Frontend/scripts/test-driver-operations.mjs",
+    "Frontend/scripts/test-pilot-trip.mjs",
+    "Frontend/scripts/test-ride-pair.py",
+    "Frontend/ui-customer/src/Development/Booking.purs",
+    "Frontend/ui-customer/src/Development/Passenger.purs",
+    "Frontend/ui-customer/src/Development/Rides.js",
+    "Frontend/ui-customer/src/Development/Rides.purs",
+    "Frontend/ui-driver/DRIVER-BR-TEST.md",
+    "Frontend/ui-driver/src/Development/Driver.js",
+    "Frontend/ui-driver/src/Development/Driver.purs",
+    "PROJECT_STATUS.md",
+    "ROADMAP.md",
+    "brasil/backend/ops/deploy-driver-pilot.py",
+    "brasil/backend/src/driver-pilot.mjs",
+    "brasil/backend/test/driver-pilot-ops.test.py",
+    "brasil/backend/test/driver-pilot.test.mjs"
+  ],
+  "report_files": [
+    "Frontend/build-reports/ciclo-completo/40134223066.json",
+    "Frontend/build-reports/ciclo-completo/RELATORIO.md"
+  ]
+}

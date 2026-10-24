@@ -27,5 +27,6 @@ public class MainApplicationProvider extends SplitCompatApplication implements R
     @Override
     public void onCreate() {
         super.onCreate();
+        BrDriverSdkContainer.initialize(this);
     }
 }
