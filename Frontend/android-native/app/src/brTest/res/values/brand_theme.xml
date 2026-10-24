@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="BrBrandTheme" parent="AppTheme">
-        <item name="android:windowBackground">@color/br_brand_pink</item>
+        <item name="android:windowBackground">@drawable/br_opening_launch</item>
         <item name="android:statusBarColor">@color/br_brand_pink</item>
         <item name="android:navigationBarColor">@color/br_brand_pink</item>
         <item name="android:windowLightStatusBar">false</item>

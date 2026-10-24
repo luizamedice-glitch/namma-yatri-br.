@@ -25,6 +25,7 @@ import Engineering.Helpers.BackTrack
 import Locale.Utils
 import Mobility.Prelude
 import Mobility.Prelude
+import Engineering.Helpers.DevelopmentMode as DevelopmentMode
 import PrestoDOM.Core
 import PrestoDOM.List
 import Screens.RideBookingFlow.HomeScreen.Config
@@ -4056,8 +4057,10 @@ pickupLocationView push state =
               , width WRAP_CONTENT
               ][ imageView
                   [ imageWithFallback $ getHeaderLogo state
-                  , height $ V 32
-                  , width $ V 93
+                  , height $ V $ if DevelopmentMode.isEnabled unit then 44 else 32
+                  , width $ V $ if DevelopmentMode.isEnabled unit then
+                      (if screenWidth unit < 380 then 116 else 136)
+                      else 93
                   , margin $ MarginRight 12
                   , visibility $ if state.data.config.homeScreen.header.showLogo then VISIBLE else GONE
                   ]

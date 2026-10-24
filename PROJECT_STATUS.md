@@ -208,3 +208,10 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - Somente recursos `nyUserProdDebug` + `brTestMode`; ícones legados nas cinco densidades e foreground adaptativo com margem de segurança. Aliases originais do cabeçalho resolvem para o novo PNG transparente. Nenhuma dependência adicionada, nenhum fonte PureScript ou servidor AWS alterado.
 - VALIDADO: fontes do APK `3205157dc5a7e7b86811dc7b12bdc5bd8ac4cf49`, run **40040469420** aprovado: build Android e teste em Pixel 2/API 29; reprodução concluída, ícone instalado, logo transparente no cabeçalho, busca/seleção real e retorno à Home aprovados. Conferência visual confirma rosa uniforme sem moldura/degradê e restauração do fundo branco/barra inferior ao sair da splash. GIF com 2500 ms e fundo uniforme verificado localmente; zero recompilações PureScript.
 - APK: https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40040469420/artifacts/12539172465 ; SHA256 `7d0825b5d8cb3b9bff15ee3aa26e0b52d572b4aa39a84af5af48d8e1c9e1cc2e`. Evidências: artefato **12539816223**. Relatório: `Frontend/build-reports/passageiro-identidade/40040469420.json`. Android 12+ ainda sem validação visual; assinatura debug pode exigir remover a versão anterior. Recursos/callbacks de produção e motorista preservados.
+
+## Ajuste de entrada e presença da marca — 2026-10-24
+
+- Solicitado: reduzir a percepção de tela rosa ociosa e ampliar a marca no cabeçalho da Home.
+- Implementado: janela de lançamento já mostra o primeiro quadro visível da marca; Android 12+ recebe o monograma no splash do sistema. Fade inicial adiantado em aproximadamente 267 ms, redistribuindo o restante da sequência para preservar 2500 ms totais. Fundo continua rosa sólido.
+- Logo da Home BR debug passa de 93×32 dp para 136×44 dp (116×44 dp em telas menores que 380 dp). Produção mantém dimensões anteriores. Fontes PureScript alterados apenas na view original do cabeçalho; requer compilação incremental com cache, sem reutilizar bundle incompatível.
+- Verificação local: GIF com primeiro quadro visível e duração de 2500 ms; XML válido. Compilação/validação Android deste ajuste pendentes.
