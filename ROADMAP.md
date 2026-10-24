@@ -62,3 +62,15 @@ Português do passageiro (2026-10-24): catálogo e interface BR empacotados sem 
 Navegação inferior do passageiro (2026-10-24): Início/Carteira/Perfil, views originais e estado preservado, aprovados em Android API 29 no run 40063516106. Carteira permanece explicitamente indisponível e perfil usa dados locais de teste. Integrar serviços reais e edição somente após desenho de sessão; validar Android 12 e navegação de produção em incremento próprio. Relatório `Frontend/build-reports/passageiro-navegacao/40063516106.json`.
 
 Motorista de testes, autorizado em 2026-10-24: reutilizar HomeScreen original por entrada debug isolada; sem login/OTP/KYC, mantendo sessão de Giselo validada pelo backend e provisionada fora do APK. Bundle/APK já compilados e cliente operacional validado em PostgreSQL/HTTP. Prioridade imediata é resolver e aprovar abertura, GPS e disponibilidade no emulador. Depois ligar ofertas e estados de viagem às views originais e testar os dois APKs. O teste HTTP com fixture de Routes não comprova esse aceite. Preservar produção e passageiro; não liberar rotas operacionais públicas do Lightsail automaticamente.
+
+
+## Incremento motorista — painel original de testes (2026-10-24)
+
+APK inicial do motorista compilado e aprovado em Pixel 2/API 29 no run
+40111273590: abertura sem login, mapa com tiles, GPS e disponibilidade
+confirmados na API/PostgreSQL locais. Defaults opcionais completos eliminam os
+avisos de configuração do painel. Detalhes em PROJECT_STATUS.md e no relatório
+Frontend/build-reports/motorista-original/40111273590.json. A Fase 5 continua
+aberta: faltam ligar ofertas e ações de viagem às views originais, integrar
+solicitação do passageiro, sincronizar os dois APKs e validar backend remoto
+com sessões privadas provisionadas. Não há alteração do Lightsail neste marco.

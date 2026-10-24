@@ -1,0 +1,49 @@
+{
+  "source_commit": "7e9bbc20b29bef38a18c0217cbf5b8bfc334a5fe",
+  "workflow_run": 40111273590,
+  "application_id": "in.juspay.nammayatripartner.debug",
+  "variant": "nyDriverProdDebug",
+  "br_test_mode": true,
+  "changes": [
+    "Retomado painel original PureScript/PrestoDOM implementado na branch existente.",
+    "Defaults de quatro configuracoes opcionais preservam o contrato default e eliminam avisos de decodificacao.",
+    "Indicador de localizacao traduzido com rotulo compacto."
+  ],
+  "checks": {
+    "client_and_real_database_contracts": {
+      "passed": 7,
+      "failed": 0
+    },
+    "android_emulator": {
+      "status": "passed",
+      "api_level": 29,
+      "profile": "Pixel 2",
+      "no_login": true,
+      "gps_and_availability_real_api": true,
+      "map_tiles_visible": true,
+      "configuration_decode_warnings": 0,
+      "visual_review": "passed: mapa e controles sem sobreposicao apos rotulo compacto"
+    },
+    "android_build": "passed",
+    "workflow": "success"
+  },
+  "previous_accepted_run": 40110341203,
+  "limitations": [
+    "API/PostgreSQL usados no aceite sao locais e descartaveis; Lightsail nao foi alterado.",
+    "A operacao em celular exige backend acessivel e sessao privada provisionada fora do APK.",
+    "Ofertas e acoes de corrida ainda nao estao ligadas as telas originais; integracao passageiro-motorista nao validada.",
+    "Menus secundarios, traducao integral do motorista e Android 12+ nao aprovados.",
+    "Indicador legado de horario da localizacao ainda nao reflete a confirmacao do novo cliente operacional."
+  ],
+  "artifacts": {
+    "apk_zip": {
+      "id": 12566278284,
+      "sha256": "58d06e5970d3927340c35ea4fc6fe351390ac0e860f2ab374802ec728bcc6515",
+      "url": "https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40111273590/artifacts/12566278284"
+    },
+    "android_evidence": {
+      "id": 12567042032,
+      "url": "https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40111273590/artifacts/12567042032"
+    }
+  }
+}

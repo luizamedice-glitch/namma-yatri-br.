@@ -53,3 +53,18 @@ alterada nesta etapa. Não use a função compartilhada do Alce.
 - Apenas os termos centrais do painel recebem tradução manual nesta primeira
   versão; catálogo completo do motorista e funcionalidades paralelas não estão
   aprovados. Não declarar integração passageiro–motorista pelo build de um APK.
+
+## Configuração local do painel
+
+`src/Development/DashboardDefaults.json` contém os valores originais de
+`defaultPetRidesFeatureConfig`, `defaultEnableOtpRideConfig`,
+`defaultRideAssignedAudioConfig` e `defaultRideEndAudioConfig`, definidos em
+`src/RemoteConfigs/Utils.purs`. `Nothing` é serializado como `null`, conforme o
+contrato JSON desses campos opcionais. O adaptador entrega o envelope `default`
+esperado pelo decodificador original apenas no pacote motorista BR debug.
+Recursos opcionais continuam desativados; valores operacionais vêm da API.
+
+Esse arquivo evita que a ausência do Firebase Remote Config operacional gere
+avisos de decodificação sobre o painel. Ele não substitui configuração de
+servidor, sessão privada nem integração de corridas. Ao alterar os contratos
+PureScript citados, revisar também os valores locais correspondentes.
