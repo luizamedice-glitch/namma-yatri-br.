@@ -1,19 +1,132 @@
 name: BR - Passageiro atualizacao em primeiro plano
 on:
-  push:
-    branches: [codex/issue-1-purescript-memory]
-    paths: ['.github/workflows/br-passenger-foreground.yml']
   workflow_dispatch:
     inputs:
       apk_run_id:
         description: Run de origem do APK passageiro
         type: string
-        default: '40134223066'
+        default: ''
+      api_level:
+        description: Android API
+        type: choice
+        options: ['29', '35']
+        default: '35'
+      idle_seconds:
+        description: Tempo em primeiro plano antes do aceite (0 a 360 s)
+        type: number
+        default: 330
+      reconnect:
+        description: Interromper e restaurar transporte antes da chegada
+        type: boolean
+        default: true
 permissions:
   contents: read
   actions: read
 jobs:
+  build:
+    if: ${{ !inputs.apk_run_id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      GHCRTS: '-N1 -M512m'
+      NODE_OPTIONS: '--openssl-legacy-provider --max-old-space-size=6144'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18.20.8'
+      - run: node --test Frontend/scripts/test-passenger-polling.mjs Frontend/scripts/test-pilot-trip.mjs Frontend/scripts/test-driver-operations.mjs
+      - run: npm install --global purescript@0.15.14 spago@0.21.0
+      - uses: actions/cache/restore@v4
+        id: cache
+        with:
+          path: |
+            Frontend/ui-customer/.spago
+            Frontend/ui-customer/output
+            ~/.cache/dhall
+          key: ride-v2-passageiro-${{ runner.os }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ride-v2-passageiro-${{ runner.os }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-
+            purs-0.15.14-v2-${{ runner.os }}-passageiro-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-40062877489-
+      - name: Exigir cache e contrato PureScript preservado
+        env:
+          MATCHED: ${{ steps.cache.outputs.cache-matched-key }}
+        run: |
+          test -n "$MATCHED"
+          test -s Frontend/ui-customer/output/Main/index.js
+          test -s Frontend/ui-customer/output/Screens.HomeScreen.View/index.js
+          git fetch origin 32d7e1d4963e2f890f3a009119b0ea256288a686
+          git diff --exit-code FETCH_HEAD HEAD -- Frontend/ui-customer/src/Development/Rides.purs
+      - working-directory: Frontend/ui-customer
+        run: |
+          npm install --legacy-peer-deps
+          spago -j 2 install
+      - name: Compilar apenas adaptador com cache
+        run: python3 Frontend/scripts/diagnose-purescript.py --app passageiro --compiler-version 0.15.14 --mode staged --target-module Development.Rides --batch-size 25 --heap 10g --timeout-seconds 600 --stall-seconds 300 --rss-limit-mib 12288 --label passenger-poll
+      - working-directory: Frontend/ui-customer
+        run: |
+          npm run bundle:android
+          node --check dist/android/index_bundle.js
+      - uses: actions/cache/save@v4
+        if: always() && steps.cache.outcome == 'success'
+        with:
+          path: |
+            Frontend/ui-customer/.spago
+            Frontend/ui-customer/output
+            ~/.cache/dhall
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: passenger-poll-diagnostics
+          path: purescript-diagnostics/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ride-passageiro-bundle
+          path: Frontend/ui-customer/dist/android/
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+          log-accepted-android-sdk-licenses: false
+      - working-directory: Frontend
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.Google_Maps_API_Key }}
+          YATRI_BACKEND_URL: https://52-67-246-31.sslip.io
+          YATRI_MAPS_TEST_MODE: 'true'
+        run: |
+          cp ui-customer/dist/android/index_bundle.js android-native/app/src/user/nammaYatri/assets/juspay/index_bundle.js
+          bash userJuspayAssets.sh nammaYatri
+          cp android-native/local-temp.properties android-native/local.properties
+          cd android-native
+          bash gradlew :app:assembleNyUserProdDebug -PbrTestMode=true -PbrRidePilot=true --no-daemon --max-workers=2 --stacktrace
+      - name: Conferir bundle e hash do APK
+        run: |
+          python3 - <<'CHECK'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import shutil,hashlib,json
+          files=list(Path('Frontend/android-native/app/build/outputs/apk/nyUserProd/debug').glob('*.apk'))
+          assert len(files)==1
+          with ZipFile(files[0]) as apk:
+            assert apk.read('assets/juspay/index_bundle.js')==Path('Frontend/ui-customer/dist/android/index_bundle.js').read_bytes()
+            config=json.loads(apk.read('assets/juspay/yatri_places_config.json'))
+            assert config['mapsTestMode'] and not config.get('passengerCredential')
+          out=Path('passenger-apk');out.mkdir()
+          shutil.copy(files[0],out/'alce-yatri-passageiro-teste.apk')
+          print('SHA256 APK:',hashlib.sha256(files[0].read_bytes()).hexdigest())
+          CHECK
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ride-passageiro-apk
+          path: passenger-apk/alce-yatri-passageiro-teste.apk
+          if-no-files-found: error
   foreground:
+    needs: build
+    if: ${{ always() && !cancelled() && (needs.build.result == 'success' || inputs.apk_run_id) }}
     runs-on: ubuntu-latest
     timeout-minutes: 22
     services:
@@ -27,6 +140,8 @@ jobs:
         options: --health-cmd "pg_isready -U yatri_test" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DATABASE_URL: postgresql://yatri_test:fixture-only@127.0.0.1:5432/passenger_foreground
+      PASSENGER_IDLE_SECONDS: ${{ inputs.idle_seconds || '0' }}
+      PASSENGER_RECONNECT: ${{ inputs.reconnect && 'true' || 'false' }}
       PASSENGER_FOREGROUND_SESSIONS: ${{ github.workspace }}/../foreground-sessions.json
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +152,7 @@ jobs:
         with:
           name: ride-passageiro-apk
           path: passenger-apk
-          run-id: ${{ inputs.apk_run_id || '40134223066' }}
+          run-id: ${{ inputs.apk_run_id || github.run_id }}
           github-token: ${{ github.token }}
       - run: npm ci --prefix brasil/backend
       - name: Iniciar API e banco isolados
@@ -58,7 +173,7 @@ jobs:
           echo "$RUNNER_TEMP/cdp/bin" >> "$GITHUB_PATH"
       - uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 29
+          api-level: ${{ inputs.api_level || '35' }}
           target: google_apis
           arch: x86_64
           profile: pixel_2

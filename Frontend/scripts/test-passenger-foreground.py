@@ -81,11 +81,21 @@ def safe_webview():
         if not target.get('webSocketDebuggerUrl'):continue
         ws=websocket.create_connection(target['webSocketDebuggerUrl'],timeout=5,suppress_origin=True)
         try:
-            ws.send(json.dumps({'id':1,'method':'Runtime.evaluate','params':{'expression':"JSON.stringify({phase:window.__YATRI_PASSENGER_RIDE__?.phase,diagnostics:window.__YATRI_PASSENGER_POLL__||null})",'returnByValue':True}}))
-            for _ in range(100):
-                msg=json.loads(ws.recv())
-                if msg.get('id')==1:
-                    states.append(msg.get('result',{}).get('result',{}).get('value'));break
+            contexts=[]
+            def evaluate(method,params=None):
+                evaluate.counter+=1;request_id=evaluate.counter
+                ws.send(json.dumps({'id':request_id,'method':method,'params':params or {}}))
+                for _ in range(200):
+                    msg=json.loads(ws.recv())
+                    if msg.get('method')=='Runtime.executionContextCreated':contexts.append(msg['params']['context']['id'])
+                    if msg.get('id')==request_id:return msg
+                raise TimeoutError('CDP read')
+            evaluate.counter=0
+            evaluate('Runtime.enable')
+            for context in contexts:
+                result=evaluate('Runtime.evaluate',{'expression':"JSON.stringify({phase:window.__YATRI_PASSENGER_RIDE__&&window.__YATRI_PASSENGER_RIDE__.phase,diagnostics:window.__YATRI_PASSENGER_POLL__||null,hidden:document.hidden,visibility:document.visibilityState})",'contextId':context,'returnByValue':True})
+                value=result.get('result',{}).get('result',{}).get('value')
+                if value:states.append(json.loads(value))
         finally:ws.close()
     (out/'webview-phases.json').write_text(json.dumps(states))
 
@@ -119,16 +129,28 @@ try:
     call('driver','/driver/availability',{'available':True})
     assert any(r['id']==ride_id for r in call('driver','/snapshot')['offers'])
     timings={}
+    idle=int(os.environ.get('PASSENGER_IDLE_SECONDS','0'))
+    assert 0<=idle<=360
+    for elapsed in range(0,idle,30):
+        time.sleep(min(30,idle-elapsed));same_foreground(pid)
+        print('Passageiro mantido em primeiro plano:',min(elapsed+30,idle),'s',flush=True)
+    safe_webview()
+    (out/'webview-idle.json').write_bytes((out/'webview-phases.json').read_bytes())
     for action,phase,heading in [('accept','accepted','Motorista a caminho'),('arrive','arrived','Motorista no embarque'),('start','in_progress','Viagem em andamento'),('complete','completed','Viagem concluída')]:
         same_foreground(pid);started=time.monotonic()
+        reconnect=action=='arrive' and os.environ.get('PASSENGER_RECONNECT')=='true'
+        if reconnect:adb('reverse','--remove','tcp:8080')
         call('driver','/rides/'+ride_id+'/'+action,{})
+        if reconnect:
+            time.sleep(12)
+            adb('reverse','tcp:8080','tcp:8080')
         assert call('passenger','/rides/'+ride_id)['status']==phase
         wait_label(heading,attempts=7)
         timings[phase]=round(time.monotonic()-started,2)
         same_foreground(pid);capture(phase)
     tap(wait_label('Voltar ao início'));home()
     result={'acceptance':'passed','isolated_database':True,'driver_actions_real_http':True,'google_routes_real':True,
-      'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'state_latency_seconds':timings}
+      'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','state_latency_seconds':timings}
     (out/'acceptance.json').write_text(json.dumps(result,indent=2))
 finally:
     try:safe_webview()
