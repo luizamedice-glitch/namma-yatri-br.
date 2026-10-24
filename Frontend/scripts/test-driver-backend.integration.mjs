@@ -1,5 +1,6 @@
 // Real PostgreSQL + HTTP, with an explicitly marked Google route fixture only.
 import { test } from 'node:test';
+import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { connectDatabase } from '../../brasil/backend/src/db.mjs';
@@ -13,7 +14,7 @@ test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo po
   const admin = await connectDatabase(process.env.DATABASE_URL);
   const schema = 'dev_' + randomUUID().replaceAll('-', '');
   await admin.query(`CREATE SCHEMA ${schema}`);
-  const { default: pg } = await import('pg');
+  const pg = createRequire(new URL('../../brasil/backend/package.json', import.meta.url))('pg');
   const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, options: `-c search_path=${schema}` });
   await migrate(pool);
   const config = { enabled: true, passengerKey: randomBytes(32).toString('hex'), driverKey: randomBytes(32).toString('hex'),

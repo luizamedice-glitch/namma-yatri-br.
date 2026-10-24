@@ -72,11 +72,14 @@ eval (Failed message) state = do
 eval (Original (Controller.SwitchDriverStatus status _)) state = do
   _ <- pure $ unsafePerformEffect $ availability (status /= Offline) (const $ pure unit) (const $ pure unit)
   continue state
+eval (Original (Controller.ChangeStatus online)) state = do
+  _ <- pure $ unsafePerformEffect $ availability online (const $ pure unit) (const $ pure unit)
+  continue state
 eval (Original (Controller.GoOffline _)) state = do
   _ <- pure $ unsafePerformEffect $ availability false (const $ pure unit) (const $ pure unit)
   continue state
 eval (Original (Controller.CurrentLocation latitude longitude)) state = case fromString latitude, fromString longitude of
-  Just lat, Just lng -> do
+  Just lat, Just lng | lat >= -90.0 && lat <= 90.0 && lng >= -180.0 && lng <= 180.0 && (lat /= 0.0 || lng /= 0.0) -> do
     _ <- pure $ unsafePerformEffect $ location lat lng
     continue state {data {currentDriverLat = lat, currentDriverLon = lng}}
   _, _ -> continue state

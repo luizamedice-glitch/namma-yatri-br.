@@ -20,7 +20,7 @@ export function createOperationsClient({baseUrl, token, fetchImpl = fetch}) {
       return data;
     },
     location:(lat,lng) => {
-      if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat)>90 || Math.abs(lng)>180) throw Error('Localização GPS inválida.');
+      if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat)>90 || Math.abs(lng)>180 || (lat === 0 && lng === 0)) throw Error('Localização GPS inválida.');
       return call('/driver/location',{lat,lng});
     },
     availability:available => call('/driver/availability',{available}),

@@ -93,3 +93,79 @@ jobs:
           name: alce-yatri-motorista-original-apk
           path: Frontend/android-native/app/build/outputs/apk/nyDriverProd/debug/*.apk
           if-no-files-found: error
+
+  contracts:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: yatri_test
+          POSTGRES_PASSWORD: fixture-only
+          POSTGRES_DB: driver_contract
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U yatri_test" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://yatri_test:fixture-only@127.0.0.1:5432/driver_contract
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix brasil/backend
+      - run: node --test Frontend/scripts/test-driver-operations.mjs Frontend/scripts/test-driver-backend.integration.mjs
+  emulator:
+    needs: android
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: yatri_test
+          POSTGRES_PASSWORD: fixture-only
+          POSTGRES_DB: driver_acceptance
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U yatri_test" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://yatri_test:fixture-only@127.0.0.1:5432/driver_acceptance
+      DRIVER_ACCEPTANCE_SESSION_FILE: ${{ github.workspace }}/../driver-session.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: alce-yatri-motorista-original-apk
+          path: driver-apk
+      - run: npm ci --prefix brasil/backend
+      - name: Iniciar API e contas persistidas do aceite isolado
+        run: |
+          node Frontend/scripts/serve-driver-acceptance.mjs > "$RUNNER_TEMP/driver-api.log" 2>&1 &
+          for attempt in $(seq 1 30); do
+            test -s "$DRIVER_ACCEPTANCE_SESSION_FILE" && break
+            sleep 1
+          done
+          test -s "$DRIVER_ACCEPTANCE_SESSION_FILE"
+      - name: Habilitar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          script: |
+            adb install -g driver-apk/*.apk
+            adb shell settings put secure location_mode 3
+            python3 Frontend/scripts/test-driver-original.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: motorista-original-aceite-android
+          path: driver-original-evidence/
+          if-no-files-found: warn
