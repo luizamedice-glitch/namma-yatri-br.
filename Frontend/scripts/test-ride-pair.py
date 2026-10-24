@@ -31,6 +31,12 @@ def wait_label(text,attempts=12):
         if found is not None:return found
         time.sleep(2)
     raise AssertionError('Controle ausente: '+text)
+def wait_driver_panel():
+    for _ in range(12):
+        ns=nodes()
+        if all(label(ns,text) is None for text in ['Voltar ao painel','Viagem concluída','Viagem cancelada','Nova solicitação']):return
+        time.sleep(2)
+    raise AssertionError('O motorista não retornou ao painel')
 def start(role):
     adb('shell','am','start','-W','-n',packages[role]+'/in.juspay.mobility.MainActivity')
     time.sleep(2)
@@ -44,7 +50,11 @@ def pair(role):
     ns=nodes();field=next(n for n in ns if n.get('class')=='android.widget.EditText')
     capture(role+'-ativacao-vazia');tap(field)
     activation=json.loads(Path(os.environ['RIDE_'+role.upper()+'_ACTIVATION']).read_text())
-    result=subprocess.run(['adb','shell','input','text',activation['code']],capture_output=True,timeout=30)
+    try:
+        result=subprocess.run(['adb','shell','input','text',activation['code']],capture_output=True,timeout=30)
+    except subprocess.TimeoutExpired:
+        # TimeoutExpired normally includes argv, which contains the private code.
+        raise AssertionError('Tempo esgotado ao inserir a ativação privada') from None
     assert result.returncode==0,'Falha ao inserir codigo privado'
     tap(connect)
     for _ in range(15):
@@ -128,7 +138,7 @@ try:
     tap(wait_label('Cancelar viagem'));wait_label('Viagem cancelada')
     assert call('passenger','/rides/'+ride_id)['status']=='cancelled'
     tap(wait_label('Voltar ao início'));home();capture('passageiro-home-final')
-    start('driver');wait_label('Viagem cancelada');tap(wait_label('Voltar ao painel'))
+    start('driver');wait_label('Viagem cancelada');tap(wait_label('Voltar ao painel'));wait_driver_panel()
     # A second real request exercises the full trip, preserving cancellation regression.
     start('passenger');home();tap(wait_label('Ver estimativa'));wait_label('Solicitar viagem')
     tap(wait_label('Solicitar viagem'));wait_label('Procurando motorista')
@@ -154,6 +164,7 @@ try:
     assert call('passenger','/rides/'+ride_id)['status']=='completed'
     adb('shell','am','force-stop',packages['driver']);start('driver');wait_label('Viagem concluída')
     tap(wait_label('Voltar ao painel'))
+    wait_driver_panel()
     capture('motorista-painel-final')
     adb('shell','am','force-stop',packages['passenger']);start('passenger');home()
     tap(wait_label('Acompanhar viagem'));wait_label('Viagem concluída');tap(wait_label('Voltar ao início'));home()
@@ -165,6 +176,7 @@ try:
       'offer_same_ride':True,'driver_accept_persisted':True,'passenger_received_driver_and_vehicle':True,
       'ride_id':ride_id,'initial_cancel_scenario_passed':True,'arrive_persisted':True,'start_persisted':True,
       'complete_persisted':True,'both_apps_display_all_trip_states':True,'process_recreation_restores_trip':True,
+      'driver_returns_to_dashboard':True,
       'driver_offline_after_test':True}
     (out/'acceptance.json').write_text(json.dumps(result,indent=2))
 finally:
