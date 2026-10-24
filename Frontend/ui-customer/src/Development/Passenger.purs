@@ -22,7 +22,7 @@ import Engineering.Helpers.Commons (getVersionByKey, getNewIDWithTag)
 import Engineering.Helpers.Utils (showToast)
 import Helpers.PrestoUtils (initUIWrapper)
 import JBridge as JB
-import PrestoDOM (Eval, Screen, PrestoDOM, Length(..), Orientation(..), Gravity(..), Padding(..), Visibility(..), linearLayout, imageView, textView, height, width, weight, orientation, gravity, padding, background, color, text, textSize, imageWithFallback, onClick, accessibilityHint, visibility, continue, continueWithCmd, exit)
+import PrestoDOM (Eval, Screen, PrestoDOM, Length(..), Orientation(..), Gravity(..), Padding(..), Visibility(..), linearLayout, imageView, textView, height, width, weight, orientation, gravity, padding, background, color, text, textSize, imageWithFallback, onClick, onBackPressed, accessibilityHint, visibility, continue, continueWithCmd, exit)
 import Screens.MyProfileScreen.View as ProfileView
 import Screens.MyProfileScreen.ScreenData as ProfileData
 import Screens.MyProfileScreen.Controller as Profile
@@ -98,7 +98,8 @@ section profile home = do
 
 shell :: forall w. (Action -> Effect Unit) -> String -> PrestoDOM (Effect Unit) w -> PrestoDOM (Effect Unit) w
 shell push selected content = linearLayout
-  [width MATCH_PARENT, height MATCH_PARENT, orientation VERTICAL, background "#FFFFFF"]
+  ([width MATCH_PARENT, height MATCH_PARENT, orientation VERTICAL, background "#FFFFFF"]
+    <> if selected == "Início" then [] else [onBackPressed push (const SelectHome)])
   [linearLayout [width MATCH_PARENT, height (V 0), weight 1.0] [content]
   ,linearLayout [width MATCH_PARENT, height (V 64), orientation HORIZONTAL, background "#FFFFFF"]
     (map (\item -> linearLayout
@@ -108,7 +109,7 @@ shell push selected content = linearLayout
       ,textView [text item.label, textSize 12, color (if selected == item.label then "#111111" else "#858585"), padding (PaddingTop 4)]])
       [{label: "Início", icon: "ny_ic_home", action: SelectHome}
       ,{label: "Carteira", icon: "ny_ic_wallet", action: SelectWallet}
-      ,{label: "Perfil", icon: "ny_ic_profile_image", action: SelectProfile}])]
+      ,{label: "Perfil", icon: "ny_ic_user_filled_dark", action: SelectProfile}])]
 
 screen :: HomeScreenState -> Screen Action HomeScreenState Route
 screen initialState =
