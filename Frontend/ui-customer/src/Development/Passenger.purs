@@ -13,6 +13,9 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Array (null)
 import Effect (Effect)
 import Development.Places as Places
+import Development.Rides as Rides
+import Development.PilotTrip as Trip
+import PrestoDOM as DOM
 import Components.LocationListItem.Controller as LocationItem
 import Data.Number (fromString)
 import Data.String.CodeUnits as String
@@ -37,12 +40,14 @@ import Screens.Types (HomeScreenState, Stage(..), SearchLocationModelType(..), L
 import Storage (KeyStore(..), setValueToLocalStore, updateLocalStage)
 import Types.App (FlowBT)
 
-data Route = HomeRoute HomeScreenState | WalletRoute HomeScreenState | ProfileRoute HomeScreenState
+data Route = HomeRoute HomeScreenState | WalletRoute HomeScreenState | ProfileRoute HomeScreenState | BookingRoute HomeScreenState
 
 data Action = SelectHome | SelectWallet | SelectProfile | ProfileAction Profile.Action | Original Home.Action
   | SuggestionsLoaded Boolean (Array Places.Suggestion)
   | PlaceLoaded Boolean Places.Place
   | PlacesFailed String
+  | OpenBooking | TripUpdated Trip.Trip | RideError String
+  | RequestRide PrimaryButton.Action | CancelRide PrimaryButton.Action | ReturnBooking PrimaryButton.Action
 
 instance showDevelopmentAction :: Show Action where
   show _ = ""
@@ -76,6 +81,7 @@ loop state = do
     HomeRoute home -> loop home
     WalletRoute home -> section false home
     ProfileRoute home -> section true home
+    BookingRoute home -> booking home
 
 section :: Boolean -> HomeScreenState -> FlowBT String Unit
 section profile home = do
@@ -95,6 +101,59 @@ section profile home = do
     HomeRoute state -> loop state
     WalletRoute state -> section false state
     ProfileRoute state -> section true state
+    BookingRoute state -> booking state
+
+booking :: HomeScreenState -> FlowBT String Unit
+booking home = do
+  next <- lift $ lift $ runScreen
+    {initialState: Trip.emptyTrip, name: "BrBooking"
+    ,globalEvents: [\push -> Rides.subscribe
+        {lat:home.props.sourceLat,lng:home.props.sourceLong,address:home.data.source}
+        {lat:home.props.destinationLat,lng:home.props.destinationLong,address:home.data.destination}
+        (push <<< TripUpdated) (push <<< RideError)]
+    ,view: \push trip -> linearLayout [width MATCH_PARENT,height MATCH_PARENT,orientation VERTICAL,background "#FFFFFF",onBackPressed push (const $ ReturnBooking PrimaryButton.OnClick)]
+       [Trip.heading (case trip.phase of
+          "quoted" -> "Estimativa da viagem"
+          "requesting" -> "Solicitando viagem…"
+          "searching" -> "Procurando motorista"
+          "accepted" -> "Motorista a caminho"
+          "cancelled" -> "Viagem cancelada"
+          "error" -> "Não foi possível calcular a viagem"
+          _ -> "Calculando estimativa…")
+       ,Trip.card push (Original Home.NoAction) trip
+       ,textView [text trip.driver,textSize 20,padding (Padding 20 8 20 8),color "#242424"]
+       ,textView [text trip.vehicle,textSize 16,padding (Padding 20 0 20 12),color "#666666"]
+       ,linearLayout [width MATCH_PARENT,height WRAP_CONTENT,visibility (if trip.phase=="quoted" then VISIBLE else GONE)]
+          [Trip.button (push <<< RequestRide) "Solicitar viagem" true]
+       ,linearLayout [width MATCH_PARENT,height WRAP_CONTENT,visibility (if trip.phase=="searching" || trip.phase=="accepted" then VISIBLE else GONE)]
+          [Trip.button (push <<< CancelRide) "Cancelar viagem" true]
+       ,Trip.button (push <<< ReturnBooking) "Voltar ao início" (trip.phase/="requesting")]
+    ,eval: \action trip -> case action of
+       TripUpdated updated -> continue updated
+       RideError message -> do
+         _ <- pure $ unsafePerformEffect $ showToast message
+         continue (if trip.phase=="idle" then trip {phase="error"} else trip)
+       RequestRide PrimaryButton.OnClick -> do
+         _ <- pure $ unsafePerformEffect Rides.request
+         continue trip
+       CancelRide PrimaryButton.OnClick -> do
+         _ <- pure $ unsafePerformEffect Rides.cancel
+         continue trip
+       ReturnBooking PrimaryButton.OnClick -> exit home
+       _ -> continue trip
+    }
+  loop next
+
+homeContent :: forall w. (Action -> Effect Unit) -> HomeScreenState -> PrestoDOM (Effect Unit) w
+homeContent push state = linearLayout [width MATCH_PARENT,height MATCH_PARENT,orientation VERTICAL]
+  [linearLayout [width MATCH_PARENT,height (V 0),weight 1.0] [HomeView.view (push <<< Original) state]
+  ,linearLayout [width MATCH_PARENT,height WRAP_CONTENT,visibility (if ready then VISIBLE else GONE)]
+    [Trip.button (\action -> case action of
+        PrimaryButton.OnClick -> push OpenBooking
+        _ -> pure unit) "Ver estimativa" true]]
+  where
+  ready = state.props.currentStage==HomeScreen && state.props.destinationPlaceId/=Nothing
+    && (state.props.sourceLat/=0.0 || state.props.sourceLong/=0.0) && unsafePerformEffect Rides.enabled
 
 shell :: forall w. (Action -> Effect Unit) -> String -> PrestoDOM (Effect Unit) w -> PrestoDOM (Effect Unit) w
 shell push selected content = linearLayout
@@ -114,7 +173,7 @@ shell push selected content = linearLayout
 screen :: HomeScreenState -> Screen Action HomeScreenState Route
 screen initialState =
   { initialState
-  , view: \push state -> shell push (if state.props.currentStage == HomeScreen then "Início" else "") (HomeView.view (push <<< Original) state)
+  , view: \push state -> shell push (if state.props.currentStage == HomeScreen then "Início" else "") (homeContent push state)
   , name: "HomeScreen"
   , globalEvents:
       [ \push -> do
@@ -130,6 +189,7 @@ eval :: Action -> HomeScreenState -> Eval Action Route HomeScreenState
 eval SelectHome state = exit (HomeRoute state)
 eval SelectWallet state = exit (WalletRoute state)
 eval SelectProfile state = exit (ProfileRoute state)
+eval OpenBooking state = exit (BookingRoute state)
 eval (ProfileAction (Profile.BackPressed _)) state = exit (HomeRoute state)
 eval (ProfileAction (Profile.GenericHeaderActionController Header.PrefixImgOnClick)) state = exit (HomeRoute state)
 eval (ProfileAction (Profile.EditProfile _)) state = do

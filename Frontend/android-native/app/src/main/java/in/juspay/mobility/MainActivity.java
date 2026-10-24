@@ -650,6 +650,7 @@ public class MainActivity extends AppCompatActivity {
         countAppUsageDays();
         startForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> handleGlResp(result, MainActivity.this));
         BrDriverSetupActivity.openIfNeeded(this);
+        BrPassengerSetupActivity.openIfNeeded(this);
     }
 
     private void startApp() {

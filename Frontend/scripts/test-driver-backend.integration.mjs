@@ -89,7 +89,7 @@ test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo po
   await driverClient.location(-23.55, -46.63);
   assert.equal((await driverClient.availability(true)).available, true);
   assert.equal((await driverClient.snapshot()).user.name, 'Giselo');
-  const pilot=createDriverPilot({pool,enabled:true,nodeEnv:'development',until:new Date(Date.now()+3600000).toISOString()});
+  const pilot=createDriverPilot({pool,enabled:true,nodeEnv:'development',until:new Date(Date.now()+3600000).toISOString(),maps});
   await new Promise(resolve=>pilot.listen(0,'127.0.0.1',resolve));
   try {
     const pilotBase='http://127.0.0.1:'+pilot.address().port;
@@ -108,8 +108,23 @@ test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo po
     assert.equal((await pilotClient.availability(true)).available,true);
     assert.equal((await pilotClient.snapshot()).user.name,'Giselo');
     const passengerAccess=await fetch(pilotBase+'/v1/snapshot',{headers:{Authorization:'Bearer '+passenger.token}});
-    assert.equal(passengerAccess.status,403);
+    assert.equal(passengerAccess.status,200);
     assert.equal((await fetch(pilotBase+'/v1/development/session',{method:'POST'})).status,404);
+    const passengerActivation=await issuePairing(pool,'passenger');
+    assert.equal((await fetch(pilotBase+'/v1/driver/pair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:passengerActivation.code})})).status,401);
+    const exchange=await fetch(pilotBase+'/v1/passenger/pair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:passengerActivation.code})});
+    assert.equal(exchange.status,200);const passengerSession=await exchange.json();
+    const pilotPassenger=createOperationsClient({baseUrl:pilotBase,token:passengerSession.token,role:'passenger'});
+    const simulatedQuote=await pilotPassenger.quote({lat:-23.55,lng:-46.63,address:'Origem de teste'}, {lat:-23.56,lng:-46.64,address:'Destino de teste'});
+    const requested=await pilotPassenger.requestRide(simulatedQuote.id);
+    assert.equal((await pilotClient.snapshot()).offers[0].id,requested.id);
+    await assert.rejects(pilotPassenger.rideAction(requested.id,'accept'),/permissão/);
+    await pilotClient.rideAction(requested.id,'accept');
+    const assigned=(await pilotPassenger.snapshot()).rides[0];
+    assert.equal(assigned.id,requested.id);assert.equal(assigned.driver_name,'Giselo');assert.equal(assigned.plate,config.vehicle.plate);
+    await pilotPassenger.rideAction(requested.id,'cancel');
+    assert.equal((await pilotClient.snapshot()).rides.length,0);
+    assert.equal((await pilotPassenger.ride(requested.id)).status,'cancelled');
   } finally {
     pilot.closeAllConnections();await new Promise(resolve=>pilot.close(resolve));
   }

@@ -10,7 +10,7 @@ class CaddyTests(unittest.TestCase):
         self.assertIn('handle /health',candidate)
         self.assertEqual(candidate.count(ops.BEGIN),1)
         self.assertNotIn('/v1/auth',candidate)
-        self.assertNotIn('/v1/rides',candidate)
+        self.assertIn('path_regexp pilotRideAction',candidate)
         self.assertIn('method GET\n        path /v1/snapshot',candidate)
         self.assertIn('method POST\n        path /v1/driver/location /v1/driver/availability /v1/driver/pair',candidate)
     def test_ambiguous_or_absent_target_is_rejected(self):

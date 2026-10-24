@@ -6,6 +6,15 @@ on:
         description: 'Cadastrar o motorista com o perfil criptografado aprovado'
         type: boolean
         default: false
+      provision_passenger:
+        description: 'Cadastrar Fagner privadamente no piloto'
+        type: boolean
+        default: false
+      role:
+        description: 'Perfil da ativacao privada'
+        type: choice
+        options: [driver, passenger]
+        default: driver
       activate:
         description: 'Somente emitir ativacao criptografada, sem implantar novamente'
         type: boolean
@@ -79,7 +88,7 @@ jobs:
           ssh "${args[@]}" "$target" "rm -rf -- '$remote_dir'"
   provision:
     needs: deploy
-    if: ${{ inputs.provision && !inputs.activate }}
+    if: ${{ (inputs.provision || inputs.provision_passenger) && !inputs.activate }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -87,7 +96,7 @@ jobs:
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
           AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
-          YATRI_DRIVER_OPERATION: provision
+          YATRI_DRIVER_OPERATION: ${{ inputs.provision_passenger && 'provision-passenger' || 'provision' }}
         run: bash brasil/backend/ops/driver-ssh-operation.sh
   activate:
     if: ${{ inputs.activate && github.ref == 'refs/heads/codex/issue-1-purescript-memory' }}
@@ -99,6 +108,7 @@ jobs:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
           AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
           YATRI_DRIVER_OPERATION: activate
+          YATRI_PILOT_ROLE: ${{ inputs.role || 'driver' }}
         run: bash brasil/backend/ops/driver-ssh-operation.sh
       - uses: actions/upload-artifact@v4
         with:

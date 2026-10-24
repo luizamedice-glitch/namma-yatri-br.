@@ -47,6 +47,7 @@ android {
 
     defaultConfig {
         buildConfigField "boolean", "BR_TEST_MODE", brTestMode.toString()
+        buildConfigField "boolean", "BR_RIDE_PILOT", (brTestMode && (project.findProperty('brRidePilot') ?: 'false').toString().toBoolean()).toString()
         minSdkVersion 24
         targetSdkVersion 34
     versionCode 192

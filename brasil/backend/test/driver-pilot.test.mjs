@@ -17,7 +17,7 @@ test('pilot exposes only three authenticated operations and only the assigned dr
   t.after(()=>new Promise(r=>{server.closeAllConnections();server.close(r);}));
   const base='http://127.0.0.1:'+server.address().port;
   assert.equal((await fetch(base+'/health')).status,200);
-  for(const [method,path] of [['POST','/v1/auth/register'],['POST','/v1/development/session'],['GET','/v1/events'],['POST','/v1/rides'],['POST','/v1/routes']]){
+  for(const [method,path] of [['POST','/v1/auth/register'],['POST','/v1/development/session'],['GET','/v1/events'],['POST','/v1/routes']]){
     const before=queries;assert.equal((await fetch(base+path,{method})).status,404);assert.equal(queries,before);
   }
   assert.equal((await fetch(base+'/v1/snapshot')).status,401);

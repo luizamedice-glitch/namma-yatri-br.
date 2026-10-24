@@ -52,7 +52,7 @@ test('reject configuration, invalid coordinates, forbidden actions before issuin
   assert.equal(calls,0);
 });
 test('runtime gate fails closed for production, passenger, missing native bridge and web', async () => {
-  const raw=await readFile(new URL('../ui-driver/src/Development/Driver.js',import.meta.url),'utf8');
+  const raw=(await readFile(new URL('../ui-driver/src/Development/Driver.js',import.meta.url),'utf8')).replace("import {tripView} from '../../../ui-common/src/Development/PilotTrip.mjs';",'const tripView=x=>x;');
   const ffi=await import('data:text/javascript;base64,'+Buffer.from(raw.replace("import {createOperationsClient} from '../../src/Development/OperationsClient.mjs';",'const createOperationsClient=()=>{};').replace("import {createNativeFetch} from '../../src/Development/NativeTransport.mjs';",'const createNativeFetch=()=>{};').replace("import {callbackMapper} from \'presto-ui\';",'const callbackMapper={map:x=>x};')).toString('base64'));
   for(const [name,flag,os,expected] of [
     ['in.juspay.nammayatripartner',true,'ANDROID',false],
@@ -67,7 +67,7 @@ test('runtime gate fails closed for production, passenger, missing native bridge
   assert.equal(ffi.enabled(),false);
 });
 test('resynchronize stale callback registry type after original Core2 imports, preserving SDK callbacks',async()=>{
-  const raw=await readFile(new URL('../ui-driver/src/Development/Driver.js',import.meta.url),'utf8');
+  const raw=(await readFile(new URL('../ui-driver/src/Development/Driver.js',import.meta.url),'utf8')).replace("import {tripView} from '../../../ui-common/src/Development/PilotTrip.mjs';",'const tripView=x=>x;');
   const ffi=await import('data:text/javascript;base64,'+Buffer.from(raw.replace("import {createOperationsClient} from '../../src/Development/OperationsClient.mjs';",'const createOperationsClient=()=>{};').replace("import {createNativeFetch} from '../../src/Development/NativeTransport.mjs';",'const createNativeFetch=()=>{};').replace("import {callbackMapper} from \'presto-ui\';",'const callbackMapper={map:x=>x};')).toString('base64'));
   const callback=()=>42;
   for(const registry of [{existing:callback},new Map([['existing',callback]])]){

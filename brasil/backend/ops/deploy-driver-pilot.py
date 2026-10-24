@@ -41,9 +41,23 @@ def caddy_config(original):
     }
     @yatriDriverUpdate {
         method POST
-        path /v1/driver/location /v1/driver/availability /v1/driver/pair
+        path /v1/driver/location /v1/driver/availability /v1/driver/pair /v1/passenger/pair /v1/quotes /v1/rides
     }
     handle @yatriDriverUpdate {
+        reverse_proxy 127.0.0.1:8082
+    }
+    @yatriPilotRideRead {
+        method GET
+        path_regexp pilotRideRead ^/v1/rides/[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}$
+    }
+    handle @yatriPilotRideRead {
+        reverse_proxy 127.0.0.1:8082
+    }
+    @yatriPilotRideAction {
+        method POST
+        path_regexp pilotRideAction ^/v1/rides/[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}/(accept|reject|cancel)$
+    }
+    handle @yatriPilotRideAction {
         reverse_proxy 127.0.0.1:8082
     }
     # END YATRI DRIVER PILOT
@@ -116,7 +130,8 @@ def main(source,sha):
     previous={p:p.read_text() if p.exists() else None for p in [env,override]}
     candidate=caddy_config(original)
     try:
-        write(env,'DATABASE_URL='+json.dumps(current_env['DATABASE_URL'])+'\n')
+        allowed=['DATABASE_URL','GOOGLE_MAPS_SERVER_KEY','BASE_FARE_CENTS','PER_KM_CENTS','DRIVER_RADIUS_METERS']
+        write(env,''.join(k+'='+json.dumps(current_env[k])+'\n' for k in allowed if current_env.get(k)))
         write(override,json.dumps(config)+'\n')
         write(work/'Caddyfile.candidate',candidate)
         run(['caddy','validate','--config',str(work/'Caddyfile.candidate'),'--adapter','caddyfile'])
@@ -131,7 +146,7 @@ def main(source,sha):
         write(CADDY,candidate,mode);run(['systemctl','reload','caddy'])
         for method,path in [('GET','/v1/snapshot'),('POST','/v1/driver/location'),('POST','/v1/driver/availability')]:
             if status('https://'+HOST+path,method)!=401:raise RuntimeError('AUTH_BOUNDARY_FAILED')
-        for method,path in [('POST','/v1/auth/register'),('POST','/v1/development/session'),('POST','/v1/rides'),('GET','/v1/events')]:
+        for method,path in [('POST','/v1/auth/register'),('POST','/v1/development/session'),('POST','/v1/rides/not-a-uuid/start'),('GET','/v1/events')]:
             if status('https://'+HOST+path,method)!=403:raise RuntimeError('UNRELATED_ROUTE_EXPOSED')
         if status('https://'+HOST+'/health')!=200:raise RuntimeError('MAIN_HEALTH_FAILED')
         if before!={name:service_id(name) for name in before}:raise RuntimeError('EXISTING_SERVICES_CHANGED')

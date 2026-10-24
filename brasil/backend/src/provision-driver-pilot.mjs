@@ -31,10 +31,25 @@ export async function provisionDriverPilot(pool,input) {
   });
 }
 
+export async function provisionPassengerPilot(pool){
+  const id='b1a51100-0000-4000-8000-000000000001';
+  const password=await passwordHash(randomBytes(32).toString('hex'));
+  await transaction(pool,async db=>{
+    const existing=await db.query('SELECT name,role FROM users WHERE id=$1',[id]);
+    if(existing.rowCount && (existing.rows[0].name!=='Fagner'||existing.rows[0].role!=='passenger'))throw Error('PASSENGER_ID_CONFLICT');
+    if(!existing.rowCount)await db.query('INSERT INTO users(id,name,email,password_hash,role) VALUES($1,$2,$3,$4,$5)',
+      [id,'Fagner','passenger@development.yatri.invalid',password,'passenger']);
+  });
+}
+
 if(process.argv[1]===new URL(import.meta.url).pathname){
   if(process.env.YATRI_DRIVER_PILOT_MODE!=='true'||process.env.NODE_ENV==='production')throw Error('DRIVER_PILOT_DISABLED');
   if(!process.argv[2])throw Error('Informe arquivo privado do veiculo.');
   const pool=await connectDatabase(process.env.DATABASE_URL);
-  try {await provisionDriverPilot(pool,JSON.parse(await readFile(process.argv[2],'utf8')));console.log('Motorista e veiculo provisionados; dados privados omitidos.');}
+  try {
+    if(process.argv[2]==='--passenger')await provisionPassengerPilot(pool);
+    else await provisionDriverPilot(pool,JSON.parse(await readFile(process.argv[2],'utf8')));
+    console.log('Perfil de testes provisionado; dados privados omitidos.');
+  }
   finally {await pool.end();}
 }
