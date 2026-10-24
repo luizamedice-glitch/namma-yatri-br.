@@ -14,6 +14,7 @@ import { mobilityService } from '../../brasil/backend/src/mobility.mjs';
 import { createApi } from '../../brasil/backend/src/http.mjs';
 import { createDriverPilot } from '../../brasil/backend/src/driver-pilot.mjs';
 import { provisionDriverPilot } from '../../brasil/backend/src/provision-driver-pilot.mjs';
+import {issuePairing,pairingHash} from '../../brasil/backend/src/driver-pairing.mjs';
 import { createOperationsClient } from '../ui-driver/src/Development/OperationsClient.mjs';
 
 test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo por HTTP', { timeout: 30000 }, async t => {
@@ -92,6 +93,16 @@ test('Fagner/Giselo: provisionamento persistente, isolamento e ciclo completo po
   await new Promise(resolve=>pilot.listen(0,'127.0.0.1',resolve));
   try {
     const pilotBase='http://127.0.0.1:'+pilot.address().port;
+    const activation=await issuePairing(pool);
+    assert.equal((await pool.query('SELECT token_hash FROM sessions WHERE token_hash=$1',[pairingHash(activation.code)])).rowCount,1);
+    await assert.rejects(service.authenticate(activation.code),e=>e.status===401);
+    const paired=await fetch(pilotBase+'/v1/driver/pair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:activation.code})});
+    assert.equal(paired.status,200);
+    const pairedSession=await paired.json();
+    assert.equal((await service.authenticate(pairedSession.token)).id,driver.user.id);
+    assert.equal((await fetch(pilotBase+'/v1/driver/pair',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:activation.code})})).status,401);
+    const invalid=await fetch(pilotBase+'/v1/driver/pair',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"code":"invalid"}'});
+    assert.equal(invalid.status,401);
     const pilotClient=createOperationsClient({baseUrl:pilotBase,token:deviceSession.token});
     await pilotClient.location(-23.55,-46.63);
     assert.equal((await pilotClient.availability(true)).available,true);

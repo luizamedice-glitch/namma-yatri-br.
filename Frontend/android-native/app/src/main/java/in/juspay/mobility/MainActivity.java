@@ -649,6 +649,7 @@ public class MainActivity extends AppCompatActivity {
                 ? 0xFFFF00BE : this.getResources().getColor(R.color.colorPrimaryDark, getTheme()));
         countAppUsageDays();
         startForResult = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> handleGlResp(result, MainActivity.this));
+        BrDriverSetupActivity.openIfNeeded(this);
     }
 
     private void startApp() {

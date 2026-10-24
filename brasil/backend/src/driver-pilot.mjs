@@ -3,9 +3,10 @@
 import {createApi} from './http.mjs';
 import {mobilityService} from './mobility.mjs';
 import {requireThat} from './domain.mjs';
+import {exchangePairing} from './driver-pairing.mjs';
 
 export const driverPilotRoutes = Object.freeze([
-  'GET /v1/snapshot', 'POST /v1/driver/location', 'POST /v1/driver/availability'
+  'GET /v1/snapshot', 'POST /v1/driver/location', 'POST /v1/driver/availability', 'POST /v1/driver/pair'
 ]);
 export const driverPilotId = 'b1a51100-0000-4000-8000-000000000002';
 
@@ -21,5 +22,8 @@ export function createDriverPilot({pool, enabled, nodeEnv, until, now = Date.now
     requireThat(user.role === 'driver' && user.id === driverPilotId, 403, 'Sessão fora do piloto de motorista');
     return user;
   }};
-  return createApi({pool, service, maps:{}, allowedRoutes:driverPilotRoutes});
+  return createApi({pool, service, maps:{}, allowedRoutes:driverPilotRoutes, pairing:body=>{
+    requireThat(now()<expiration,503,'Janela de testes do motorista encerrada');
+    return exchangePairing(pool,body);
+  }});
 }

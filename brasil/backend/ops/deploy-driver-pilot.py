@@ -41,7 +41,7 @@ def caddy_config(original):
     }
     @yatriDriverUpdate {
         method POST
-        path /v1/driver/location /v1/driver/availability
+        path /v1/driver/location /v1/driver/availability /v1/driver/pair
     }
     handle @yatriDriverUpdate {
         reverse_proxy 127.0.0.1:8082

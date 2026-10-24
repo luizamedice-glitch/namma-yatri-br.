@@ -12,7 +12,7 @@ class CaddyTests(unittest.TestCase):
         self.assertNotIn('/v1/auth',candidate)
         self.assertNotIn('/v1/rides',candidate)
         self.assertIn('method GET\n        path /v1/snapshot',candidate)
-        self.assertIn('method POST\n        path /v1/driver/location /v1/driver/availability',candidate)
+        self.assertIn('method POST\n        path /v1/driver/location /v1/driver/availability /v1/driver/pair',candidate)
     def test_ambiguous_or_absent_target_is_rejected(self):
         for config in ['other.example {\n}\n','52-67-246-31.sslip.io {\n}\n52-67-246-31.sslip.io {\n}\n']:
             with self.assertRaises(RuntimeError):ops.caddy_config(config)
