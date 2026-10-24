@@ -1,6 +1,15 @@
 name: BR - Motorista no Lightsail
 on:
   workflow_dispatch:
+    inputs:
+      provision:
+        description: 'Cadastrar o motorista com o perfil criptografado aprovado'
+        type: boolean
+        default: false
+      activate:
+        description: 'Somente emitir ativacao criptografada, sem implantar novamente'
+        type: boolean
+        default: false
   push:
     branches: [codex/issue-1-purescript-memory]
     paths: ['.github/workflows/br-driver-lightsail.yml']
@@ -11,6 +20,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   contracts:
+    if: ${{ !inputs.activate }}
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -35,7 +45,7 @@ jobs:
       - run: python3 brasil/backend/test/driver-pilot-ops.test.py
   deploy:
     needs: contracts
-    if: github.ref == 'refs/heads/codex/issue-1-purescript-memory'
+    if: github.ref == 'refs/heads/codex/issue-1-purescript-memory' && !inputs.activate
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -67,3 +77,31 @@ jobs:
           scp "${args[@]}" "$work/backend.tar.gz" "$target:$remote_dir/"
           ssh "${args[@]}" "$target" "tar -xzf '$remote_dir/backend.tar.gz' -C '$remote_dir' && sudo -n python3 '$remote_dir/brasil/backend/ops/deploy-driver-pilot.py' '$remote_dir/brasil/backend' '$GITHUB_SHA'"
           ssh "${args[@]}" "$target" "rm -rf -- '$remote_dir'"
+  provision:
+    needs: deploy
+    if: ${{ inputs.provision && !inputs.activate }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Aplicar perfil privado autorizado
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+          YATRI_DRIVER_OPERATION: provision
+        run: bash brasil/backend/ops/driver-ssh-operation.sh
+  activate:
+    if: ${{ inputs.activate && github.ref == 'refs/heads/codex/issue-1-purescript-memory' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Emitir ativacao sem expor codigo nos logs
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+          YATRI_DRIVER_OPERATION: activate
+        run: bash brasil/backend/ops/driver-ssh-operation.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: motorista-ativacao-criptografada
+          path: ${{ runner.temp }}/driver-activation.enc
+          retention-days: 1
