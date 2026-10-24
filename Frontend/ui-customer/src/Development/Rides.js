@@ -3,9 +3,8 @@ import {callbackMapper} from 'presto-ui';
 import {createOperationsClient} from '../../../ui-driver/src/Development/OperationsClient.mjs';
 import {createNativeFetch} from '../../../ui-driver/src/Development/NativeTransport.mjs';
 import {tripView} from '../../../ui-common/src/Development/PilotTrip.mjs';
-let listener,timer,quote,rideId,busy=false;
+let listener;
 const rideKey='YATRI_PASSENGER_ACTIVE_RIDE';
-function rememberRide(id){rideId=id;window.JBridge.setInSharedPrefs(rideKey,id||'');}
 export const enabled=()=>{
   try{return window.__OS==='ANDROID'&&window.__YATRI_BR_DEVELOPMENT__===true&&
     JSON.parse(window.JBridge.getDeviceInfo()).package_name==='in.juspay.nammayatri.debug'&&
@@ -20,41 +19,108 @@ function client(){
       const registry=window.__PROXY_FN;if(registry instanceof Map)registry.delete(id);else if(registry)delete registry[id];
     })});
 }
-function emit(value,owner=listener){if(listener&&owner===listener){listener.changed(value)();window.__YATRI_PASSENGER_RIDE__={id:value.id,phase:value.phase};}}
-function fail(error,owner=listener){if(listener&&owner===listener)listener.error(error.message||'Não foi possível atualizar a viagem.')();}
-async function refresh(owner=listener){
-  const api=client(),data=await api.snapshot();
+function diagnostics(owner){
   if(owner!==listener)return;
-  if(data.rides.length){if(rideId!==data.rides[0].id)rememberRide(data.rides[0].id);emit(tripView(data.rides[0]),owner);}
-  else if(rideId)emit(tripView(await api.ride(rideId)),owner);
+  // Read-only counters for Android acceptance; no session, URL, address or vehicle data.
+  window.__YATRI_PASSENGER_POLL__={ticks:owner.ticks,reads:owner.reads,errors:owner.errors,
+    polling:owner.polling,actionBusy:owner.busy,phase:owner.phase||'idle',lastSuccessAt:owner.lastSuccessAt||0};
+}
+function rememberRide(owner,id){
+  if(owner!==listener)return;
+  owner.rideId=id;window.JBridge.setInSharedPrefs(rideKey,id||'');
+}
+function emit(owner,value){
+  if(owner!==listener)return;
+  const serialized=JSON.stringify(value);
+  if(serialized===owner.lastTrip)return;
+  owner.changed(value)();
+  owner.lastTrip=serialized;owner.phase=value.phase;
+  window.__YATRI_PASSENGER_RIDE__={id:value.id,phase:value.phase};
+  diagnostics(owner);
+}
+function fail(owner,error){
+  if(owner!==listener)return;
+  owner.errors++;
+  owner.error(error.message||'Não foi possível atualizar a viagem.')();
+  diagnostics(owner);
+}
+async function refresh(owner){
+  const revision=++owner.revision;
+  const current=()=>owner===listener&&revision===owner.revision;
+  owner.reads++;diagnostics(owner);
+  try{
+    const api=client(),data=await api.snapshot();
+    if(!current())return;
+    if(data.rides.length){
+      rememberRide(owner,data.rides[0].id);emit(owner,tripView(data.rides[0]));
+    }else if(owner.rideId){
+      const ride=await api.ride(owner.rideId);
+      if(!current())return;
+      emit(owner,tripView(ride));
+    }else if(!owner.quote){
+      // Retry an initial snapshot/quote failure on the next tick, without reopening.
+      const quote=await api.quote(owner.origin,owner.destination);
+      if(!current())return;
+      owner.quote=quote;emit(owner,tripView(quote,'quoted'));
+    }
+    owner.lastSuccessAt=Date.now();diagnostics(owner);
+  }catch(error){if(current())fail(owner,error);}
+}
+async function tick(owner){
+  if(owner!==listener)return;
+  owner.ticks++;
+  if(owner.polling||owner.busy){diagnostics(owner);return;}
+  owner.polling=true;diagnostics(owner);
+  try{await refresh(owner);}finally{owner.polling=false;diagnostics(owner);}
 }
 export const subscribe=origin=>destination=>changed=>error=>()=>{
-  const owner={changed,error};listener=owner;quote=null;busy=false;
+  if(listener)listener.stop();
   const saved=window.JBridge.getFromSharedPrefs(rideKey);
-  rideId=/^[a-f0-9-]{36}$/.test(saved||'')?saved:null;
-  (async()=>{
-    try{
-      const api=client(),data=await api.snapshot();
-      if(owner!==listener)return;
-      if(data.rides.length){rememberRide(data.rides[0].id);emit(tripView(data.rides[0]),owner);}
-      else if(rideId){emit(tripView(await api.ride(rideId)),owner);}
-      else{const value=await api.quote(origin,destination);if(owner!==listener)return;quote=value;emit(tripView(value,'quoted'),owner);}
-    }catch(e){fail(e,owner);}
-  })();
-  if(timer)clearInterval(timer);
-  let polling=false;
-  timer=setInterval(async()=>{if(polling||busy)return;polling=true;try{await refresh(owner);}catch(e){fail(e,owner);}finally{polling=false;}},3000);
-  return ()=>{if(listener===owner){listener=null;clearInterval(timer);}};
+  const owner={origin,destination,changed,error,revision:0,ticks:0,reads:0,errors:0,busy:false,polling:false,
+    rideId:/^[a-f0-9-]{36}$/.test(saved||'')?saved:null};
+  listener=owner;
+  const wake=()=>{Promise.resolve().then(()=>tick(owner));};
+  const timer=setInterval(()=>tick(owner),3000);
+  const resumed=window.onResumeListeners;
+  if(Array.isArray(resumed))resumed.push(wake);
+  if(window.addEventListener)window.addEventListener('online',wake);
+  owner.stop=()=>{
+    clearInterval(timer);owner.revision++;
+    if(Array.isArray(resumed)){const index=resumed.indexOf(wake);if(index>=0)resumed.splice(index,1);}
+    if(window.removeEventListener)window.removeEventListener('online',wake);
+    if(listener===owner)listener=null;
+  };
+  tick(owner);
+  return owner.stop;
 };
 export const request=()=>{
-  if(busy||!quote||rideId)return;
-  const owner=listener;busy=true;emit(tripView(quote,'requesting'),owner);
-  (async()=>{try{const created=await client().requestRide(quote.id);rememberRide(created.id);await refresh(owner);}
-    catch(e){fail(e,owner);if(quote)emit(tripView(quote,'quoted'),owner);}finally{busy=false;}})();
+  const owner=listener;
+  if(!owner||owner.busy||!owner.quote||owner.rideId)return;
+  owner.busy=true;owner.revision++;diagnostics(owner);
+  // Do not push a nested screen action from inside the request-click reducer.
+  Promise.resolve().then(async()=>{
+    try{
+      if(owner!==listener)return;
+      emit(owner,tripView(owner.quote,'requesting'));
+      const created=await client().requestRide(owner.quote.id);
+      if(owner!==listener)return;
+      rememberRide(owner,created.id);await refresh(owner);
+    }catch(error){fail(owner,error);if(owner===listener&&!owner.rideId)emit(owner,tripView(owner.quote,'quoted'));}
+    finally{owner.busy=false;diagnostics(owner);}
+  });
 };
-export const dismiss=()=>{rememberRide(null);};
+export const dismiss=()=>{
+  if(listener&&['completed','cancelled'].includes(listener.phase)){
+    listener.revision++;rememberRide(listener,null);
+  }
+};
 export const cancel=()=>{
-  if(busy||!rideId)return;
-  const owner=listener;busy=true;
-  (async()=>{try{await client().rideAction(rideId,'cancel');await refresh(owner);}catch(e){fail(e,owner);}finally{busy=false;}})();
+  const owner=listener;
+  if(!owner||owner.busy||!owner.rideId)return;
+  owner.busy=true;owner.revision++;diagnostics(owner);
+  Promise.resolve().then(async()=>{
+    try{if(owner===listener){await client().rideAction(owner.rideId,'cancel');if(owner===listener)await refresh(owner);}}
+    catch(error){fail(owner,error);}
+    finally{owner.busy=false;diagnostics(owner);}
+  });
 };
