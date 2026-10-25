@@ -97,3 +97,10 @@ pelo aplicativo motorista. Aceite deve comprovar o traçado nos dois APKs e a
 posição atualizada no passageiro, preservando conclusão, cancelamento e retomada.
 Após este aceite, priorizar operação em segundo plano/push e teste de campo em
 dois celulares; pagamentos reais seguem fora do piloto.
+
+25/10/2026: ciclo completo com rota e posição do veículo aprovado nos dois
+APKs contra Google/Lightsail, run 40145108191. Próximos passos: teste de rua
+com dois celulares; corrigir a chave legada de limpeza dos pinos de origem;
+operação em segundo plano/push. Relatório em
+Frontend/build-reports/mapa-corrida/RELATORIO.md. Pagamentos e navegação curva
+a curva continuam fora do aceite.

@@ -1,0 +1,88 @@
+{
+  "dateUTC": "2026-10-25",
+  "status": "passed_with_documented_limits",
+  "sourceSha": "6c0542d4b11b0b59cbeb77cfebabe503dd1315d5",
+  "workflowRun": 40145108191,
+  "backend": {
+    "deploymentRun": 40142001067,
+    "sourceSha": "2ff16a8f5fc82187a07c8493b0a11616d3fed742",
+    "url": "https://52-67-246-31.sslip.io",
+    "schemaChanged": false,
+    "mainServicesRecreated": false
+  },
+  "contractRun": 40142200365,
+  "compilerReferenceRun": 40143012209,
+  "compilerReusedAfterStrictSourceComparison": true,
+  "apks": [
+    {
+      "name": "ride-passageiro-apk",
+      "artifact": 12580950856,
+      "zip_sha256": "e560373f7abaa93ecf4c7e5df0ab8a8fe9ba784af5a92da1de9a26d40e81790a",
+      "apk_sha256": "656e7eba731bfa3436dbdae88f7eafde2c01851755cda6122a64d1ff6e3f1dcf",
+      "apk_bytes": 127814611
+    },
+    {
+      "name": "ride-motorista-apk",
+      "artifact": 12580691234,
+      "zip_sha256": "57746e06549101d9f331b1cfc74906d0256ca2fc85d307a135f90e7ad64c03db",
+      "apk_sha256": "8186521346b3371ff42fce39c684e7ee965138b19c69b1dc7076e34adc28171f",
+      "apk_bytes": 270992179
+    }
+  ],
+  "evidence": {
+    "artifact": 12580502272,
+    "zip_sha256": "9f9f8c4de9152f04e75e4235c29cd715ad64e0b641be919ca95b4fe3f784e1c1"
+  },
+  "android": {
+    "api": 29,
+    "device": "Pixel 2 emulator",
+    "acceptance": {
+      "acceptance": "passed",
+      "backend": "lightsail_https",
+      "two_original_apks": true,
+      "foreground_switching": true,
+      "native_pairing_both_roles": true,
+      "google_places_and_routes_real": true,
+      "request_persisted": true,
+      "offer_same_ride": true,
+      "driver_accept_persisted": true,
+      "passenger_received_driver_and_vehicle": true,
+      "ride_id": "0e51f8d1-d2e7-4cc1-b5b7-28f407fc4df4",
+      "initial_cancel_scenario_passed": true,
+      "arrive_persisted": true,
+      "start_persisted": true,
+      "complete_persisted": true,
+      "both_apps_display_all_trip_states": true,
+      "process_recreation_restores_trip": true,
+      "driver_returns_to_dashboard": true,
+      "native_route_drawn_both_apps": true,
+      "pickup_route_google_real": true,
+      "android_gps_movement_received_by_passenger": true,
+      "gps_source": "emulator_location_provider",
+      "native_passenger_vehicle_marker_exists": true,
+      "driver_offline_after_test": true
+    },
+    "diagnostics": {
+      "fatal_exception_count": 0,
+      "driver_anr_count": 0,
+      "passenger_anr_count": 0,
+      "raw_logcat_published": false
+    },
+    "screenshotsVisuallyReviewed": true
+  },
+  "tracking": {
+    "passengerPollSeconds": 3,
+    "driverGpsPollSeconds": 5,
+    "staleGpsSeconds": 60,
+    "pickupRouteCacheSeconds": 30,
+    "fare": "agreed_quote_no_financial_charge"
+  },
+  "limits": [
+    "Physical driving and two physical devices not validated by this automation.",
+    "Driver must stay open for this pilot; background push/closed-app GPS not implemented.",
+    "In-progress geometry is the quoted route; no turn-by-turn guidance or automatic trip rerouting.",
+    "Extra green source pins can remain after route redraw: legacy native bridge stores source marker under pointerIcon rather than configured markerId. Vehicle marker and current GPS were verified.",
+    "Secondary driver menus and legacy Home GPS indicator remain outside this acceptance.",
+    "Development activation and session expire; pilot window remains unchanged."
+  ]
+}

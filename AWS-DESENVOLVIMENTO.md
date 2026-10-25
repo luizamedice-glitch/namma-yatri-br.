@@ -212,3 +212,10 @@ portas nem a janela vigente. Versões anteriores dos APKs continuam compatíveis
 O acompanhamento deste incremento depende do motorista aberto e com permissão
 GPS. Push/serviço em segundo plano e navegação curva a curva não estão incluídos.
 Aceite Android com traçado e movimento ainda pendente no registro inicial.
+
+25/10/2026: aceite Android remoto 40145108191 aprovado com os dois APKs,
+rotas Google e GPS recebido do aplicativo motorista. Ciclo até conclusão,
+cancelamento e recuperação dos processos confirmados. Backend permanece em
+2ff16a8/run 40142001067; nenhuma nova atualização remota no fechamento.
+Ao terminar, motorista indisponível e nenhuma corrida ativa do teste. O GPS
+foi emulado; teste de rua/segundo plano não foi validado por essa execução.

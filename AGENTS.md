@@ -31,7 +31,7 @@ Leia antes de modificar o código:
 6. Resuma commits, testes, problemas abertos e próximo passo.
 
 ## Objetivo imediato
-Priorizar a tela principal original do passageiro (HomeScreen): inicialização debug sem login, mapa, origem/destino e navegação. Depois conectar progressivamente serviços reais brasileiros, sem mascarar respostas do backend. Otimizar o ciclo de build antes de alterações extensas.
+Consolidar o piloto dos dois APKs: o ciclo completo com mapa/GPS foi aprovado em Android API 29 contra Lightsail no run 40145108191, fontes 6c0542d4b1. Leia Frontend/build-reports/mapa-corrida/RELATORIO.md e seus limites. Próximos incrementos: teste de rua em dois celulares, limpeza visual dos pinos legados e operação em segundo plano/push. Preserve a fonte única no backend, produção e as telas originais; não confunda GPS emulado com deslocamento físico. Para alterações exclusivas em TripMapRuntime.js, use apenas o reaproveitamento de compilação com comparação estrita documentado no workflow.
 
 ## Servidor de desenvolvimento AWS
 Leia também `AWS-DESENVOLVIMENTO.md` antes de alterar integração remota, autenticação, rotas HTTP ou infraestrutura. A URL de testes atual é `https://52-67-246-31.sslip.io`, com mapas de teste e um piloto autenticado temporário; consulte nesse documento as rotas, evidências e expiração atuais, sem presumir liberação geral de endpoints. Documentação não concede acesso SSH e nunca se devem incluir credenciais no APK ou no Git.

@@ -347,3 +347,55 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
   recuperação dos dois clientes e guard de produção. Teste Android ampliado exige
   traçado visível, GPS do emulador recebido pelo servidor/passageiro, ciclo completo
   e recriação dos processos. Não se declara aceite visual/Android antecipadamente.
+
+### Mapa durante o ciclo completo — primeiro aceite remoto e revisão visual
+
+- Run **40143012209 success**, fontes `5900d9a2ab`: API 29, duas instalações,
+  ativação nativa, Google real e PostgreSQL Lightsail. Pedido/oferta/aceite,
+  cancelamento, chegada, início, conclusão, recriação dos processos e retorno
+  ao painel aprovados. Duas mudanças de GPS do provedor do emulador chegaram
+  pelo app motorista ao servidor e ao passageiro. Evidência **12580410488**;
+  zero exceções fatais/ANRs no resumo. Não é teste de deslocamento físico.
+- Capturas conferidas: tiles e polylines reais em ameixa. Revisão visual
+  identificou acúmulo de pinos e enquadramento herdado que corta marcadores.
+  Runtime corrigido para remover marcadores por ID, limpar o mapa ao sair e
+  enquadrar geometria + posição do veículo. Nova versão `6c0542d4b1` em validação
+  no run **40145108191**, exigindo também existência do marcador Android do
+  passageiro e capturas de toda a área do mapa. Ainda não entregar como aceite
+  final dessa revisão enquanto a execução não terminar.
+- Otimização do CI: `runtime_cache_run_id` admite alteração exclusiva em
+  `TripMapRuntime.js` após comparar todas as outras fontes/configurações dos
+  dois frontends com um run de compilação aprovado. Cache precisa corresponder
+  exatamente ao run solicitado. Não executa PureScript/Spago nesse modo;
+  empacotamento, APK e aceite Android continuam obrigatórios. Referência atual
+  **40143012209**. Não aumentados heap/timeouts.
+- Medição da referência: motorista, apenas Development.Driver, 36,58 s e
+  2.514,59 MiB RSS; passageiro, zero módulos recompilados, mas etapa ainda
+  consumiu 340,23 s e 8.874 MiB lendo/verificando os lotes. O modo restrito de
+  runtime evita repetir essa etapa; não se confunde cache com custo zero.
+- Backend permanece no run **40142001067**, fonte `2ff16a8`; contratos incluindo
+  coalescência/cache e GPS vencido aprovados em **40142200365**. Nenhuma nova
+  migration, conta, porta ou renovação da janela para as revisões de interface.
+
+### Corrida com mapa e GPS — aceite final aprovado em 25/10/2026
+
+- **COMPILADO/TESTADO EM ANDROID:** fontes `6c0542d4b1`, run **40145108191
+  success**, Pixel 2/API 29. Fluxo completo, cancelamento, GPS do Android,
+  marcador nativo do passageiro, rotas Google, persistência Lightsail,
+  recuperação dos processos e retorno ao painel aprovados. Zero fatal/ANR.
+- Capturas finais conferidas: carro visível nas duas posições, rota em ameixa
+  e enquadramento incluindo o veículo. Evidência **12580502272**. APK passageiro
+  **12580950856**; motorista **12580691234**. Digests ZIP e hashes dos APKs
+  internos conferidos. Relatório: `Frontend/build-reports/mapa-corrida/RELATORIO.md`.
+- O run final reutilizou a compilação após comparação estrita e não executou
+  PureScript. Estado operacional real continua no backend `2ff16a8`; sem
+  alteração de schema/conta/portas/serviços principais neste fechamento.
+- **Limite visual conhecido:** ainda podem permanecer pinos verdes de origem
+  após redesenhar a rota. O SDK armazena esse marcador por `pointerIcon`, em vez
+  do `markerId` usado no restante da limpeza; próxima revisão deve remover
+  também `ny_ic_source_dot`. Não declarar esse polimento concluído. Carro,
+  GPS, geometria e estados foram confirmados apesar dessa pendência visual.
+- Aceite usa GPS do emulador e alternância dos apps. Teste de rua com dois
+  celulares, push/GPS com app fechado, navegação curva a curva e pagamentos
+  permanecem pendentes. Ativações de uso único entregues em arquivo privado;
+  código/sessão não publicados no Git/logs.
