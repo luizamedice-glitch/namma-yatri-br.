@@ -28,12 +28,14 @@ export function transition(ride, actor, action) {
   const ownDriver = ride.driver_id === actor.id;
   requireThat(ownPassenger || ownDriver, 403, 'Acesso negado');
   if (action === 'cancel') {
-    requireThat(['searching', 'accepted', 'arrived'].includes(ride.status), 409, 'Não é possível cancelar neste estado');
+    requireThat(['searching', 'accepted', 'arrived', 'cancelled'].includes(ride.status), 409, 'Não é possível cancelar neste estado');
     return 'cancelled';
   }
   requireThat(ownDriver && actor.role === 'driver', 403, 'Somente o motorista atribuído');
   const next = { arrive: ['accepted', 'arrived'], start: ['arrived', 'in_progress'], complete: ['in_progress', 'completed'] }[action];
-  requireThat(next && next[0] === ride.status, 409, 'Transição de corrida inválida');
+  // Repeating a committed command confirms its target state. A delayed command
+  // from another stage still conflicts; authorization above always runs first.
+  requireThat(next && (next[0] === ride.status || next[1] === ride.status), 409, 'Transição de corrida inválida');
   return next[1];
 }
 export function fare(distanceMeters, base, perKm) {

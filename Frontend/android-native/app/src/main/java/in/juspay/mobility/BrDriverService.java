@@ -64,7 +64,7 @@ public final class BrDriverService extends Service implements LocationListener {
             else startForeground(FOREGROUND,notification);
             locations=(LocationManager)getSystemService(LOCATION_SERVICE);
             for(String provider:new String[]{LocationManager.GPS_PROVIDER,LocationManager.NETWORK_PROVIDER}){
-                if(locations.isProviderEnabled(provider)){
+                if(locations.getAllProviders().contains(provider)){
                     locations.requestLocationUpdates(provider,5000,0,this,Looper.getMainLooper());
                     Location known=locations.getLastKnownLocation(provider);if(known!=null)onLocationChanged(known);
                 }
@@ -97,7 +97,8 @@ public final class BrDriverService extends Service implements LocationListener {
             JSONObject snapshot=call("/snapshot",null);if(closed)return;snapshots++;
             if(!"driver".equals(snapshot.getJSONObject("user").getString("role"))){halt("invalid_role");return;}
             JSONArray rides=snapshot.getJSONArray("rides"),offers=snapshot.getJSONArray("offers");
-            if(fresh&&!snapshot.optBoolean("available")&&rides.length()==0){halt("offline");return;}
+            boolean requested=snapshot.has("online")?snapshot.getBoolean("online"):snapshot.optBoolean("available")||!fresh;
+            if(!requested&&rides.length()==0){halt("offline");return;}
             NotificationManager manager=getSystemService(NotificationManager.class);
             String offer=offers.length()>0?offers.getJSONObject(0).getString("id"):"";
             if(!offer.equals(displayedOffer)){
@@ -115,14 +116,10 @@ public final class BrDriverService extends Service implements LocationListener {
             }
             String title=rides.length()>0?"Corrida em andamento":"Motorista online";
             String text=fresh?"Compartilhando localização. Toque para abrir.":"GPS sem atualização. Ative a localização do celular.";
-            String content=title+"\n"+text;
-            if(!content.equals(foregroundContent)){
-                notifyRunning(FOREGROUND,notification(TRACKING,title,text).setOngoing(true).setOnlyAlertOnce(true).build());
-                foregroundContent=content;
-            }
+            trackingStatus(title,text);
             record(fresh?"running":"waiting_gps");
         }catch(Unauthorized ignored){halt("session_rejected");}
-        catch(Exception ignored){errors++;record("reconnecting");}
+        catch(Exception ignored){errors++;trackingStatus("Reconectando motorista","Sem conexão com o servidor. Tentando novamente.");record("reconnecting");}
     }
     private JSONObject call(String path,JSONObject body)throws Exception{
         URI base=new URI(prefs.getString("YATRI_DRIVER_BACKEND_URL",""));String host=base.getHost();
@@ -149,7 +146,14 @@ public final class BrDriverService extends Service implements LocationListener {
         }finally{connection.disconnect();}
     }
     private static final class Unauthorized extends Exception{}
-    private void notifyRunning(int id,Notification notification){main.post(()->{if(!closed)getSystemService(NotificationManager.class).notify(id,notification);});}
+    private void trackingStatus(String title,String text){
+        String content=title+"\n"+text;
+        if(closed||content.equals(foregroundContent))return;
+        notifyRunning(FOREGROUND,notification(TRACKING,title,text).setOngoing(true).setOnlyAlertOnce(true).build());foregroundContent=content;
+    }
+    private void notifyRunning(int id,Notification notification){main.post(()->{
+        if(!closed)try{getSystemService(NotificationManager.class).notify(id,notification);}catch(RuntimeException ignored){ }
+    });}
     private void record(String state){if(closed)return;diagnostics.edit().putString("state",state).putInt("uploads",uploads).putInt("snapshots",snapshots)
         .putInt("notifications",alerts).putInt("errors",errors).putLong("observedAt",System.currentTimeMillis()).apply();}
     private void halt(String reason){record(reason);main.post(this::stopSelf);}

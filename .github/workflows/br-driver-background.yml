@@ -147,6 +147,7 @@ jobs:
       - name: API e PostgreSQL isolados, sem corridas no Lightsail
         run: |
           node Frontend/scripts/serve-passenger-foreground.mjs > "$RUNNER_TEMP/api.log" 2>&1 &
+          echo "PASSENGER_TEST_API_PID=$!" >> "$GITHUB_ENV"
           for attempt in $(seq 1 30); do
             test -s "$PASSENGER_FOREGROUND_SESSIONS" && break
             sleep 1

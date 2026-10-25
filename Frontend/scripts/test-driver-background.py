@@ -71,6 +71,32 @@ try:
     locked_uploads=int(native()['uploads'])
     fix(-46.6319,-23.5514)
     await_native(lambda s:int(s.get('uploads','0'))>=locked_uploads+3,'GPS não continuou com tela bloqueada')
+    # Real TCP loss, including existing keep-alive sockets. No restart or JS wake.
+    p.cut_transport()
+    await_native(lambda s:s.get('state')=='reconnecting','Serviço não reconheceu perda de conexão')
+    p.adb('reverse','tcp:8080','tcp:8080')
+    uploads=int(native()['uploads'])
+    await_native(lambda s:s.get('state')=='running' and int(s.get('uploads','0'))>uploads,'GPS não voltou após restaurar conexão')
+    assert p.adb('shell','pidof',p.package).decode().strip()==pid
+    report['cases'].append({'case':'native_network_recovery_locked_screen','passed':True,'same_pid':True})
+    # Disable the actual location setting long enough to invalidate both the
+    # 30s device fix and the server's 60s freshness. Online intent must survive.
+    p.adb('shell','settings','put','secure','location_mode','0')
+    await_native(lambda s:s.get('state')=='waiting_gps','GPS desativado não foi sinalizado',attempts=25)
+    for _ in range(40):
+        stale=p.call('driver','/snapshot')
+        if stale['available'] is False:break
+        time.sleep(2)
+    else:raise AssertionError('Localização antiga continuou elegível para novas ofertas')
+    assert stale['online'] is True,'Perda de GPS apagou intenção de ficar online'
+    assert native().get('stopped')=='false','Serviço parou antes de poder recuperar GPS'
+    uploads=int(native()['uploads'])
+    p.adb('shell','settings','put','secure','location_mode','3')
+    fix(-46.6319,-23.5514)
+    await_native(lambda s:s.get('state')=='running' and int(s.get('uploads','0'))>uploads,'GPS não voltou após reativar localização')
+    assert p.call('driver','/snapshot')['available'] is True
+    assert p.adb('shell','pidof',p.package).decode().strip()==pid
+    report['cases'].append({'case':'gps_disable_stale_eligibility_reenable_locked_screen','passed':True,'same_pid':True})
     origin={'lat':-23.5514,'lng':-46.6319,'address':'Embarque público do teste em São Paulo'}
     destination={'lat':-23.5614,'lng':-46.6559,'address':'Destino público do teste na Avenida Paulista'}
     quote=p.call('passenger','/quotes',{'origin':origin,'destination':destination})

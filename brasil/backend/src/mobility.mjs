@@ -166,6 +166,7 @@ export function mobilityService(pool, maps, { inviteCode, radiusMeters = 5000, a
         const r = await db.query('SELECT * FROM rides WHERE id=$1 FOR UPDATE', [id]);
         requireThat(r.rowCount, 404, 'Corrida não encontrada');
         const status = transition(r.rows[0], user, action);
+        if(status===r.rows[0].status)return {id,status};
         const updated = await db.query('UPDATE rides SET status=$2,version=version+1,updated_at=now() WHERE id=$1 RETURNING *', [id, status]);
         await notifyRide(db, updated.rows[0]); await dispatch(db); return { id, status };
       });
@@ -198,10 +199,11 @@ export function mobilityService(pool, maps, { inviteCode, radiusMeters = 5000, a
     },
     async snapshot(user) {
       const rides = await pool.query(rideSelect + ` WHERE (r.passenger_id=$1 OR r.driver_id=$1) AND r.status IN ('searching','accepted','arrived','in_progress') ORDER BY r.created_at DESC`, [user.id]);
-      let offers = [], available = false;
+      let offers = [], available = false, online = false;
       if (user.role === 'driver') {
-        const d = await pool.query(`SELECT available AND location_at>now()-interval '60 seconds' AS available FROM drivers WHERE user_id=$1`, [user.id]);
+        const d = await pool.query(`SELECT available AS online, available AND location_at>now()-interval '60 seconds' AS available FROM drivers WHERE user_id=$1`, [user.id]);
         available = Boolean(d.rows[0]?.available);
+        online = Boolean(d.rows[0]?.online);
         if (available && !rides.rowCount) {
           const o = await pool.query(rideSelect + ` JOIN offers o ON o.ride_id=r.id
             WHERE o.driver_id=$1 AND NOT o.rejected AND r.status='searching' AND r.created_at>now()-interval '10 minutes'
@@ -214,7 +216,7 @@ export function mobilityService(pool, maps, { inviteCode, radiusMeters = 5000, a
           offers = o.rows;
         }
       }
-      return { user: { id: user.id, name: user.name, role: user.role }, available, rides: rides.rows, offers };
+      return { user: { id: user.id, name: user.name, role: user.role }, available, online, rides: rides.rows, offers };
     },
     async history(user) {
       return (await pool.query(rideSelect + ' WHERE r.passenger_id=$1 OR r.driver_id=$1 ORDER BY r.created_at DESC LIMIT 100', [user.id])).rows;

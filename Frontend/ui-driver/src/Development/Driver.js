@@ -64,14 +64,15 @@ async function snapshot() {
   try {
     const api=client(),data = await api.snapshot();
     if(owner!==changed||revision!==snapshotRevision)return;
-    syncTracking(data.available===true||data.rides.length>0);
+    const requested=typeof data.online==='boolean'?data.online:data.available===true;
+    syncTracking(requested||data.rides.length>0);
     let ride=data.rides[0]||data.offers[0],phase=data.rides.length?ride.status:'offer';
     if(data.rides.length&&lastRide!==ride.id)rememberRide(ride.id);
     // Active-only snapshots omit terminal trips. Read the actual persisted trip
     // before dismissing its UI, including after Activity/process recreation.
     if(!ride&&lastRide){ride=await api.ride(lastRide);phase=ride.status;}
     if(owner!==changed||revision!==snapshotRevision)return;
-    if (online && lastAvailable!==data.available){lastAvailable=data.available;online(data.available === true)();}
+    if (online && lastAvailable!==requested){lastAvailable=requested;online(requested)();}
     if(ride&&['accepted','arrived'].includes(ride.status)){
       if(!navAt||Date.now()-navAt>30000||navPhase!==ride.status){
         navAt=Date.now();navPhase=ride.status;

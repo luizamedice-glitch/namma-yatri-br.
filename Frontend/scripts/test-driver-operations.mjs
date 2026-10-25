@@ -5,21 +5,23 @@ import {createOperationsClient} from '../ui-driver/src/Development/OperationsCli
 import {createNativeFetch} from '../ui-driver/src/Development/NativeTransport.mjs';
 import {tripView} from '../ui-common/src/Development/PilotTrip.mjs';
 test('online requires notification permission; native tracking owns GPS and survives screen cleanup',async()=>{
-  let ready=false,active=false,available=false,gpsCalls=0,availabilityCalls=0;const wanted=[],errors=[];
-  const api={snapshot:async()=>({available,rides:[],offers:[]}),location:async()=>{gpsCalls++;},availability:async value=>{availabilityCalls++;available=value;return {available};}};
+  let ready=false,active=false,available=false,requested=false,gpsCalls=0,availabilityCalls=0;const wanted=[],errors=[],handlers={},onlineStates=[];
+  const api={snapshot:async()=>({available,online:requested,rides:[],offers:[]}),location:async()=>{gpsCalls++;},availability:async value=>{availabilityCalls++;available=requested=value;return {available};}};
   globalThis.driverBackgroundHarness={createOperationsClient:()=>api,createNativeFetch:()=>{},callbackMapper:{},tripView,updateTripMap:()=>{},releaseTripMap:()=>{}};
-  globalThis.window={__OS:'ANDROID',__YATRI_BR_DEVELOPMENT__:true,JBridge:{getDeviceInfo:()=>JSON.stringify({package_name:'in.juspay.nammayatripartner.debug'}),
+  globalThis.window={__OS:'ANDROID',__YATRI_BR_DEVELOPMENT__:true,addEventListener:(name,fn)=>{handlers[name]=fn;},JBridge:{getDeviceInfo:()=>JSON.stringify({package_name:'in.juspay.nammayatripartner.debug'}),
     getFromSharedPrefs:()=>'',prepareYatriDriverTracking:()=>ready,isYatriDriverTrackingActive:()=>active,setYatriDriverTracking:value=>wanted.push(value)}};
   const source=(await readFile(new URL('../ui-driver/src/Development/Driver.js',import.meta.url),'utf8')).replace(/^import .*;$/gm,'');
   const ffi=await import('data:text/javascript;base64,'+Buffer.from('const {createOperationsClient,createNativeFetch,callbackMapper,tripView,updateTripMap,releaseTripMap}=globalThis.driverBackgroundHarness;'+source).toString('base64'));
   const flush=()=>new Promise(resolve=>setImmediate(resolve));let stop;
   try{
-    stop=ffi.subscribe(()=>()=>{})(message=>()=>errors.push(message))(()=>{})(()=>()=>{})();await flush();
+    stop=ffi.subscribe(value=>()=>onlineStates.push(value))(message=>()=>errors.push(message))(()=>{})(()=>()=>{})();await flush();
     ffi.location(-23.55)(-46.63)();await flush();assert.equal(gpsCalls,1);
     ffi.availability(true)(()=>()=>{})(()=>()=>{})();await flush();
     assert.equal(availabilityCalls,0,'Permission refusal must not mark the driver online');assert.match(errors.at(-1),/Autorize/);
     ready=true;ffi.availability(true)(()=>()=>{})(()=>()=>{})();await flush();assert.equal(wanted.at(-1),true);
     active=true;const before=gpsCalls;ffi.location(-23.56)(-46.64)();await flush();assert.equal(gpsCalls,before,'Native GPS must not be duplicated by WebView');
+    available=false;handlers.focus();await flush();assert.equal(wanted.at(-1),true,'Stale GPS must not erase online intent or stop the service');
+    assert.equal(onlineStates.at(-1),true);
     const commands=wanted.length;stop();stop=null;assert.equal(wanted.length,commands,'Screen cleanup must not stop online tracking');
     ffi.availability(false)(()=>()=>{})(()=>()=>{})();await flush();assert.equal(wanted.at(-1),false);
     window.JBridge.supportsYatriDriverTracking=()=>false;ready=false;active=false;
