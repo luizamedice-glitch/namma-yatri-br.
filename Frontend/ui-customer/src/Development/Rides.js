@@ -53,7 +53,9 @@ function fail(owner,error){
   if(owner!==listener)return;
   owner.errors++;
   if(owner.value)emit(owner,{...owner.value,gpsFresh:false,tracking:'Sem atualização — verificando conexão'});
-  owner.error(error.message||'Não foi possível atualizar a viagem.')();
+  const message=error.message||'Não foi possível atualizar a viagem.';
+  // One toast per distinct error in an outage; keep the inline warning visible.
+  if(owner.lastError!==message){owner.lastError=message;owner.error(message)();}
   diagnostics(owner);
 }
 function present(owner,ride,current){
@@ -90,12 +92,16 @@ async function refresh(owner){
       const ride=await api.ride(owner.rideId);
       if(!current())return;
       await present(owner,ride,current);
-    }else if(!owner.quote){
+    }else if(owner.quote){
+      // A successful snapshot settles an ambiguous send and clears stale warnings.
+      emit(owner,tripView(owner.quote,'quoted'));
+    }else{
       // Retry an initial snapshot/quote failure on the next tick, without reopening.
       const quote=await api.quote(owner.origin,owner.destination);
       if(!current())return;
       owner.quote=quote;emit(owner,tripView(quote,'quoted'));
     }
+    owner.awaitingRequest=false;owner.lastError=null;
     owner.lastSuccessAt=Date.now();diagnostics(owner);
   }catch(error){if(current())fail(owner,error);}
 }
@@ -146,7 +152,7 @@ export const subscribe=origin=>destination=>changed=>error=>()=>{
 };
 export const request=()=>{
   const owner=listener;
-  if(!owner||owner.busy||!owner.quote||owner.rideId)return;
+  if(!owner||owner.busy||!owner.quote||owner.rideId||owner.awaitingRequest)return;
   owner.busy=true;owner.revision++;diagnostics(owner);
   // Do not push a nested screen action from inside the request-click reducer.
   Promise.resolve().then(async()=>{
@@ -162,7 +168,11 @@ export const request=()=>{
         return;
       }
       rememberRide(owner,created.id);await refresh(owner);
-    }catch(error){fail(owner,error);if(owner===listener&&!owner.rideId)emit(owner,tripView(owner.quote,'quoted'));}
+    }catch(error){
+      // A transport error does not tell us whether POST committed. Reconcile
+      // with the authoritative snapshot before permitting another click.
+      owner.awaitingRequest=true;fail(owner,error);
+    }
     finally{owner.busy=false;diagnostics(owner);}
   });
 };

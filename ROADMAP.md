@@ -119,3 +119,11 @@ controles/retomada/processo frio/exportação aprovados em API 29 e 36. Próximo
 critério: confirmar no Samsung ou coletar o diagnóstico durante o bloqueio,
 antes de encerrar o incidente. Não usar o aceite do emulador como prova física.
 Relatório: Frontend/build-reports/passageiro-cold-runtime/RELATORIO.md.
+
+25/10/2026: proprietário confirmou resolução do bloqueio no Samsung A07 com
+o runtime entregue. Teste de rua adiado por indisponibilidade dos dois aparelhos.
+Próximo incremento verificável: reconexão do passageiro com aviso persistente,
+recuperação da cotação e reconciliação de solicitações cuja resposta se perdeu,
+sem reenvio automático. Preservar runtime, mapas e produção. Aceite: testes
+negativos e Android com corte real de transporte, mesma Activity/processo,
+retomada dos estados e remoção do aviso após reconectar.

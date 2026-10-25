@@ -79,3 +79,10 @@ esse snapshot por clipboard/arquivo privado. Nenhum dado é enviado a serviços.
 A idade da observação JS distingue um snapshot antigo de uma resposta recente.
 A investigação do Samsung A07 continua aberta; os aceites de ciclo frio em
 emulador não substituem a confirmação nesse aparelho.
+
+Confirmação física posterior: proprietário informou resolução do bloqueio no
+Samsung A07/Android 16. No incremento de reconexão, somente snapshot autenticado
+resolve envio de solicitação com resultado incerto; cliente não reenvia POST
+automaticamente. Aviso inline usa o campo tracking original; notificações de
+erro iguais são deduplicadas até uma leitura bem-sucedida. Backend/motorista e
+autenticação de produção preservados.

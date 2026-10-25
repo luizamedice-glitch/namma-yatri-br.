@@ -28,7 +28,7 @@ start origin destination = do
     ,view: \push trip -> linearLayout [width MATCH_PARENT,height MATCH_PARENT,orientation VERTICAL,background "#FFFFFF",onBackPressed push (const $ ReturnBooking PrimaryButton.OnClick)]
        [Trip.heading (case trip.phase of
           "quoted" -> "Estimativa da viagem"
-          "requesting" -> "Solicitando viagem…"
+          "requesting" -> "Confirmando solicitação…"
           "searching" -> "Procurando motorista"
           "accepted" -> "Motorista a caminho"
           "arrived" -> "Motorista no embarque"
@@ -46,7 +46,7 @@ start origin destination = do
           [Trip.button (push <<< RequestRide) "Solicitar viagem" true]
        ,linearLayout [width MATCH_PARENT,height WRAP_CONTENT,visibility (if trip.phase=="searching" || trip.phase=="accepted" || trip.phase=="arrived" then VISIBLE else GONE)]
           [Trip.button (push <<< CancelRide) "Cancelar viagem" true]
-       ,Trip.button (push <<< ReturnBooking) "Voltar ao início" (trip.phase/="requesting")]
+       ,Trip.button (push <<< ReturnBooking) "Voltar ao início" true]
     ,eval: \action trip -> case action of
        TripUpdated updated -> continue updated
        RideError message -> do

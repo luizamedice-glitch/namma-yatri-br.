@@ -74,7 +74,7 @@ jobs:
           npm install --legacy-peer-deps
           spago -j 2 install
       - name: Compilar apenas adaptador com cache
-        run: python3 Frontend/scripts/diagnose-purescript.py --app passageiro --compiler-version 0.15.14 --mode staged --target-module Development.Rides --batch-size 25 --heap 10g --timeout-seconds 600 --stall-seconds 300 --rss-limit-mib 12288 --label passenger-poll
+        run: python3 Frontend/scripts/diagnose-purescript.py --app passageiro --compiler-version 0.15.14 --mode staged --target-module Development.Booking --batch-size 25 --heap 10g --timeout-seconds 600 --stall-seconds 300 --rss-limit-mib 12288 --label passenger-poll
       - working-directory: Frontend/ui-customer
         run: |
           npm run bundle:android

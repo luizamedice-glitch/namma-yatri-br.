@@ -160,9 +160,14 @@ def main():
             call('driver','/rides/'+ride_id+'/'+action,{})
             if reconnect:
                 time.sleep(12)
+                wait_label('Sem atualização — verificando conexão',attempts=4)
+                wait_label('Motorista a caminho',attempts=2)
+                same_foreground(pid);capture('conexao-interrompida')
                 adb('reverse','tcp:8080','tcp:8080')
             assert call('passenger','/rides/'+ride_id)['status']==phase
             wait_label(heading,attempts=7)
+            if reconnect:
+                assert label(nodes(),'Sem atualização — verificando conexão') is None,'Aviso de conexão permaneceu após recuperar o estado'
             timings[phase]=round(time.monotonic()-started,2)
             same_foreground(pid);capture(phase)
         if os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true':
