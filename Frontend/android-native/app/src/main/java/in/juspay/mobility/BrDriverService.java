@@ -106,7 +106,7 @@ public final class BrDriverService extends Service implements LocationListener {
                     if(!offer.equals(previous)){
                         manager.notify(OFFER,notification(OFFERS,"Nova solicitação de corrida","Abra o AlceYatri para consultar e aceitar.")
                             .setCategory(NotificationCompat.CATEGORY_EVENT).setPriority(NotificationCompat.PRIORITY_HIGH)
-                            .setAutoCancel(true).setTimeoutAfter(60000).build());
+                            .setAutoCancel(true).setTimeoutAfter(600000).build());
                         alerts++;diagnostics.edit().putString("lastOffer",offer).apply();
                     }
                 }else manager.cancel(OFFER);

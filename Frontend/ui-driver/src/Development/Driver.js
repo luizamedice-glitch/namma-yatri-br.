@@ -57,8 +57,8 @@ function failed(error) {
   if (failure && lastError !== message) failure(message)();
   lastError = message;
 }
-function trackingActive(){try{return window.JBridge.isYatriDriverTrackingActive?.()===true;}catch(_){return false;}}
-function syncTracking(wanted){try{window.JBridge.setYatriDriverTracking?.(wanted);}catch(_){} }
+function trackingActive(){try{return typeof window.JBridge.isYatriDriverTrackingActive==='function'&&window.JBridge.isYatriDriverTrackingActive()===true;}catch(_){return false;}}
+function syncTracking(wanted){try{if(typeof window.JBridge.setYatriDriverTracking==='function')window.JBridge.setYatriDriverTracking(wanted);}catch(_){} }
 async function snapshot() {
   const owner=changed,revision=++snapshotRevision;
   try {
@@ -96,14 +96,14 @@ export const subscribe = ok => fail => gps => updates => () => {
   if (timer) clearInterval(timer);
   snapshot();
   const resume=()=>{if(!actionBusy)snapshot();};
-  window.addEventListener?.('online',resume);window.addEventListener?.('focus',resume);
+  if(window.addEventListener){window.addEventListener('online',resume);window.addEventListener('focus',resume);}
   let busy = false;
   timer = setInterval(async () => {
     if (busy||actionBusy) return;
     busy = true;
     try { gps(); await snapshot(); } finally { busy = false; }
   }, 5000);
-  return () => { clearInterval(timer); timer = null;window.removeEventListener?.('online',resume);window.removeEventListener?.('focus',resume); online = failure = changed = null;snapshotRevision++;releaseTripMap(); };
+  return () => { clearInterval(timer); timer = null;if(window.removeEventListener){window.removeEventListener('online',resume);window.removeEventListener('focus',resume);} online = failure = changed = null;snapshotRevision++;releaseTripMap(); };
 };
 export const act = action => id => () => {
   if(!enabled()||actionBusy||!['accept','reject','arrive','start','complete','cancel'].includes(action))return;

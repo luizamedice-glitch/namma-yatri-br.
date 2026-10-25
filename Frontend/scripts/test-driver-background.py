@@ -87,6 +87,7 @@ try:
     report['cases'].append({'case':'notification_opens_offer_and_assigned_gps_reaches_passenger','passed':True,'same_pid':True})
     # Cancel through the actual passenger actor, then explicitly go offline remotely.
     p.call('passenger','/rides/'+ride['id']+'/cancel',{})
+    p.adb('emu','geo','fix','-46.6329','-23.5507')
     p.call('driver','/driver/availability',{'available':False})
     await_native(lambda s:s.get('stopped')=='true','Serviço não parou ao ficar offline sem corrida')
     report['cases'].append({'case':'offline_without_ride_stops_gps_service','passed':True})
