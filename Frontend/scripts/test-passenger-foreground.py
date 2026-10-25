@@ -37,6 +37,19 @@ def call(role,path,body=None):
     request=urllib.request.Request(base+'/v1'+path,data=json.dumps(body).encode() if body is not None else None,
       headers={'Content-Type':'application/json','Authorization':'Bearer '+sessions[role]})
     with urllib.request.urlopen(request,timeout=20) as r:return json.load(r)
+def cut_transport():
+    # Await the server's acknowledgement before starting another HTTP actor.
+    # Otherwise SIGUSR2 may destroy the driver's newly opened socket too.
+    path=Path(os.environ['PASSENGER_FOREGROUND_SESSIONS']+'.faults')
+    previous=json.loads(path.read_text()).get('cuts',0) if path.exists() else 0
+    adb('reverse','--remove','tcp:8080')
+    os.kill(int(os.environ['PASSENGER_TEST_API_PID']),signal.SIGUSR2)
+    for _ in range(40):
+        try:
+            if path.exists() and json.loads(path.read_text()).get('cuts',0)>previous:return
+        except json.JSONDecodeError:pass
+        time.sleep(0.1)
+    raise AssertionError('Servidor não confirmou corte das conexões')
 def where(ns):return next((n for n in ns if n.get('content-desc') in {'Where To : Button','Where are you going? : Button','Para onde?: botão','Para onde você vai?: botão'}),None)
 def home():
     for _ in range(15):
@@ -135,8 +148,7 @@ def main():
         quote_pid=adb('shell','pidof',package).decode().strip()
         faults_path=Path(os.environ['PASSENGER_FOREGROUND_SESSIONS']+'.faults')
         if os.environ.get('PASSENGER_RECONNECT')=='true':
-            adb('reverse','--remove','tcp:8080')
-            os.kill(int(os.environ['PASSENGER_TEST_API_PID']),signal.SIGUSR2)
+            cut_transport()
             wait_label('Sem atualização — verificando conexão')
             capture('cotacao-sem-conexao');same_foreground(quote_pid)
             adb('reverse','tcp:8080','tcp:8080')
@@ -177,8 +189,7 @@ def main():
             call('driver','/driver/location',driver_point)
             reconnect=action=='arrive' and os.environ.get('PASSENGER_RECONNECT')=='true'
             if reconnect:
-                adb('reverse','--remove','tcp:8080')
-                os.kill(int(os.environ['PASSENGER_TEST_API_PID']),signal.SIGUSR2)
+                cut_transport()
             call('driver','/rides/'+ride_id+'/'+action,{})
             if reconnect:
                 time.sleep(12)
