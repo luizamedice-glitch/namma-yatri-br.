@@ -9,7 +9,7 @@ on:
       api_level:
         description: Android API
         type: choice
-        options: ['29', '35']
+        options: ['29', '35', '36']
         default: '35'
       idle_seconds:
         description: Tempo em primeiro plano antes do aceite (0 a 360 s)
