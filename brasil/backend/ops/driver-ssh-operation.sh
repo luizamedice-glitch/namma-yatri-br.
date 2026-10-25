@@ -25,6 +25,9 @@ case "$YATRI_DRIVER_OPERATION" in
     openssl pkeyutl -decrypt -inkey "$work/key" -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -in "$work/profile.enc" -out "$work/profile.json"
     ssh "${args[@]}" "$target" "$remote src/provision-driver-pilot.mjs /dev/stdin" < "$work/profile.json"
     ;;
+  geocoding-check)
+    ssh "${args[@]}" "$target" "$remote --input-type=module" < brasil/backend/ops/check-geocoding.mjs
+    ;;
   activate)
     [[ "${YATRI_PILOT_ROLE:-driver}" =~ ^(driver|passenger)$ ]] || exit 1
     ssh "${args[@]}" "$target" "$remote src/issue-driver-pairing.mjs ${YATRI_PILOT_ROLE:-driver}" < "${YATRI_DRIVER_PUBLIC_FILE:-brasil/backend/ops/driver-delivery-public.pem}" > "$RUNNER_TEMP/driver-activation.enc"

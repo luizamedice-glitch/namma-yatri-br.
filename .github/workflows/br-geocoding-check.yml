@@ -1,0 +1,20 @@
+name: BR - Verificar Geocoding Google no servidor
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lightsail-ssh-test
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Consulta somente leitura sem expor a chave
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+          YATRI_DRIVER_OPERATION: geocoding-check
+        run: bash brasil/backend/ops/driver-ssh-operation.sh
