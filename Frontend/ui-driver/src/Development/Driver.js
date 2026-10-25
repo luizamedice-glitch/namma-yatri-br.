@@ -57,11 +57,14 @@ function failed(error) {
   if (failure && lastError !== message) failure(message)();
   lastError = message;
 }
+function trackingActive(){try{return window.JBridge.isYatriDriverTrackingActive?.()===true;}catch(_){return false;}}
+function syncTracking(wanted){try{window.JBridge.setYatriDriverTracking?.(wanted);}catch(_){} }
 async function snapshot() {
   const owner=changed,revision=++snapshotRevision;
   try {
     const api=client(),data = await api.snapshot();
     if(owner!==changed||revision!==snapshotRevision)return;
+    syncTracking(data.available===true||data.rides.length>0);
     let ride=data.rides[0]||data.offers[0],phase=data.rides.length?ride.status:'offer';
     if(data.rides.length&&lastRide!==ride.id)rememberRide(ride.id);
     // Active-only snapshots omit terminal trips. Read the actual persisted trip
@@ -92,13 +95,15 @@ export const subscribe = ok => fail => gps => updates => () => {
   lastRide=/^[a-f0-9-]{36}$/.test(saved||'')?saved:null;
   if (timer) clearInterval(timer);
   snapshot();
+  const resume=()=>{if(!actionBusy)snapshot();};
+  window.addEventListener?.('online',resume);window.addEventListener?.('focus',resume);
   let busy = false;
   timer = setInterval(async () => {
     if (busy||actionBusy) return;
     busy = true;
     try { gps(); await snapshot(); } finally { busy = false; }
   }, 5000);
-  return () => { clearInterval(timer); timer = null; online = failure = changed = null;snapshotRevision++;releaseTripMap(); };
+  return () => { clearInterval(timer); timer = null;window.removeEventListener?.('online',resume);window.removeEventListener?.('focus',resume); online = failure = changed = null;snapshotRevision++;releaseTripMap(); };
 };
 export const act = action => id => () => {
   if(!enabled()||actionBusy||!['accept','reject','arrive','start','complete','cancel'].includes(action))return;
@@ -114,6 +119,7 @@ export const dismissTrip=()=>{
 export const location = lat => lng => () => {
   if (!enabled()) return;
   position = {lat,lng};
+  if(trackingActive())return;
   try { client().location(lat,lng).catch(failed); } catch (error) { failed(error); }
 };
 export const availability = available => ok => fail => () => {
@@ -121,11 +127,14 @@ export const availability = available => ok => fail => () => {
     try {
       const api = client();
       if (available) {
+        if(typeof window.JBridge.prepareYatriDriverTracking==='function'&&!window.JBridge.prepareYatriDriverTracking())
+          throw Error('Autorize localização e notificações e toque novamente em Ficar disponível.');
         if (!position) throw Error('Aguarde uma localização GPS válida antes de ficar disponível.');
         await api.location(position.lat,position.lng);
       }
       const data = await api.availability(available);
       snapshotRevision++;lastAvailable=data.available;
+      syncTracking(data.available===true||['accepted','arrived','in_progress'].includes(lastPhase));
       ok(data.available)();
       if (online) online(data.available)();
       lastError = null;

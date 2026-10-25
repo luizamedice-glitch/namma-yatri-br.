@@ -28,6 +28,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <application android:name=".MainApplicationProvider">
+        <service android:name="in.juspay.mobility.BrDriverService"
+            android:enabled="@bool/yatri_br_ride_pilot" android:exported="false"
+            android:foregroundServiceType="location" android:stopWithTask="false" />
         <activity
             android:name="in.juspay.mobility.MainActivity"
             android:exported="true"
