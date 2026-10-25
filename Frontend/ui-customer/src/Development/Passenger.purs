@@ -14,6 +14,7 @@ import Data.Array (null)
 import Effect (Effect)
 import Development.Places as Places
 import Development.Geocoding as Geocoding
+import Development.GeoAttribution as GeoAttribution
 import Development.Rides as Rides
 import Development.PilotTrip as Trip
 import Development.Booking as Booking
@@ -113,6 +114,7 @@ booking home = do
 homeContent :: forall w. (Action -> Effect Unit) -> HomeScreenState -> PrestoDOM (Effect Unit) w
 homeContent push state = linearLayout [width MATCH_PARENT,height MATCH_PARENT,orientation VERTICAL]
   [linearLayout [width MATCH_PARENT,height (V 0),weight 1.0] [HomeView.view (push <<< Original) state]
+  ,GeoAttribution.view
   ,linearLayout [width MATCH_PARENT,height WRAP_CONTENT,visibility (if ready then VISIBLE else GONE)]
     [Trip.button (\action -> case action of
         PrimaryButton.OnClick -> push OpenBooking

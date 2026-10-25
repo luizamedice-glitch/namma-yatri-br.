@@ -6,6 +6,7 @@ import Control.Monad.Except.Trans (lift)
 import Components.PrimaryButton.Controller as PrimaryButton
 import Development.PilotTrip as Trip
 import Development.Rides as Rides
+import Development.GeoAttribution as GeoAttribution
 import Engineering.Helpers.Utils (showToast)
 import PrestoDOM
 import PrestoDOM.Core.Types.Language.Flow (runScreen)
@@ -39,6 +40,7 @@ start origin destination = do
           _ -> "Calculando estimativa…")
        ,Trip.mapView
        ,Trip.card push NoOp trip
+       ,GeoAttribution.view
        ,textView [text trip.tracking,textSize 14,padding (Padding 20 0 20 8),color "#666666"]
        ,textView [text trip.driver,textSize 20,padding (Padding 20 8 20 8),color "#242424"]
        ,textView [text trip.vehicle,textSize 16,padding (Padding 20 0 20 12),color "#666666"]

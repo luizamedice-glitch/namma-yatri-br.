@@ -1,72 +1,41 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import {createGeoBackend} from './GeoBackend.mjs';
 export function createGeocoding(callbackMapper){
-let listener,sequence=0,pending,pendingKey;
-const cache=new Map();
-function allowed(){try{return window.__OS==='ANDROID'&&window.__YATRI_BR_DEVELOPMENT__===true&&
+ let listener,sequence=0,pending;const cache=new Map();
+ function allowed(){try{return window.__OS==='ANDROID'&&window.__YATRI_BR_DEVELOPMENT__===true&&
   JSON.parse(window.JBridge.getDeviceInfo()).package_name==='in.juspay.nammayatri.debug';}catch(_){return false;}}
-function status(state){
-  const previous=window.__YATRI_GEOCODING__||{requests:0,successes:0,failures:0};
-  window.__YATRI_GEOCODING__={...previous,state,
-    requests:previous.requests+(state==='loading'?1:0),successes:previous.successes+(state==='resolved'?1:0),
-    failures:previous.failures+(state==='unavailable'?1:0)};
-}
-function remove(id){const registry=window.__PROXY_FN;
-  if(Object.prototype.toString.call(registry)==='[object Map]')registry.delete(id);else if(registry)delete registry[id];}
-// Keep a tiny cleanup callback until an accepted native request actually replies.
-// The SDK dispatcher throws on missing IDs; cancellation must not create that error.
-// Only one native geocoder can be in flight, so these cleanup callbacks are bounded.
-function retire(id,waiting){
-  if(!waiting){remove(id);return;}
-  const registry=window.__PROXY_FN,cleanup=()=>remove(id);
-  if(Object.prototype.toString.call(registry)==='[object Map]')registry.set(id,cleanup);else if(registry)registry[id]=cleanup;
-}
-const subscribe=changed=>positionChanged=>()=>{
-  if(pending)pending();const owner={changed,positionChanged};listener=owner;sequence++;
-  return ()=>{if(listener===owner){listener=null;sequence++;if(pending)pending();}};
-};
-function resolveAt(lat,lng,attempt=0){
+ function status(state){const previous=window.__YATRI_GEOCODING__||{requests:0,successes:0,failures:0};
+  window.__YATRI_GEOCODING__={...previous,provider:'geoapify',state,requests:previous.requests+(state==='loading'?1:0),
+   successes:previous.successes+(state==='resolved'?1:0),failures:previous.failures+(state==='unavailable'?1:0)};}
+ function remove(id){const registry=window.__PROXY_FN;if(Object.prototype.toString.call(registry)==='[object Map]')registry.delete(id);else if(registry)delete registry[id];}
+ const subscribe=changed=>positionChanged=>()=>{
+  if(pending)pending.cancel();const owner={changed,positionChanged};listener=owner;sequence++;
+  return ()=>{if(listener===owner){listener=null;sequence++;if(pending)pending.cancel();}};
+ };
+ function resolveAt(lat,lng,attempt=0){
   if(!allowed()||!listener||!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180||(lat===0&&lng===0))return;
   const owner=listener,key=lat.toFixed(4)+','+lng.toFixed(4),cached=cache.get(key),now=Date.now();
-  if(pending&&pendingKey===key)return;
-  const version=++sequence;
-  if(pending)pending();
+  if(pending?.key===key)return;
+  const version=++sequence;if(pending)pending.cancel();
+  const current=()=>listener===owner&&sequence===version;
   if(cached&&(cached.address||attempt===0)&&now-cached.at<(cached.address?600000:30000)){
-    if(cached.address)Promise.resolve().then(()=>{if(listener===owner&&version===sequence)owner.changed(lat)(lng)(cached.address)();});
-    return;
+   if(cached.address)Promise.resolve().then(()=>{if(current())owner.changed(lat)(lng)(cached.address)();});return;
   }
-  if(typeof window.JBridge.reverseGeocodeYatri!=='function'){status('unavailable');return;}
-  status('loading');let id,timer,done=false,nativeAccepted=false,nativeDone=false;
-  const finish=(result,address)=>{
-    if(done)return;done=true;clearTimeout(timer);if(id!==undefined)retire(id,nativeAccepted&&!nativeDone);if(pending===cancel)pending=null;
-    if(listener!==owner||version!==sequence)return;
-    const valid=result==='ok'&&typeof address==='string'&&address.trim().length>=3&&address.length<=1000;
-    cache.set(key,{at:Date.now(),address:valid?address.trim():''});if(cache.size>16)cache.delete(cache.keys().next().value);
-    status(valid?'resolved':'unavailable');
-    if(valid)Promise.resolve().then(()=>{if(listener===owner&&version===sequence)owner.changed(lat)(lng)(address.trim())();});
-    else if(attempt<2){
-      const retryTimer=setTimeout(()=>{
-        if(pending===cancelRetry)pending=null;
-        if(listener===owner&&version===sequence)resolveAt(lat,lng,attempt+1);
-      },1500);
-      const cancelRetry=()=>{clearTimeout(retryTimer);if(pending===cancelRetry)pending=null;};
-      pending=cancelRetry;pendingKey=key;
-    }
-  };
-  const cancel=()=>{done=true;clearTimeout(timer);if(id!==undefined)retire(id,nativeAccepted&&!nativeDone);if(pending===cancel)pending=null;};
-  pending=cancel;pendingKey=key;
-  timer=setTimeout(()=>finish('timeout',''),8000);
-  try{id=callbackMapper.map((...args)=>{nativeDone=true;try{finish(...args);}finally{remove(id);}});
-    nativeAccepted=window.JBridge.reverseGeocodeYatri(lat,lng,id)===true;if(!nativeAccepted)finish('unavailable','');}
-  catch(_){finish('unavailable','');}
-}
-const resolve=lat=>lng=>()=>resolveAt(lat,lng);
-
-// Reuse the original GPS callback used by the recenter button. Defer UI delivery.
-const position=lat=>lng=>()=>{
-  const owner=listener;
-  if(!allowed()||!owner)return;
-  Promise.resolve().then(()=>{if(listener===owner)owner.positionChanged(lat)(lng)();});
-};
-
-return {subscribe,resolve,position};
+  const controller=new AbortController(),request={key,cancel:()=>{controller.abort();if(pending===request)pending=null;}};
+  pending=request;status('loading');
+  createGeoBackend(window.JBridge,callbackMapper.map,remove).reverse({lat,lng},{signal:controller.signal}).then(result=>{
+   if(!current())return;cache.set(key,{at:Date.now(),address:result.address});status('resolved');
+   Promise.resolve().then(()=>{if(current())owner.changed(lat)(lng)(result.address)();});
+  }).catch(error=>{
+   if(!current())return;cache.set(key,{at:Date.now(),address:''});status('unavailable');
+   if(attempt<2&&error.retryable!==false){
+    const retry={key,cancel:()=>{clearTimeout(retry.timer);if(pending===retry)pending=null;}};
+    retry.timer=setTimeout(()=>{if(pending===retry)pending=null;if(current())resolveAt(lat,lng,attempt+1);},1500);pending=retry;
+   }
+  }).finally(()=>{if(pending===request)pending=null;if(cache.size>16)cache.delete(cache.keys().next().value);});
+ }
+ const resolve=lat=>lng=>()=>resolveAt(lat,lng);
+ const position=lat=>lng=>()=>{const owner=listener;if(!allowed()||!owner)return;
+  Promise.resolve().then(()=>{if(listener===owner)owner.positionChanged(lat)(lng)();});};
+ return {subscribe,resolve,position};
 }

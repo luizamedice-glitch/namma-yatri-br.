@@ -16,6 +16,7 @@ class CaddyTests(unittest.TestCase):
         candidate=ops.caddy_config(source)
         self.assertEqual(ops.caddy_config(candidate),candidate)
         self.assertIn('handle /health',candidate)
+        self.assertIn('/v1/places/reverse',candidate)
         self.assertEqual(candidate.count(ops.BEGIN),1)
         self.assertNotIn('/v1/auth',candidate)
         self.assertIn('path_regexp pilotRideAction',candidate)

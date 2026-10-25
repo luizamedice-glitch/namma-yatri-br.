@@ -16,7 +16,7 @@ on:
         type: boolean
         default: false
       expect_geocoding:
-        description: Exigir endereco real do geocodificador Android para o GPS
+        description: Exigir endereco real Geoapify para o GPS
         type: boolean
         default: false
       expect_runtime_v2:
@@ -155,6 +155,7 @@ jobs:
         ports: ['5432:5432']
         options: --health-cmd "pg_isready -U yatri_test" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
+      GEOAPIFY_API_KEY: ${{ secrets.GEOAPIFY_API_KEY }}
       DATABASE_URL: postgresql://yatri_test:fixture-only@127.0.0.1:5432/passenger_foreground
       PASSENGER_EXPECT_GEOCODING: ${{ inputs.expect_geocoding && 'true' || 'false' }}
       PASSENGER_EXPECT_RUNTIME_V2: ${{ inputs.expect_runtime_v2 && 'true' || 'false' }}

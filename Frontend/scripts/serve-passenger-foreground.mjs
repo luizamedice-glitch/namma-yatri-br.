@@ -8,6 +8,7 @@ import {migrate} from '../../brasil/backend/src/migrate.mjs';
 import {developmentAccounts} from '../../brasil/backend/src/development.mjs';
 import {mobilityService} from '../../brasil/backend/src/mobility.mjs';
 import {createApi} from '../../brasil/backend/src/http.mjs';
+import {geoapifyGeocoding} from '../../brasil/backend/src/geocoding.mjs';
 const pool=await connectDatabase(process.env.DATABASE_URL);
 await migrate(pool);
 const credentials={passenger:randomBytes(32).toString('hex'),driver:randomBytes(32).toString('hex')};
@@ -15,7 +16,7 @@ const development=await developmentAccounts(pool,{enabled:true,passengerKey:cred
   vehicle:{plate:'TST1A23',model:'Veículo do teste isolado',color:'Prata'}});
 const sessions={};
 for(const role of ['passenger','driver'])sessions[role]=(await development.session({role,credential:credentials[role]})).token;
-const maps={route:async(origin,destination)=>{
+const maps={reverse:geoapifyGeocoding({key:process.env.GEOAPIFY_API_KEY}).reverse,route:async(origin,destination)=>{
   const response=await fetch('https://52-67-246-31.sslip.io/v1/test/routes',{method:'POST',
     headers:{'content-type':'application/json'},body:JSON.stringify({origin,destination}),signal:AbortSignal.timeout(15000)});
   if(!response.ok)throw Error('Google Routes indisponível no serviço de mapas de teste');

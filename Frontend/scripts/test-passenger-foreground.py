@@ -146,9 +146,9 @@ def main():
             time.sleep(4)
             for _ in range(4):
                 states=safe_webview()
-                if any((s.get('geocoding') or {}).get('successes',0)>0 for s in states):break
+                if any((s.get('geocoding') or {}).get('successes',0)>0 and (s.get('geocoding') or {}).get('provider')=='geoapify' for s in states):break
                 time.sleep(2)
-            else:raise AssertionError('Geocoder Android não retornou endereço real após tentativas limitadas')
+            else:raise AssertionError('Geoapify não retornou endereço real após tentativas limitadas')
             tap(where(home()));time.sleep(1)
             fields=[n for n in nodes() if n.get('class')=='android.widget.EditText']
             assert fields and len(fields[0].get('text','').strip())>=5
@@ -229,7 +229,7 @@ def main():
                 assert any(s.get('diagnostics',{}).get('errors',0)>0 for s in states if s.get('diagnostics')),'Corte de rede nao foi observado pelo cliente'
         tap(wait_label('Voltar ao início'));home()
         result={'acceptance':'passed','isolated_database':True,'driver_actions_real_http':True,'google_routes_real':True,
-          'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'native_clock_required':os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true','idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','quote_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','gps_reverse_geocoding_real':os.environ.get('PASSENGER_EXPECT_GEOCODING')=='true','committed_request_response_loss_recovered':os.environ.get('PASSENGER_RECONNECT')=='true','network_fault':'tunnel_removed_and_existing_sockets_closed' if os.environ.get('PASSENGER_RECONNECT')=='true' else None,'state_latency_seconds':timings,'apk_source_run':os.environ.get('PASSENGER_APK_SOURCE_RUN'),'apk_sha256':hashlib.sha256(next(Path('passenger-apk').glob('*.apk')).read_bytes()).hexdigest()}
+          'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'native_clock_required':os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true','idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','quote_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','gps_reverse_geocoding_real':os.environ.get('PASSENGER_EXPECT_GEOCODING')=='true','geocoding_provider':'geoapify','committed_request_response_loss_recovered':os.environ.get('PASSENGER_RECONNECT')=='true','network_fault':'tunnel_removed_and_existing_sockets_closed' if os.environ.get('PASSENGER_RECONNECT')=='true' else None,'state_latency_seconds':timings,'apk_source_run':os.environ.get('PASSENGER_APK_SOURCE_RUN'),'apk_sha256':hashlib.sha256(next(Path('passenger-apk').glob('*.apk')).read_bytes()).hexdigest()}
         (out/'acceptance.json').write_text(json.dumps(result,indent=2))
     finally:
         try:
