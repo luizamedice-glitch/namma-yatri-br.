@@ -4,7 +4,7 @@ on:
     inputs:
       operation:
         type: choice
-        options: [export-public-key, geocoding-check, configure-geoapify]
+        options: [export-public-key, geocoding-check, configure-geoapify, geoapify-check]
         default: export-public-key
 permissions:
   contents: read
