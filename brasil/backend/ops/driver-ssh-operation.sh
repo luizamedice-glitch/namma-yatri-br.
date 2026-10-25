@@ -25,6 +25,10 @@ case "$YATRI_DRIVER_OPERATION" in
     openssl pkeyutl -decrypt -inkey "$work/key" -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -in "$work/profile.enc" -out "$work/profile.json"
     ssh "${args[@]}" "$target" "$remote src/provision-driver-pilot.mjs /dev/stdin" < "$work/profile.json"
     ;;
+  export-public-key)
+    openssl pkey -in "$work/key" -pubout -out "$RUNNER_TEMP/geocoding-server-public.pem" 2>/dev/null
+    if [[ -n "${GH_TOKEN:-}" ]]; then echo 'GitHub secret writer configured: true'; else echo 'GitHub secret writer configured: false'; fi
+    ;;
   geocoding-check)
     ssh "${args[@]}" "$target" "$remote --input-type=module" < brasil/backend/ops/check-geocoding.mjs
     ;;

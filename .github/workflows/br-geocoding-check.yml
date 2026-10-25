@@ -1,9 +1,11 @@
-name: BR - Verificar Geocoding Google no servidor
+name: BR - Configuracao privada do geocoding
 on:
   workflow_dispatch:
-  push:
-    branches: [codex/issue-1-purescript-memory]
-    paths: [.github/workflows/br-geocoding-check.yml]
+    inputs:
+      operation:
+        type: choice
+        options: [export-public-key, geocoding-check, configure-geoapify]
+        default: export-public-key
 permissions:
   contents: read
 concurrency:
@@ -19,5 +21,12 @@ jobs:
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
           AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
-          YATRI_DRIVER_OPERATION: geocoding-check
+          YATRI_DRIVER_OPERATION: ${{ inputs.operation }}
+          GH_TOKEN: ${{ secrets.IMPORT_GH_PAT }}
         run: bash brasil/backend/ops/driver-ssh-operation.sh
+      - uses: actions/upload-artifact@v4
+        if: inputs.operation == 'export-public-key'
+        with:
+          name: geocoding-server-public-key
+          path: ${{ runner.temp }}/geocoding-server-public.pem
+          retention-days: 1
