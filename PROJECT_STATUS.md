@@ -1,5 +1,14 @@
 # Yatri Brasil — situação do projeto
 
+## Estado atual — 25/10/2026
+
+- Proprietário confirmou resolução do bloqueio no Samsung A07/Android 16 com o runtime anterior. Registros de incidente aberto abaixo são históricos. Teste de rua em dois celulares continua pendente.
+- Reconexão do passageiro implementada nas fontes `5833a5d5cb`: aviso persistente sem toasts repetitivos, limpeza do aviso na cotação recuperada e reconciliação de envio incerto antes de liberar outra tentativa. Retorno à Home disponível durante confirmação.
+- APK `12602430585`, build `40200987234` aprovado; mesmos bytes aprovados em Android 16 (`40202387656`) e Android 10 (`40201809248`). O run de build terminou vermelho por falha de sincronização no injetor do primeiro aceite, corrigida apenas nos testes posteriores. No Android 16: dois cortes reais, um POST/resposta real truncada após commit, recuperação automática e ciclo completo com mesmo PID. Android 10: controles na primeira abertura e restauração após recriar processo aprovados.
+- 32 testes Node; somente Rides/Booking recompilados: 16,25 s, 417,17 MiB RSS amostrado, 22 lotes/cache. Backend, motorista, autenticação de produção e mapas preservados.
+- Assinatura debug mudou; reinstalar somente passageiro para usar este APK. Nova ativação privada fora do Git, sem deploy, válida até 2026-10-26T14:34:05.281Z.
+- Limites: teste com API/PostgreSQL isolados, motorista por HTTP e Google real; sem teste físico novo, fila de POST pendentes entre processos ou segundo plano/push. Próximos ajustes: assinatura debug persistente, pinos legados e piloto de rua. Relatório `Frontend/build-reports/passageiro-reconexao/RELATORIO.md`.
+
 ## Abertura animada AlceYatri — implementação em validação
 
 - MP4 original do ZIP `AlceYatri_projeto_Android_animacao_original.zip` incorporado byte a byte, SHA256 `bf1ff534bcf0acc7aa9bb83a8a01c31ce3fa0d721ab8bf08666e45a7978c022c`, H.264 1280×720, 2,5 s, sem áudio. Asset exclusivo do passageiro BR debug.
@@ -424,4 +433,4 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - Sem disponibilidade para teste em dois celulares agora, autorizado avançar no piloto. Incremento: recuperação de falhas de conexão no passageiro, preservando telas PureScript, rotas e runtime corrigido, sem alterar motorista/backend.
 - Quatro regressões reproduzidas em testes antes da correção: aviso repetido por poll, aviso de conexão preso na cotação recuperada, solicitação com resposta perdida voltando prematuramente à cotação e segundo clique permitido antes da reconciliação.
 - Implementação em validação: status persistente com toast deduplicado até recuperação; cotação existente limpa o aviso após snapshot válido; envio incerto aguarda snapshot antes de liberar nova tentativa. Voltar ao início permanece disponível durante a confirmação, sem cancelar implicitamente uma corrida. Não há reenvio automático de POST.
-- Testes locais: 32 testes Node aprovados. Compilação incremental e aceite Android deste incremento ainda pendentes neste registro.
+- Resultado posterior: 32 testes Node e aceites Android 16/10 aprovados, conforme resumo atual e relatório de reconexão. Compilação incremental medida em 16,25 s.

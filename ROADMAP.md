@@ -127,3 +127,11 @@ recuperação da cotação e reconciliação de solicitações cuja resposta se 
 sem reenvio automático. Preservar runtime, mapas e produção. Aceite: testes
 negativos e Android com corte real de transporte, mesma Activity/processo,
 retomada dos estados e remoção do aviso após reconectar.
+
+Reconexão aprovada em 25/10: Android 16 `40202387656` validou cotação offline,
+perda parcial da resposta de POST com um único envio, dois cortes de transporte
+e recuperação dos estados com mesmo PID. Android 10 `40201809248` validou
+controles e processo frio no mesmo APK. Fontes `5833a5d5cb`, relatório
+Frontend/build-reports/passageiro-reconexao/RELATORIO.md. Próximo ajuste de
+distribuição: assinatura debug persistente para evitar reinstalações; depois
+pinos legados e teste de rua quando houver dois aparelhos disponíveis.
