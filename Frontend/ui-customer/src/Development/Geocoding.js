@@ -12,8 +12,8 @@ function status(state){
 }
 function remove(id){const registry=window.__PROXY_FN;
   if(Object.prototype.toString.call(registry)==='[object Map]')registry.delete(id);else if(registry)delete registry[id];}
-export const subscribe=changed=>()=>{
-  if(pending)pending();const owner={changed};listener=owner;sequence++;
+export const subscribe=changed=>positionChanged=>()=>{
+  if(pending)pending();const owner={changed,positionChanged};listener=owner;sequence++;
   return ()=>{if(listener===owner){listener=null;sequence++;if(pending)pending();}};
 };
 export const resolve=lat=>lng=>()=>{
@@ -41,4 +41,11 @@ export const resolve=lat=>lng=>()=>{
   timer=setTimeout(()=>finish('timeout',''),8000);
   try{id=callbackMapper.map(finish);if(window.JBridge.reverseGeocodeYatri(lat,lng,id)!==true)finish('unavailable','');}
   catch(_){finish('unavailable','');}
+};
+
+// Reuse the original GPS callback used by the recenter button. Defer UI delivery.
+export const position=lat=>lng=>()=>{
+  const owner=listener;
+  if(!allowed()||!owner)return;
+  Promise.resolve().then(()=>{if(listener===owner)owner.positionChanged(lat)(lng)();});
 };

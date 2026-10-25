@@ -144,6 +144,7 @@ screen initialState =
   , name: "HomeScreen"
   , globalEvents:
       [ \push -> Geocoding.subscribe (\lat lng address -> push $ GpsAddress lat lng address)
+          (\lat lng -> push $ Original $ Home.UpdateCurrentLocation lat lng)
       , \push -> do
           JB.requestLocation unit
           JB.getCurrentPosition push (\lat lng -> Original $ Home.UpdateCurrentLocation lat lng)
@@ -358,7 +359,8 @@ recenter :: Effect Unit
 recenter = do
   JB.requestLocation unit
   JB.getCurrentPositionWithTimeout (\point -> case fromString point.lat, fromString point.lng of
-    Just lat, Just lng | lat >= -90.0 && lat <= 90.0 && lng >= -180.0 && lng <= 180.0 && (lat /= 0.0 || lng /= 0.0) ->
+    Just lat, Just lng | lat >= -90.0 && lat <= 90.0 && lng >= -180.0 && lng <= 180.0 && (lat /= 0.0 || lng /= 0.0) -> do
+      Geocoding.position point.lat point.lng
       JB.animateCamera lat lng 16.0 "ZOOM"
     _, _ -> showToast "Localização indisponível. Ative o GPS ou pesquise um endereço.")
     (\lat lng _ -> {lat, lng}) 8000 false

@@ -151,7 +151,9 @@ def main():
             assert fields and len(fields[0].get('text','').strip())>=5
             assert fields[0].get('text','')!='Localização atual' and not re.fullmatch(r'[-\d., ]+',fields[0].get('text',''))
             capture('gps-endereco-real')
-            adb('shell','input','keyevent','KEYCODE_BACK');home()
+            adb('shell','input','keyevent','KEYCODE_BACK');time.sleep(1)
+            if where(nodes()) is None:adb('shell','input','keyevent','KEYCODE_BACK')
+            home()
         select_place('Avenida Paulista Sao Paulo','paulista',False)
         select_place('Praca da Se Sao Paulo','praca da se',True)
         tap(wait_label('Ver estimativa'));wait_label('Solicitar viagem')

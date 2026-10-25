@@ -12,7 +12,7 @@ async function harness(run){
     reverseGeocodeYatri:(lat,lng,id)=>{native={lat,lng,id,callback:callbacks[id]};return true;}}};
   const source=(await readFile(new URL('../ui-customer/src/Development/Geocoding.js',import.meta.url),'utf8')).replace(/^import .*;$/gm,'');
   const ffi=await import('data:text/javascript;base64,'+Buffer.from('const callbackMapper=globalThis.geocodeMapper;'+source).toString('base64')+'#'+Math.random());
-  const stop=ffi.subscribe(lat=>lng=>address=>()=>results.push({lat,lng,address}))();
+  const stop=ffi.subscribe(lat=>lng=>address=>()=>results.push({lat,lng,address}))(_lat=>_lng=>()=>{})();
   try{await run({ffi,results,callbacks,native:()=>native,count:()=>count,stop});}
   finally{stop();delete globalThis.window;delete globalThis.geocodeMapper;}
 }
