@@ -132,7 +132,29 @@ def main():
         select_place('Avenida Paulista Sao Paulo','paulista',False)
         select_place('Praca da Se Sao Paulo','praca da se',True)
         tap(wait_label('Ver estimativa'));wait_label('Solicitar viagem')
+        quote_pid=adb('shell','pidof',package).decode().strip()
+        faults_path=Path(os.environ['PASSENGER_FOREGROUND_SESSIONS']+'.faults')
+        if os.environ.get('PASSENGER_RECONNECT')=='true':
+            adb('reverse','--remove','tcp:8080')
+            os.kill(int(os.environ['PASSENGER_TEST_API_PID']),signal.SIGUSR2)
+            wait_label('Sem atualização — verificando conexão')
+            capture('cotacao-sem-conexao');same_foreground(quote_pid)
+            adb('reverse','tcp:8080','tcp:8080')
+            for _ in range(12):
+                if label(nodes(),'Sem atualização — verificando conexão') is None:break
+                time.sleep(2)
+            else:raise AssertionError('Cotação não recuperou conexão')
+            wait_label('Solicitar viagem');same_foreground(quote_pid)
+            os.kill(int(os.environ['PASSENGER_TEST_API_PID']),signal.SIGWINCH)
+            for _ in range(20):
+                if faults_path.exists() and json.loads(faults_path.read_text())['armed']:break
+                time.sleep(0.1)
+            else:raise AssertionError('Falha de resposta não armada')
         tap(wait_label('Solicitar viagem'));wait_label('Procurando motorista')
+        if os.environ.get('PASSENGER_RECONNECT')=='true':
+            faults=json.loads(faults_path.read_text())
+            assert faults['droppedResponses']==1 and faults['requests']==1,'Solicitação não recuperada após perder resposta real'
+            same_foreground(quote_pid);capture('solicitacao-recuperada')
         pid=adb('shell','pidof',package).decode().strip()
         ride=call('passenger','/snapshot')['rides'][0];ride_id=ride['id']
         assert ride['route']['distanceMeters']>0 and ride['route']['encodedPolyline']!='fixture-only'
@@ -177,7 +199,7 @@ def main():
                 assert any(s.get('diagnostics',{}).get('errors',0)>0 for s in states if s.get('diagnostics')),'Corte de rede nao foi observado pelo cliente'
         tap(wait_label('Voltar ao início'));home()
         result={'acceptance':'passed','isolated_database':True,'driver_actions_real_http':True,'google_routes_real':True,
-          'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'native_clock_required':os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true','idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','network_fault':'tunnel_removed_and_existing_sockets_closed' if os.environ.get('PASSENGER_RECONNECT')=='true' else None,'state_latency_seconds':timings,'apk_source_run':os.environ.get('PASSENGER_APK_SOURCE_RUN'),'apk_sha256':hashlib.sha256(next(Path('passenger-apk').glob('*.apk')).read_bytes()).hexdigest()}
+          'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'native_clock_required':os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true','idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','quote_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','committed_request_response_loss_recovered':os.environ.get('PASSENGER_RECONNECT')=='true','network_fault':'tunnel_removed_and_existing_sockets_closed' if os.environ.get('PASSENGER_RECONNECT')=='true' else None,'state_latency_seconds':timings,'apk_source_run':os.environ.get('PASSENGER_APK_SOURCE_RUN'),'apk_sha256':hashlib.sha256(next(Path('passenger-apk').glob('*.apk')).read_bytes()).hexdigest()}
         (out/'acceptance.json').write_text(json.dumps(result,indent=2))
     finally:
         try:safe_webview()

@@ -2,6 +2,7 @@
 // Isolated CI database/API; only Google maps queries use the existing maps-test service.
 import {randomBytes} from 'node:crypto';
 import {writeFile} from 'node:fs/promises';
+import {writeFileSync} from 'node:fs';
 import {connectDatabase} from '../../brasil/backend/src/db.mjs';
 import {migrate} from '../../brasil/backend/src/migrate.mjs';
 import {developmentAccounts} from '../../brasil/backend/src/development.mjs';
@@ -24,6 +25,24 @@ const maps={route:async(origin,destination)=>{
 }};
 const service=mobilityService(pool,maps,{allowDevelopmentAccounts:true});
 const server=createApi({pool,maps,service,development});
+// CI-only, one-shot loss of the actual committed POST response; no fake API data.
+const faultPath=process.env.PASSENGER_FOREGROUND_SESSIONS+'.faults';
+const faults={armed:false,requests:0,droppedResponses:0};
+const saveFaults=()=>writeFileSync(faultPath,JSON.stringify(faults),{mode:0o600});
+process.on('SIGWINCH',()=>{faults.armed=true;saveFaults();});
+server.prependListener('request',(request,response)=>{
+  if(request.method!=='POST'||request.url!=='/v1/rides')return;
+  faults.requests++;saveFaults();
+  if(!faults.armed)return;
+  faults.armed=false;
+  const end=response.end;
+  response.end=function(...args){
+    if(response.statusCode>=200&&response.statusCode<300){
+      faults.droppedResponses++;saveFaults();response.destroy();return response;
+    }
+    return end.apply(this,args);
+  };
+});
 await new Promise(resolve=>server.listen(8080,'127.0.0.1',resolve));
 await writeFile(process.env.PASSENGER_FOREGROUND_SESSIONS,JSON.stringify(sessions),{mode:0o600});
 console.log('API isolada pronta. Nenhuma operação de corrida usa o Lightsail.');
