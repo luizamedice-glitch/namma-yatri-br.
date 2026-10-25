@@ -11,8 +11,12 @@ on:
         type: choice
         options: ['29', '35', '36']
         default: '35'
+      expect_native_clock:
+        description: Exigir cadencia Android nativa no APK corrigido
+        type: boolean
+        default: false
       idle_seconds:
-        description: Tempo em primeiro plano antes do aceite (0 a 360 s)
+        description: Tempo em Motorista a caminho antes da chegada (0 a 360 s)
         type: number
         default: 330
       reconnect:
@@ -140,6 +144,7 @@ jobs:
         options: --health-cmd "pg_isready -U yatri_test" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DATABASE_URL: postgresql://yatri_test:fixture-only@127.0.0.1:5432/passenger_foreground
+      PASSENGER_EXPECT_NATIVE_CLOCK: ${{ inputs.expect_native_clock && 'true' || 'false' }}
       PASSENGER_APK_SOURCE_RUN: ${{ inputs.apk_run_id || github.run_id }}
       PASSENGER_IDLE_SECONDS: ${{ inputs.idle_seconds || '0' }}
       PASSENGER_RECONNECT: ${{ inputs.reconnect && 'true' || 'false' }}

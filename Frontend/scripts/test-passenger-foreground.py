@@ -45,6 +45,10 @@ def home():
             close=label(ns,'Close app')
             assert close is not None,'Dialogo do launcher sem controle para fechar'
             tap(close);time.sleep(2);continue
+        if any('use Location Accuracy' in n.get('text','') for n in ns):
+            turn_on=label(ns,'Turn on')
+            assert turn_on is not None,'Dialogo de localizacao sem controle'
+            tap(turn_on);time.sleep(2);continue
         if where(ns) is not None:return ns
         time.sleep(2)
     raise AssertionError('Home original do passageiro ausente')
@@ -99,6 +103,7 @@ def safe_webview():
         finally:
             if ws:ws.close()
     (out/'webview-phases.json').write_text(json.dumps(states))
+    return states
 
 def same_foreground(pid):
     assert adb('shell','pidof',package).decode().strip()==pid,'Processo passageiro foi recriado'
@@ -134,11 +139,12 @@ try:
     timings={}
     idle=int(os.environ.get('PASSENGER_IDLE_SECONDS','0'))
     assert 0<=idle<=360
-    for elapsed in range(0,idle,30):
-        time.sleep(min(30,idle-elapsed));same_foreground(pid)
-        call('driver','/driver/location',driver_point)
-        print('Passageiro mantido em primeiro plano:',min(elapsed+30,idle),'s',flush=True)
     for action,phase,heading in [('accept','accepted','Motorista a caminho'),('arrive','arrived','Motorista no embarque'),('start','in_progress','Viagem em andamento'),('complete','completed','Viagem concluída')]:
+        if action=='arrive':
+        for elapsed in range(0,idle,30):
+            time.sleep(min(30,idle-elapsed));same_foreground(pid)
+            call('driver','/driver/location',driver_point)
+            print('Passageiro mantido em primeiro plano:',min(elapsed+30,idle),'s',flush=True)
         same_foreground(pid);started=time.monotonic()
         call('driver','/driver/location',driver_point)
         reconnect=action=='arrive' and os.environ.get('PASSENGER_RECONNECT')=='true'
@@ -151,9 +157,12 @@ try:
         wait_label(heading,attempts=7)
         timings[phase]=round(time.monotonic()-started,2)
         same_foreground(pid);capture(phase)
+    if os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true':
+        states=safe_webview()
+        assert any(s.get('diagnostics') and s['diagnostics'].get('clock')=='native' and s['diagnostics'].get('ticks',0)>=4 for s in states),'Cadencia nativa nao confirmada'
     tap(wait_label('Voltar ao início'));home()
     result={'acceptance':'passed','isolated_database':True,'driver_actions_real_http':True,'google_routes_real':True,
-      'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','state_latency_seconds':timings,'apk_source_run':os.environ.get('PASSENGER_APK_SOURCE_RUN'),'apk_sha256':hashlib.sha256(next(Path('passenger-apk').glob('*.apk')).read_bytes()).hexdigest()}
+      'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'native_clock_required':os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true','idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','state_latency_seconds':timings,'apk_source_run':os.environ.get('PASSENGER_APK_SOURCE_RUN'),'apk_sha256':hashlib.sha256(next(Path('passenger-apk').glob('*.apk')).read_bytes()).hexdigest()}
     (out/'acceptance.json').write_text(json.dumps(result,indent=2))
 finally:
     try:safe_webview()

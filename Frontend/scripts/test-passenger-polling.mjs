@@ -87,3 +87,40 @@ test('a late request receipt cannot overwrite a newer trip or cross a renewed se
     resolve({id:h.ride.id});await tick();assert.equal(h.prefs.YATRI_PASSENGER_ACTIVE_RIDE,before);
   });
 });
+
+test('status updates continue while pickup navigation never replies; obsolete route cannot restore an old phase',()=>harness(async h=>{
+  h.ffi.request();await tick();
+  let resolve;
+  h.api.navigation=()=>new Promise(r=>{resolve=r;});
+  h.ride.status='accepted';await h.poll();await tick();assert.equal(h.phases.at(-1),'accepted');
+  h.ride.status='arrived';await h.poll();assert.equal(h.phases.at(-1),'arrived');
+  h.ride.status='in_progress';await h.poll();assert.equal(h.phases.at(-1),'in_progress');
+  h.ride.status='completed';await h.poll();assert.equal(h.phases.at(-1),'completed');
+  resolve({route:{encodedPolyline:'old-route'}});await tick();assert.equal(h.phases.at(-1),'completed');
+}));
+test('native foreground clock updates all states without a WebView interval and stops with its subscription',()=>harness(async h=>{
+  let nativeTick,stopped;
+  window.JBridge.startYatriPassengerClock=callback=>{nativeTick=callback;return true;};
+  window.JBridge.stopYatriPassengerClock=callback=>{stopped=callback;};
+  h.subscribe();await tick();h.ffi.request();await tick();
+  for(const phase of ['accepted','arrived','in_progress','completed']){
+    h.ride.status=phase;window.__YATRI_PASSENGER_CLOCK_CALLBACKS__[nativeTick]();await tick();assert.equal(h.phases.at(-1),phase);
+  }
+  assert.equal(window.__YATRI_PASSENGER_POLL__.clock,'native');
+  h.close();assert.equal(stopped,nativeTick);assert.equal(Object.keys(window.__YATRI_PASSENGER_CLOCK_CALLBACKS__).length,0);
+}));
+test('a lost read callback cannot hold the polling lock forever or replace a recovered state',()=>harness(async h=>{
+  h.ffi.request();await tick();
+  let resolve;
+  h.api.snapshot=()=>new Promise(r=>{resolve=r;});
+  const pending=h.poll();
+  const now=Date.now;
+  try{
+    Date.now=()=>now()+26000;
+    h.ride.status='arrived';h.api.snapshot=async()=>({rides:[{...h.ride}]});
+    await h.poll();assert.equal(h.phases.at(-1),'arrived');
+    assert.equal(window.__YATRI_PASSENGER_POLL__.stalledReadsRecovered,1);
+    resolve({rides:[{...h.ride,status:'accepted'}]});await pending;
+    assert.equal(h.phases.at(-1),'arrived');assert.equal(window.__YATRI_PASSENGER_POLL__.polling,false);
+  }finally{Date.now=now;}
+}));

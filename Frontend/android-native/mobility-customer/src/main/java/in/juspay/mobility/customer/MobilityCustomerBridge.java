@@ -9,6 +9,11 @@
 
 package in.juspay.mobility.customer;
 
+import android.app.Activity;
+import android.content.pm.ApplicationInfo;
+import android.os.Handler;
+import android.os.Looper;
+import java.lang.ref.WeakReference;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
@@ -62,6 +67,67 @@ import in.juspay.mobility.common.MobilityCommonBridge;
 import android.view.accessibility.AccessibilityManager;
 
 public class MobilityCustomerBridge extends MobilityCommonBridge {
+    // Foreground cadence only. Never contains a URL, token, or operational response.
+    private final Handler yatriClockHandler = new Handler(Looper.getMainLooper());
+    private PassengerClock yatriPassengerClock;
+
+    private boolean yatriPassengerClockEnabled() {
+        try {
+            Context context = bridgeComponents.getContext();
+            if (!"in.juspay.nammayatri.debug".equals(context.getPackageName()) ||
+                (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) == 0) return false;
+            int resource = context.getResources().getIdentifier("yatri_br_ride_pilot", "bool", context.getPackageName());
+            return resource != 0 && context.getResources().getBoolean(resource) &&
+                context.getSharedPreferences("godel", Context.MODE_PRIVATE)
+                    .getString("YATRI_PASSENGER_SESSION", "").matches("[a-f0-9]{64}");
+        } catch (Exception ignored) { return false; }
+    }
+
+    @JavascriptInterface
+    public boolean startYatriPassengerClock(String callback) {
+        if (!yatriPassengerClockEnabled() || callback == null || callback.isEmpty() || callback.length() > 256) return false;
+        ExecutorManager.runOnMainThread(() -> {
+            if (yatriPassengerClock != null) yatriClockHandler.removeCallbacks(yatriPassengerClock);
+            yatriPassengerClock = new PassengerClock(this, callback);
+            yatriClockHandler.postDelayed(yatriPassengerClock, 3000);
+        });
+        return true;
+    }
+
+    @JavascriptInterface
+    public void stopYatriPassengerClock(String callback) {
+        ExecutorManager.runOnMainThread(() -> {
+            if (yatriPassengerClock != null && yatriPassengerClock.callback.equals(callback)) {
+                yatriClockHandler.removeCallbacks(yatriPassengerClock);
+                yatriPassengerClock = null;
+            }
+        });
+    }
+
+    private static final class PassengerClock implements Runnable {
+        private final WeakReference<MobilityCustomerBridge> reference;
+        private final String callback;
+        PassengerClock(MobilityCustomerBridge bridge, String callback) {
+            this.reference = new WeakReference<>(bridge); this.callback = callback;
+        }
+        @Override public void run() {
+            MobilityCustomerBridge bridge = reference.get();
+            if (bridge == null || bridge.yatriPassengerClock != this) return;
+            Activity activity = bridge.bridgeComponents.getActivity();
+            if (activity == null || activity.isFinishing() || activity.isDestroyed() || !bridge.yatriPassengerClockEnabled()) {
+                bridge.yatriPassengerClock = null; return;
+            }
+            if (activity.hasWindowFocus() && bridge.bridgeComponents.getJsCallback() != null) {
+                String id = JSONObject.quote(callback);
+                // A cancelled subscription may have removed its callback already.
+                String script = "(function(){var r=window.__YATRI_PASSENGER_CLOCK_CALLBACKS__,k=" + id +
+                    ",f=r&&r[k];if(typeof f==='function')f();})()";
+                bridge.bridgeComponents.getJsCallback().addJsToWebView(script);
+            }
+            bridge.yatriClockHandler.postDelayed(this, 3000);
+        }
+    }
+
 
     @Override
     public void reset() {

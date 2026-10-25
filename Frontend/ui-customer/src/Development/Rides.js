@@ -4,7 +4,7 @@ import {createOperationsClient} from '../../../ui-driver/src/Development/Operati
 import {createNativeFetch} from '../../../ui-driver/src/Development/NativeTransport.mjs';
 import {updateTripMap,releaseTripMap} from '../../../ui-common/src/Development/TripMapRuntime.js';
 import {tripView} from '../../../ui-common/src/Development/PilotTrip.mjs';
-let listener;
+let listener,clockSequence=0;
 const rideKey='YATRI_PASSENGER_ACTIVE_RIDE';
 export const enabled=()=>{
   try{return window.__OS==='ANDROID'&&window.__YATRI_BR_DEVELOPMENT__===true&&
@@ -24,7 +24,7 @@ function diagnostics(owner){
   if(owner!==listener)return;
   // Read-only counters for Android acceptance; no session, URL, address or vehicle data.
   window.__YATRI_PASSENGER_POLL__={ticks:owner.ticks,reads:owner.reads,errors:owner.errors,
-    polling:owner.polling,actionBusy:owner.busy,phase:owner.phase||'idle',lastSuccessAt:owner.lastSuccessAt||0};
+    polling:owner.polling,actionBusy:owner.busy,clock:owner.nativeClock?'native':'webview',stalledReadsRecovered:owner.stalledReadsRecovered||0,phase:owner.phase||'idle',lastSuccessAt:owner.lastSuccessAt||0};
 }
 function rememberRide(owner,id){
   if(owner!==listener)return;
@@ -47,16 +47,27 @@ function fail(owner,error){
   owner.error(error.message||'Não foi possível atualizar a viagem.')();
   diagnostics(owner);
 }
-async function present(owner,ride,current){
-  if(['accepted','arrived'].includes(ride.status)){
-    if(!owner.navAt||Date.now()-owner.navAt>30000||owner.navPhase!==ride.status){
-      owner.navAt=Date.now();owner.navPhase=ride.status;
-      try{owner.nav=await client().navigation(ride.id);}catch(error){owner.nav=null;if(current())fail(owner,error);}
-    }
-    ride={...ride,route:{...ride.route,encodedPolyline:owner.nav?owner.nav.route.encodedPolyline:''}};
-  }else{owner.nav=null;owner.navPhase=ride.status;}
-  if(current())emit(owner,tripView(ride));
+function present(owner,ride,current){
+  const pickup=['accepted','arrived'].includes(ride.status);
+  const key=ride.id+'/'+ride.status;
+  if(owner.navKey!==key){owner.navKey=key;owner.nav=null;owner.navAt=0;}
+  const value=tripView(ride);
+  if(pickup)value.polyline=owner.nav?owner.nav.route.encodedPolyline:'';
+  // State delivery must never wait for Google Routes or another native HTTP callback.
+  if(current())emit(owner,value);
+  if(!pickup||owner.navPending||owner.navAt&&Date.now()-owner.navAt<30000)return;
+  owner.navAt=Date.now();
+  const pending={key};owner.navPending=pending;
+  Promise.resolve().then(()=>client().navigation(ride.id)).then(nav=>{
+    if(owner!==listener||owner.navKey!==key||owner.navPending!==pending)return;
+    owner.nav=nav;
+    if(owner.value&&owner.value.id===ride.id&&owner.value.phase===ride.status)
+      emit(owner,{...owner.value,polyline:nav.route.encodedPolyline});
+  }).catch(()=>{
+    if(owner===listener&&owner.navKey===key)owner.error('Rota de aproximação indisponível. Os estados da viagem continuam sendo atualizados.')();
+  }).finally(()=>{if(owner.navPending===pending)owner.navPending=null;});
 }
+
 async function refresh(owner){
   const revision=++owner.revision;
   const current=()=>owner===listener&&revision===owner.revision;
@@ -82,9 +93,14 @@ async function refresh(owner){
 async function tick(owner){
   if(owner!==listener)return;
   owner.ticks++;
+  if(owner.polling&&Date.now()-owner.pollingAt>25000){
+    owner.revision++;owner.polling=false;owner.activePoll=null;
+    owner.stalledReadsRecovered=(owner.stalledReadsRecovered||0)+1;
+  }
   if(owner.polling||owner.busy){diagnostics(owner);return;}
+  const poll={};owner.activePoll=poll;owner.pollingAt=Date.now();
   owner.polling=true;diagnostics(owner);
-  try{await refresh(owner);}finally{owner.polling=false;diagnostics(owner);}
+  try{await refresh(owner);}finally{if(owner.activePoll===poll){owner.polling=false;diagnostics(owner);}}
 }
 export const subscribe=origin=>destination=>changed=>error=>()=>{
   if(listener)listener.stop();
@@ -93,12 +109,24 @@ export const subscribe=origin=>destination=>changed=>error=>()=>{
     rideId:/^[a-f0-9-]{36}$/.test(saved||'')?saved:null};
   listener=owner;
   const wake=()=>{Promise.resolve().then(()=>tick(owner));};
-  const timer=setInterval(()=>tick(owner),3000);
+  let timer,clockCallback;
+  try{
+    if(typeof window.JBridge.startYatriPassengerClock==='function'){
+      clockCallback='br-passenger-'+(++clockSequence);
+      const callbacks=window.__YATRI_PASSENGER_CLOCK_CALLBACKS__||(window.__YATRI_PASSENGER_CLOCK_CALLBACKS__=Object.create(null));
+      callbacks[clockCallback]=wake;
+      owner.nativeClock=window.JBridge.startYatriPassengerClock(clockCallback)===true;
+    }
+  }catch(_){owner.nativeClock=false;}
+  if(!owner.nativeClock){if(clockCallback)delete window.__YATRI_PASSENGER_CLOCK_CALLBACKS__[clockCallback];timer=setInterval(()=>tick(owner),3000);}
   const resumed=window.onResumeListeners;
   if(Array.isArray(resumed))resumed.push(wake);
   if(window.addEventListener)window.addEventListener('online',wake);
   owner.stop=()=>{
-    clearInterval(timer);owner.revision++;
+    if(timer!==undefined)clearInterval(timer);
+    if(owner.nativeClock)try{window.JBridge.stopYatriPassengerClock(clockCallback);}catch(_){}
+    if(clockCallback)delete window.__YATRI_PASSENGER_CLOCK_CALLBACKS__[clockCallback];
+    owner.revision++;
     if(Array.isArray(resumed)){const index=resumed.indexOf(wake);if(index>=0)resumed.splice(index,1);}
     if(window.removeEventListener)window.removeEventListener('online',wake);
     if(listener===owner){listener=null;releaseTripMap();}
