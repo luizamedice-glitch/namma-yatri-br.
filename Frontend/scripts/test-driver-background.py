@@ -30,7 +30,7 @@ def ui_button(pattern):
             consent=next((n for n in ns if n.get('text','')=='Turn on'),None)
             if consent is not None:p.tap(consent);time.sleep(2);continue
         found=next((n for n in ns if re.fullmatch(pattern,n.get('text',''),re.I)),None)
-        if found:return found
+        if found is not None:return found
         time.sleep(2)
     raise AssertionError('Controle do painel original ausente')
 def launch():p.adb('shell','am','start','-W','-n',p.package+'/in.juspay.mobility.MainActivity')
