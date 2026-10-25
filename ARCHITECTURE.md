@@ -13,8 +13,9 @@ restauração cifrada em outra instância isolada. Fonte `8d24ad18edebe754341e78
 Timers systemd: backup diário/monitor cinco minutos. `maintenance-ssh.sh` exporta
 cifra, descriptografa temporariamente no runner e chama `verify-backup.py`, que
 restaura somente em novo PostgreSQL sem rede, portas ou montagem de host.
-Não existe operação de restore para o banco ativo. PR #5 separa o cron externo
-na main com fonte fixa; aguarda revisão, ainda inativo. Evidências e limites em
+Não existe operação de restore para o banco ativo. PR #5 incorporado com
+autorização do proprietário; cron externo ativo na main com fonte fixa,
+backup diário 03:45 UTC e saúde a cada 15 minutos. Evidências e limites em
 `brasil/backend/ops/RECOVERY-REPORT-2026-10-25.md`.
 
 ## Recuperação operacional — 25/10/2026

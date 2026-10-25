@@ -35,8 +35,9 @@ Incremento de resiliência PostgreSQL/backup: fonte 8d24ad18edebe754341e78392611
 CI 40241759979, instalação/restauração real 40241777998 e deploy de piloto
 40241930473 aprovados. Backups
 cifrados diários e monitor local ativos; chave privada fora do servidor.
-Leia brasil/backend/ops/RECOVERY-REPORT-2026-10-25.md. PR #5 agenda cópia externa
-e saúde na main, aguardando revisão específica; cron externo ainda inativo.
+Leia brasil/backend/ops/RECOVERY-REPORT-2026-10-25.md. PR #5 incorporado à main
+com autorização explícita do proprietário: cron externo ativo para cópia diária
+e saúde a cada 15 minutos, fonte operacional imutável 8d24ad18edebe754341e7839261122b70a440777.
 Não executar restore ativo ou reconstrução de instância sem revisão específica.
 Próximos aceites: carga isolada, duração física prolongada e assinatura persistente.
 

@@ -48,9 +48,15 @@ na instância: sem ela, cópias cifradas não podem ser recuperadas.
 
 O [PR #5](https://github.com/luizamedice-glitch/namma-yatri-br./pull/5) publica
 somente o agendamento externo na main: backup diário 03:45 UTC e saúde a cada
-15 minutos, fonte operacional fixa. Aguarda revisão específica de publicação
-conforme AGENTS.md; **cron externo ainda não está ativo**. Cópia externa e
-monitor foram executados manualmente com sucesso. Atrasos no cron GitHub são
+15 minutos, fonte operacional fixa. Proprietário autorizou a publicação;
+incorporado em `e0d5835379eacaf89bf72c95354b728c7e990051` às 23:51 UTC.
+Workflow confirmado `active` na API do GitHub; **cron externo está habilitado**.
+Validação após publicação: execução manual [40246613110](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40246613110)
+na main aprovada: exportação cifrada, restauração isolada e saúde. Artefato
+`12618129685`, retenção sete dias, contém somente ciphertext/relatórios seguros.
+Nenhum deploy novo da aplicação nesta publicação. O primeiro
+disparo por cron ainda não foi observado neste registro. Cópia externa e
+monitor já foram executados manualmente com sucesso. Atrasos no cron GitHub são
 possíveis; alertas dependem das preferências de notificações do proprietário.
 Monitor deixa estado degradado se backup/restauração tiver mais de 26 horas;
 não reinicia automaticamente serviços nem prolonga o piloto.

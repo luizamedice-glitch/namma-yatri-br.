@@ -4,7 +4,8 @@
 
 Queda/retorno real de PostgreSQL isolado e restauração de dump real do Lightsail
 aprovados em `40241759979`/`40241777998`. Backup cifrado diário e monitor local
-ativos; cópia externa verificada. PR #5 aguarda revisão para cron externo na main.
+ativos; cópia externa verificada. PR #5 autorizado e incorporado: cron externo
+ativo na main para backup diário e saúde a cada 15 minutos.
 Nenhuma troca de banco ativo ou reconstrução completa do servidor foi executada.
 Detalhes: `brasil/backend/ops/RECOVERY-REPORT-2026-10-25.md`.
 

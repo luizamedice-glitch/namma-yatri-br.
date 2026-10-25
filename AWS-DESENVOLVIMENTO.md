@@ -15,8 +15,14 @@ Chave privada não enviada ao servidor. Primeira cópia externa restaurada em
 contêiner descartável, migrations/índices válidos, banco ativo preservado;
 saúde de ambos os serviços aprovada. Arquivos/diretórios 600/700.
 
-PR #5 contém somente cron externo na branch padrão, fixado na revisão testada;
-ainda não incorporado/ativo. Execução manual externa `40241825428` aprovada.
+PR #5 autorizado pelo proprietário e incorporado à main em
+`e0d5835379eacaf89bf72c95354b728c7e990051`, às 23:51 UTC de 25/10/2026.
+Workflow externo ativo: backup 03:45 UTC (00:45 Brasília) e monitor a cada
+15 minutos, fixado na revisão operacional testada. Execução manual externa
+anterior `40241825428` aprovada; validação manual após publicação em
+`40246613110` aprovada (backup cifrado, restauração isolada e saúde).
+Artefato `12618129685` retido sete dias; primeiro disparo automático por cron
+ainda não observado neste registro. Publicação não fez deploy da aplicação.
 Guardar PEM original fora da instância para recuperar `.ybk`; não substituí-lo
 sem plano para cópias anteriores. Nenhuma restauração ativa/porta/recurso AWS
 novo. Relatório/procedimento: `brasil/backend/ops/RECOVERY-REPORT-2026-10-25.md`
