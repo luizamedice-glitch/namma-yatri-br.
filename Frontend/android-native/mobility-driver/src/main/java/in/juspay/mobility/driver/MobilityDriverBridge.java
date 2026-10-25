@@ -151,7 +151,13 @@ public class MobilityDriverBridge extends MobilityCommonBridge {
         Context c=bridgeComponents.getContext().getApplicationContext();
         Intent service=new Intent().setClassName(c,"in.juspay.mobility.BrDriverService");
         if(!wanted){c.stopService(service);return;}
-        if(isYatriDriverTrackingActive()||!prepareYatriDriverTracking())return;
+        // Periodic snapshots never open permission prompts. Only the explicit
+        // online button calls prepareYatriDriverTracking to request consent.
+        Activity activity=bridgeComponents.getActivity();
+        if(isYatriDriverTrackingActive()||activity==null||!(activity instanceof LifecycleOwner)
+            ||!((LifecycleOwner)activity).getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)
+            ||ContextCompat.checkSelfPermission(c,Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED
+            ||Build.VERSION.SDK_INT>=33&&ContextCompat.checkSelfPermission(c,Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)return;
         try{ContextCompat.startForegroundService(c,service);}catch(RuntimeException ignored){ }
     }
 

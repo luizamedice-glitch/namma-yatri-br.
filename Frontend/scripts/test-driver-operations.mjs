@@ -4,6 +4,26 @@ import {readFile} from 'node:fs/promises';
 import {createOperationsClient} from '../ui-driver/src/Development/OperationsClient.mjs';
 import {createNativeFetch} from '../ui-driver/src/Development/NativeTransport.mjs';
 import {tripView} from '../ui-common/src/Development/PilotTrip.mjs';
+test('online requires notification permission; native tracking owns GPS and survives screen cleanup',async()=>{
+  let ready=false,active=false,available=false,gpsCalls=0,availabilityCalls=0;const wanted=[],errors=[];
+  const api={snapshot:async()=>({available,rides:[],offers:[]}),location:async()=>{gpsCalls++;},availability:async value=>{availabilityCalls++;available=value;return {available};}};
+  globalThis.driverBackgroundHarness={createOperationsClient:()=>api,createNativeFetch:()=>{},callbackMapper:{},tripView,updateTripMap:()=>{},releaseTripMap:()=>{}};
+  globalThis.window={__OS:'ANDROID',__YATRI_BR_DEVELOPMENT__:true,JBridge:{getDeviceInfo:()=>JSON.stringify({package_name:'in.juspay.nammayatripartner.debug'}),
+    getFromSharedPrefs:()=>'',prepareYatriDriverTracking:()=>ready,isYatriDriverTrackingActive:()=>active,setYatriDriverTracking:value=>wanted.push(value)}};
+  const source=(await readFile(new URL('../ui-driver/src/Development/Driver.js',import.meta.url),'utf8')).replace(/^import .*;$/gm,'');
+  const ffi=await import('data:text/javascript;base64,'+Buffer.from('const {createOperationsClient,createNativeFetch,callbackMapper,tripView,updateTripMap,releaseTripMap}=globalThis.driverBackgroundHarness;'+source).toString('base64'));
+  const flush=()=>new Promise(resolve=>setImmediate(resolve));let stop;
+  try{
+    stop=ffi.subscribe(()=>()=>{})(message=>()=>errors.push(message))(()=>{})(()=>()=>{})();await flush();
+    ffi.location(-23.55)(-46.63)();await flush();assert.equal(gpsCalls,1);
+    ffi.availability(true)(()=>()=>{})(()=>()=>{})();await flush();
+    assert.equal(availabilityCalls,0,'Permission refusal must not mark the driver online');assert.match(errors.at(-1),/Autorize/);
+    ready=true;ffi.availability(true)(()=>()=>{})(()=>()=>{})();await flush();assert.equal(wanted.at(-1),true);
+    active=true;const before=gpsCalls;ffi.location(-23.56)(-46.64)();await flush();assert.equal(gpsCalls,before,'Native GPS must not be duplicated by WebView');
+    const commands=wanted.length;stop();stop=null;assert.equal(wanted.length,commands,'Screen cleanup must not stop online tracking');
+    ffi.availability(false)(()=>()=>{})(()=>()=>{})();await flush();assert.equal(wanted.at(-1),false);
+  }finally{if(stop)stop();delete globalThis.window;delete globalThis.driverBackgroundHarness;}
+});
 test('driver discards stale snapshots and retains the persisted completed trip until dismissed',async()=>{
   const id='12345678-1234-4234-8234-123456789abc';
   const ride={id,status:'accepted',fare_cents:1234,route:{distanceMeters:1000},origin:{address:'Embarque do teste'},destination:{address:'Destino do teste'}};
