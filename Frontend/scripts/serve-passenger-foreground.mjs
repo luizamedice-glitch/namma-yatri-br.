@@ -27,4 +27,6 @@ const server=createApi({pool,maps,service,development});
 await new Promise(resolve=>server.listen(8080,'127.0.0.1',resolve));
 await writeFile(process.env.PASSENGER_FOREGROUND_SESSIONS,JSON.stringify(sessions),{mode:0o600});
 console.log('API isolada pronta. Nenhuma operação de corrida usa o Lightsail.');
+// CI-only fault injection: drop existing keep-alive sockets, keeping API/PG alive.
+process.on('SIGUSR2',()=>server.closeAllConnections());
 process.on('SIGTERM',()=>{server.closeStreams();server.closeAllConnections();server.close(()=>pool.end().then(()=>process.exit()));});

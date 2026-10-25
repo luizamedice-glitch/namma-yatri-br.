@@ -4,7 +4,7 @@ Test accounts/vehicle exist only in an isolated disposable database, no simulate
 """
 from pathlib import Path
 import hashlib
-import json,os,re,subprocess,time,unicodedata,urllib.request,xml.etree.ElementTree as ET
+import json,os,re,signal,subprocess,time,unicodedata,urllib.request,xml.etree.ElementTree as ET
 out=Path('passenger-foreground-evidence');out.mkdir(exist_ok=True)
 base='http://127.0.0.1:8080'
 package='in.juspay.nammayatri.debug'
@@ -150,7 +150,9 @@ try:
         same_foreground(pid);started=time.monotonic()
         call('driver','/driver/location',driver_point)
         reconnect=action=='arrive' and os.environ.get('PASSENGER_RECONNECT')=='true'
-        if reconnect:adb('reverse','--remove','tcp:8080')
+        if reconnect:
+            adb('reverse','--remove','tcp:8080')
+            os.kill(int(os.environ['PASSENGER_TEST_API_PID']),signal.SIGUSR2)
         call('driver','/rides/'+ride_id+'/'+action,{})
         if reconnect:
             time.sleep(12)
@@ -162,9 +164,11 @@ try:
     if os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true':
         states=safe_webview()
         assert any(s.get('diagnostics') and s['diagnostics'].get('clock')=='native' and s['diagnostics'].get('nativeTicks',0)>=4 for s in states),'Callbacks nativos nao chegaram ao frontend'
+        if os.environ.get('PASSENGER_RECONNECT')=='true':
+            assert any(s.get('diagnostics',{}).get('errors',0)>0 for s in states if s.get('diagnostics')),'Corte de rede nao foi observado pelo cliente'
     tap(wait_label('Voltar ao início'));home()
     result={'acceptance':'passed','isolated_database':True,'driver_actions_real_http':True,'google_routes_real':True,
-      'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'native_clock_required':os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true','idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','state_latency_seconds':timings,'apk_source_run':os.environ.get('PASSENGER_APK_SOURCE_RUN'),'apk_sha256':hashlib.sha256(next(Path('passenger-apk').glob('*.apk')).read_bytes()).hexdigest()}
+      'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'native_clock_required':os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true','idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','network_fault':'tunnel_removed_and_existing_sockets_closed' if os.environ.get('PASSENGER_RECONNECT')=='true' else None,'state_latency_seconds':timings,'apk_source_run':os.environ.get('PASSENGER_APK_SOURCE_RUN'),'apk_sha256':hashlib.sha256(next(Path('passenger-apk').glob('*.apk')).read_bytes()).hexdigest()}
     (out/'acceptance.json').write_text(json.dumps(result,indent=2))
 finally:
     try:safe_webview()
