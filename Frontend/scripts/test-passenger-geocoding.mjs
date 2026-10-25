@@ -2,7 +2,7 @@
 // Native boundary fixtures; actual Android geocoder is validated separately in CI.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
+import {readFile,access} from 'node:fs/promises';
 import {createGeocoding} from '../ui-customer/src/Development/GeocodingRuntime.mjs';
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 async function harness(run){
@@ -75,3 +75,12 @@ test('persistent provider failure stops after three attempts without inventing a
   assert.equal(window.__YATRI_GEOCODING__.state,'unavailable');assert.equal(Object.keys(h.callbacks).length,0);
  }finally{globalThis.setTimeout=original;}
 }));
+
+test('FFI runtime imports resolve both before and after PureScript copies foreign.js',async()=>{
+ const sourceUrl=new URL('../ui-customer/src/Development/Geocoding.js',import.meta.url);
+ const outputUrl=new URL('../ui-customer/output/Development.Geocoding/foreign.js',import.meta.url);
+ const source=await readFile(sourceUrl,'utf8');
+ for(const match of source.matchAll(/from ['"](\.[^'"]+)['"]/g)){
+  await access(new URL(match[1],sourceUrl));await access(new URL(match[1],outputUrl));
+ }
+});
