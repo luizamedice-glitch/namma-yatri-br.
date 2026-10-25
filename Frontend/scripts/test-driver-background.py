@@ -110,8 +110,21 @@ try:
     # Tap actual notification: do not launch via adb here. UI must recover the real offer.
     p.adb('shell','input','keyevent','KEYCODE_WAKEUP');p.adb('shell','wm','dismiss-keyguard')
     p.adb('shell','cmd','statusbar','expand-notifications');time.sleep(2)
-    p.capture('notification-shade')
-    p.tap(ui_button(r'Nova solicitação de corrida'))
+    # Always retain pixels even if Android 10's SystemUI never reports idle to
+    # the legacy hierarchy dumper. This fallback is limited to our fixed Pixel 2
+    # API29 fixture; it still taps the real first high-priority notification.
+    (p.out/'notification-shade.png').write_bytes(p.adb('exec-out','screencap','-p'))
+    try:
+        p.tap(ui_button(r'Nova solicitação de corrida'))
+    except subprocess.CalledProcessError:
+        if p.adb('shell','getprop','ro.build.version.sdk').decode().strip()!='29':raise
+        dump=p.adb('shell','dumpsys','notification','--noredact').decode()
+        assert re.search(r'NotificationRecord\([^\n]*pkg='+re.escape(p.package)+r'[^\n]*id=47002\b',dump),'Notificação de chamada real ausente'
+        assert 'Nova solicitação de corrida' in dump
+        size=re.search(r'(\d+)x(\d+)',p.adb('shell','wm','size').decode());assert size
+        x,y=int(size[1])//2,round(int(size[2])*0.33)
+        (p.out/'notification-tap.json').write_text(json.dumps({'method':'api29_fixed_profile_first_notification','x':x,'y':y,'system_notification_verified':True}))
+        p.adb('shell','input','tap',str(x),str(y))
     p.wait_label('Aceitar viagem');p.capture('offer-restored')
     p.tap(p.wait_label('Aceitar viagem'));p.wait_label('Cheguei ao embarque')
     assert p.call('passenger','/rides/'+ride['id'])['status']=='accepted'
