@@ -7,6 +7,12 @@
 - APK: artefato `12606883337`, SHA256 interno `bb99fb16c554eba52b15c25e41a5a11adfbd07a656e0498a8ccdc0c9ac44e617`.
 - Evidência Android: `12607361037`; `gps-endereco-real.png` e `accepted.png` inspecionados visualmente.
 - 42 testes Node aprovados no mesmo build, incluindo callbacks, geocoding, estados e mapa.
+- Mesmo APK, sem recompilar: Android 10/API 29 aprovado em
+  [40215993505](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40215993505),
+  evidência `12607641870`. `cold-acceptance.json` confirma botões na primeira
+  abertura, retomada, recuperação após force-stop, todos os estados e
+  exportação diagnóstica segura. Esse roteiro cobre ciclo frio; o endereço
+  Geoapify real foi exigido pelo roteiro separado do Android 16.
 
 ## Comportamento
 
