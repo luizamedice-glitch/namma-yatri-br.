@@ -165,7 +165,7 @@ def main():
         tap(wait_label('Solicitar viagem'));wait_label('Procurando motorista')
         if os.environ.get('PASSENGER_RECONNECT')=='true':
             faults=json.loads(faults_path.read_text())
-            assert faults['droppedResponses']==1 and faults['requests']==1,'Solicitação não recuperada após perder resposta real'
+            assert faults['droppedResponses']==1 and faults['requests']==1,'Solicitação não recuperada após perder resposta real: '+json.dumps(faults)
             same_foreground(quote_pid);capture('solicitacao-recuperada')
         pid=adb('shell','pidof',package).decode().strip()
         ride=call('passenger','/snapshot')['rides'][0];ride_id=ride['id']
@@ -213,6 +213,10 @@ def main():
           'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'native_clock_required':os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true','idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','quote_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','committed_request_response_loss_recovered':os.environ.get('PASSENGER_RECONNECT')=='true','network_fault':'tunnel_removed_and_existing_sockets_closed' if os.environ.get('PASSENGER_RECONNECT')=='true' else None,'state_latency_seconds':timings,'apk_source_run':os.environ.get('PASSENGER_APK_SOURCE_RUN'),'apk_sha256':hashlib.sha256(next(Path('passenger-apk').glob('*.apk')).read_bytes()).hexdigest()}
         (out/'acceptance.json').write_text(json.dumps(result,indent=2))
     finally:
+        try:
+            faults=Path(os.environ['PASSENGER_FOREGROUND_SESSIONS']+'.faults')
+            if faults.exists():(out/'transport-faults.json').write_text(faults.read_text())
+        except Exception:pass
         try:safe_webview()
         except Exception as e:(out/'cdp-error.txt').write_text(type(e).__name__)
         try:capture('final')

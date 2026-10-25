@@ -38,7 +38,12 @@ server.prependListener('request',(request,response)=>{
   const end=response.end;
   response.end=function(...args){
     if(response.statusCode>=200&&response.statusCode<300){
-      faults.droppedResponses++;saveFaults();response.destroy();return response;
+      faults.droppedResponses++;saveFaults();
+      // Send the start of the REAL response before truncating it. Closing before
+      // headers may trigger transparent POST replay inside HttpURLConnection.
+      response.flushHeaders();
+      const body=args[0];if(body&&body.length)response.write(body.slice(0,1));
+      setTimeout(()=>response.destroy(),50);return response;
     }
     return end.apply(this,args);
   };
