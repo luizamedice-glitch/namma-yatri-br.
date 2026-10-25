@@ -1,0 +1,181 @@
+{
+  "date": "2026-10-25",
+  "branch": "codex/issue-1-purescript-memory",
+  "incident": {
+    "device": "Samsung A07",
+    "android": 16,
+    "status": "open_pending_physical_diagnostic",
+    "reported": "First/cold entry blocks trip updates, Cancel, Home and Android Back; reopen recovers temporarily.",
+    "exact_device_reproduced": false
+  },
+  "source": "735cfdd21eff9a3fb3ce006f48537b1054fe81ee",
+  "artifact": 12586282367,
+  "build_run": 40160194185,
+  "build_job": "success",
+  "initial_acceptance": "failed_after_successful_trip_and_export_due_to_tapping_Android_clipboard_Quick_Share_overlay",
+  "verification": {
+    "source": "735cfdd21eff9a3fb3ce006f48537b1054fe81ee",
+    "compiler_seconds": 16.26,
+    "sampled_peak_rss_mib": 394.75,
+    "batches": 22,
+    "compiled": [
+      "Development.Rides"
+    ],
+    "apk_sha256": "29ce0cd78f15ebbd8c3e89ab55aaa6399613b6ea82b7e728369772e5b6b8239a",
+    "apk_bytes": 127819655,
+    "runtime_and_native_diagnostics_present": true
+  },
+  "baseline_emulator_run": 40159713510,
+  "baseline_emulator_also_passed": true,
+  "node_tests": 28,
+  "cases": {
+    "v2-cold36": {
+      "run": 40161535583,
+      "artifact": 12585899952,
+      "acceptance": {
+        "acceptance": "passed",
+        "cases": [
+          {
+            "case": "first_cold_controls",
+            "passed": true,
+            "same_pid": true
+          },
+          {
+            "case": "warm_resume",
+            "passed": true,
+            "same_pid": true
+          },
+          {
+            "case": "cold_process_restore_controls_and_all_states",
+            "passed": true,
+            "restarts_during_states": 0
+          }
+        ],
+        "backend": "isolated_postgresql",
+        "driver_actor": "real_authenticated_http",
+        "safe_native_diagnostic_export": true
+      },
+      "native_diagnostic": {
+        "revision": 2,
+        "runtime": {
+          "ticks": 14,
+          "reads": 14,
+          "errors": 0,
+          "nativeTicks": 13,
+          "callbackReceived": 85,
+          "callbackFailed": 0,
+          "callbackClock": 17,
+          "callbackOther": 68,
+          "polling": false,
+          "actionBusy": false,
+          "backEnabled": false,
+          "registryMapFlag": false,
+          "phase": "completed",
+          "registryType": "object"
+        },
+        "sinceJsMs": 4046,
+        "nativeClock": {
+          "scheduled": false,
+          "ticks": 13,
+          "dispatches": 13,
+          "resumed": true,
+          "windowFocused": true
+        },
+        "androidApi": 36,
+        "device": "Google sdk_gphone64_x86_64",
+        "visibleControls": []
+      }
+    },
+    "v2-cold29": {
+      "run": 40161537133,
+      "artifact": 12586474240,
+      "acceptance": {
+        "acceptance": "passed",
+        "cases": [
+          {
+            "case": "first_cold_controls",
+            "passed": true,
+            "same_pid": true
+          },
+          {
+            "case": "warm_resume",
+            "passed": true,
+            "same_pid": true
+          },
+          {
+            "case": "cold_process_restore_controls_and_all_states",
+            "passed": true,
+            "restarts_during_states": 0
+          }
+        ],
+        "backend": "isolated_postgresql",
+        "driver_actor": "real_authenticated_http",
+        "safe_native_diagnostic_export": true
+      },
+      "native_diagnostic": {
+        "revision": 2,
+        "runtime": {
+          "ticks": 15,
+          "reads": 15,
+          "errors": 0,
+          "nativeTicks": 14,
+          "callbackReceived": 85,
+          "callbackFailed": 0,
+          "callbackClock": 18,
+          "callbackOther": 67,
+          "polling": false,
+          "actionBusy": false,
+          "backEnabled": false,
+          "registryMapFlag": false,
+          "phase": "completed",
+          "registryType": "object"
+        },
+        "sinceJsMs": 4326,
+        "nativeClock": {
+          "scheduled": false,
+          "ticks": 14,
+          "dispatches": 14,
+          "resumed": true,
+          "windowFocused": true
+        },
+        "androidApi": 29,
+        "device": "Google Android SDK built for x86_64",
+        "visibleControls": []
+      }
+    }
+  },
+  "scope": {
+    "production_auth_changed": false,
+    "backend_changed": false,
+    "driver_apk_rebuilt": false,
+    "purescript_views_changed": false,
+    "dependencies_upgraded": false,
+    "google_maps_and_routes_preserved": true
+  },
+  "activation": {
+    "run": 40161232767,
+    "role": "passenger",
+    "expires_at": "2026-10-26T04:15:54.373Z",
+    "code_redeemed": false,
+    "plaintext_outside_git": true
+  },
+  "limitations": [
+    "Samsung physical case remains unconfirmed.",
+    "Force-stop models process recreation; does not reproduce every Samsung background policy.",
+    "Known duplicate origin pins remain.",
+    "Debug signing certificate can require reinstall.",
+    "Diagnostic values are last observed JS state; sinceJsMs reports age.",
+    "backEnabled=false and leaf clickable=false can occur with working controls."
+  ],
+  "changed_files": [
+    ".github/workflows/br-passenger-foreground.yml",
+    "Frontend/android-native/app/src/main/java/in/juspay/mobility/MainActivity.java",
+    "Frontend/android-native/mobility-customer/src/main/java/in/juspay/mobility/customer/MobilityCustomerBridge.java",
+    "Frontend/scripts/test-passenger-cold.py",
+    "Frontend/scripts/test-passenger-foreground.py",
+    "Frontend/scripts/test-passenger-native-clock.mjs",
+    "Frontend/scripts/test-passenger-runtime.mjs",
+    "Frontend/ui-customer/index.js",
+    "Frontend/ui-customer/src/Development/Rides.js"
+  ]
+}

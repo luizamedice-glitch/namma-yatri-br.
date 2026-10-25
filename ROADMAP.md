@@ -112,3 +112,10 @@ Android 10 e com corte efetivo/recuperação da conexão (`40156836847`). Confir
 este APK no celular do proprietário antes do próximo teste de campo. Preservar
 mapas/rotas atuais; segundo plano/push e limpeza de pinos permanecem pendentes.
 Relatório: `Frontend/build-reports/passageiro-atualizacao/RELATORIO.md`.
+
+Incidente reaberto em 25/10: A07/Android 16 ainda bloqueia UI na abertura fria.
+Runtime fortalecido e diagnóstico local entregues nas fontes 735cfdd21e;
+controles/retomada/processo frio/exportação aprovados em API 29 e 36. Próximo
+critério: confirmar no Samsung ou coletar o diagnóstico durante o bloqueio,
+antes de encerrar o incidente. Não usar o aceite do emulador como prova física.
+Relatório: Frontend/build-reports/passageiro-cold-runtime/RELATORIO.md.

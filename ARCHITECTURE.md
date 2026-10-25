@@ -65,3 +65,17 @@ uma leitura, sem carregar URL, credencial ou resposta operacional. Estados são
 publicados sem aguardar Google Routes, e respostas antigas mantêm os guards
 existentes. Gate exclusivo do pacote passageiro debug, recurso de piloto e
 sessão privada. Produção, motorista e navegação visual permanecem preservados.
+
+## Robustez e diagnóstico do runtime passageiro BR debug
+
+A entrada do passageiro preserva JBridge sem decorá-lo com telemetria Firebase
+no modo brasileiro. O dispatcher resolve callbacks por propriedade ou Map,
+incluindo outro contexto JS; o indicador do mapper acompanha o registro real
+sem substituí-lo. Produção mantém a instrumentação anterior.
+
+Rides envia somente contadores/fase a uma memória diagnóstica nativa filtrada.
+Três eventos Volume+ rápidos, exclusivamente no passageiro BR debug, exportam
+esse snapshot por clipboard/arquivo privado. Nenhum dado é enviado a serviços.
+A idade da observação JS distingue um snapshot antigo de uma resposta recente.
+A investigação do Samsung A07 continua aberta; os aceites de ciclo frio em
+emulador não substituem a confirmação nesse aparelho.
