@@ -3,18 +3,20 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {createGeocoding} from '../ui-customer/src/Development/GeocodingRuntime.mjs';
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 async function harness(run){
   let count=0;const callbacks={},results=[],positions=[];let native;
+  globalThis.geocodeFactory=createGeocoding;
   globalThis.geocodeMapper={map:fn=>{const id='geo'+(++count);callbacks[id]=fn;return id;}};
   globalThis.window={__OS:'ANDROID',__YATRI_BR_DEVELOPMENT__:true,__PROXY_FN:callbacks,JBridge:{
     getDeviceInfo:()=>JSON.stringify({package_name:'in.juspay.nammayatri.debug'}),
     reverseGeocodeYatri:(lat,lng,id)=>{native={lat,lng,id,callback:callbacks[id]};return true;}}};
   const source=(await readFile(new URL('../ui-customer/src/Development/Geocoding.js',import.meta.url),'utf8')).replace(/^import .*;$/gm,'');
-  const ffi=await import('data:text/javascript;base64,'+Buffer.from('const callbackMapper=globalThis.geocodeMapper;'+source).toString('base64')+'#'+Math.random());
+  const ffi=await import('data:text/javascript;base64,'+Buffer.from('const callbackMapper=globalThis.geocodeMapper,createGeocoding=globalThis.geocodeFactory;'+source).toString('base64')+'#'+Math.random());
   const stop=ffi.subscribe(lat=>lng=>address=>()=>results.push({lat,lng,address}))(lat=>lng=>()=>positions.push({lat,lng}))();
   try{await run({ffi,results,positions,callbacks,native:()=>native,count:()=>count,stop});}
-  finally{stop();delete globalThis.window;delete globalThis.geocodeMapper;}
+  finally{stop();delete globalThis.window;delete globalThis.geocodeMapper;delete globalThis.geocodeFactory;}
 }
 test('native address resolves asynchronously, duplicate GPS shares pending request, cache avoids more calls',()=>harness(async h=>{
  h.ffi.resolve(-23.55)(-46.63)();h.ffi.resolve(-23.55)(-46.63)();assert.equal(h.count(),1);
@@ -42,8 +44,9 @@ test('timeout releases callback and ignores a late native result',()=>harness(as
  globalThis.setTimeout=fn=>{expire=fn;return 999;};globalThis.clearTimeout=()=>{};
  try{
   h.ffi.resolve(-23.55)(-46.63)();const n=h.native();expire();
-  assert.equal(window.__YATRI_GEOCODING__.state,'unavailable');assert.equal(Object.keys(h.callbacks).length,0);
-  n.callback('ok','Resposta tardia');await flush();assert.equal(h.results.length,0);
+  assert.equal(window.__YATRI_GEOCODING__.state,'unavailable');assert.equal(typeof h.callbacks[n.id],'function');
+  assert.doesNotThrow(()=>h.callbacks[n.id]('ok','Resposta tardia'),'SDK must still find a cleanup callback after timeout');
+  await flush();assert.equal(h.results.length,0);assert.equal(Object.keys(h.callbacks).length,0);
  }finally{globalThis.setTimeout=original;globalThis.clearTimeout=clear;}
 }));
 
