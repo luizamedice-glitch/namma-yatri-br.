@@ -22,6 +22,9 @@ test('online requires notification permission; native tracking owns GPS and surv
     active=true;const before=gpsCalls;ffi.location(-23.56)(-46.64)();await flush();assert.equal(gpsCalls,before,'Native GPS must not be duplicated by WebView');
     const commands=wanted.length;stop();stop=null;assert.equal(wanted.length,commands,'Screen cleanup must not stop online tracking');
     ffi.availability(false)(()=>()=>{})(()=>()=>{})();await flush();assert.equal(wanted.at(-1),false);
+    window.JBridge.supportsYatriDriverTracking=()=>false;ready=false;active=false;
+    const previous=availabilityCalls;ffi.availability(true)(()=>()=>{})(()=>()=>{})();await flush();
+    assert.equal(availabilityCalls,previous+1,'Legacy debug variant must retain original foreground operation when native pilot is disabled');
   }finally{if(stop)stop();delete globalThis.window;delete globalThis.driverBackgroundHarness;}
 });
 test('driver discards stale snapshots and retains the persisted completed trip until dismissed',async()=>{

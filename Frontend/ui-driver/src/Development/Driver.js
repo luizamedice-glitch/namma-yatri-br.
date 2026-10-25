@@ -127,7 +127,8 @@ export const availability = available => ok => fail => () => {
     try {
       const api = client();
       if (available) {
-        if(typeof window.JBridge.prepareYatriDriverTracking==='function'&&!window.JBridge.prepareYatriDriverTracking())
+        const nativeTracking=typeof window.JBridge.supportsYatriDriverTracking!=='function'||window.JBridge.supportsYatriDriverTracking();
+        if(nativeTracking&&typeof window.JBridge.prepareYatriDriverTracking==='function'&&!window.JBridge.prepareYatriDriverTracking())
           throw Error('Autorize localização e notificações e toque novamente em Ficar disponível.');
         if (!position) throw Error('Aguarde uma localização GPS válida antes de ficar disponível.');
         await api.location(position.lat,position.lng);

@@ -123,13 +123,22 @@ public class MobilityDriverBridge extends MobilityCommonBridge {
     }
 
     @JavascriptInterface
+    public boolean supportsYatriDriverTracking() {
+        return yatriTrackingScope();
+    }
+
+    @JavascriptInterface
     public boolean prepareYatriDriverTracking() {
         if(!yatriTrackingScope())return false;
         Activity activity=bridgeComponents.getActivity();
         if(activity==null||activity.isFinishing()||!(activity instanceof LifecycleOwner)
             ||!((LifecycleOwner)activity).getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED))return false;
         java.util.ArrayList<String> needed=new java.util.ArrayList<>();
-        if(ContextCompat.checkSelfPermission(activity,Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED)needed.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        if(ContextCompat.checkSelfPermission(activity,Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED){
+            // Android 12+ requires coarse and fine in the same precision request.
+            needed.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+            needed.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
         if(Build.VERSION.SDK_INT>=33&&ContextCompat.checkSelfPermission(activity,Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)needed.add(Manifest.permission.POST_NOTIFICATIONS);
         if(!needed.isEmpty()){
             activity.runOnUiThread(()->ActivityCompat.requestPermissions(activity,needed.toArray(new String[0]),7415));
