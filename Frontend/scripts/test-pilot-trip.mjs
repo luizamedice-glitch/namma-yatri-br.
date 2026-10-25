@@ -70,3 +70,20 @@ test('trip map uses the existing native bridge and updates the assigned GPS mark
   assert.equal(calls.length,length);
   delete globalThis.window;delete globalThis.tripMapTest;
 });
+test('camera fits Google geometry plus live vehicle and does not refit an unchanged position',async()=>{
+  const source=(await readFile(new URL('../ui-common/src/Development/TripMapRuntime.js',import.meta.url),'utf8')).replace(/^import .*;$/gm,'');
+  globalThis.tripMapCameraTest={mapPayload};
+  const runtime=await import('data:text/javascript;base64,'+Buffer.from('const {mapPayload}=globalThis.tripMapCameraTest;'+source).toString('base64')+'#camera');
+  const cameras=[],clears=[];let ready;
+  globalThis.window={__OS:'ANDROID',__YATRI_BR_DEVELOPMENT__:true,JBridge:{getDeviceInfo:()=>JSON.stringify({package_name:'in.juspay.nammayatri.debug'}),
+    showMap:()=>{},removeAllPolylines:value=>clears.push(JSON.parse(value)),drawRouteV2:()=>{},showMarker:()=>{},removeMarker:()=>{},
+    getLayoutBounds:()=>JSON.stringify({width:320,height:240}),animateCamera:(...args)=>cameras.push(args)},__PROXY_FN:{}};
+  const trip={polyline:'_p~iF~ps|UgEfEgEfE',gpsFresh:true,driverLat:38.505,driverLng:-120.205,phase:'accepted'};
+  try{
+    runtime.updateTripMap(trip);runtime.mountMapWithMapper('123',callback=>{ready=callback;return 'cb';});ready('MAP');
+    await new Promise(resolve=>setTimeout(resolve,200));
+    assert.equal(cameras.length,1);assert.ok(Math.abs(cameras[0][0]-38.5025)<0.0001);assert.ok(Math.abs(cameras[0][1]+120.2025)<0.0001);
+    assert.ok(cameras[0][2]>13&&cameras[0][2]<=18);assert.deepEqual(clears[0].markersToRemove,['br-origin','br-destination']);
+    runtime.updateTripMap({...trip});await new Promise(resolve=>setTimeout(resolve,200));assert.equal(cameras.length,1);
+  }finally{runtime.releaseTripMap();delete globalThis.window;delete globalThis.tripMapCameraTest;}
+});

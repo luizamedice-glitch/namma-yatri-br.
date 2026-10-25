@@ -112,7 +112,7 @@ def map_state(role):
                     if message.get('id')==request_id:return message
             command('Runtime.enable')
             for context in contexts:
-                result=command('Runtime.evaluate',{'expression':'JSON.stringify(window.__YATRI_TRIP_MAP__||null)','contextId':context,'returnByValue':True})
+                result=command('Runtime.evaluate',{'expression':"JSON.stringify(window.__YATRI_TRIP_MAP__?Object.assign({},window.__YATRI_TRIP_MAP__,{nativeMarkerPresent:window.JBridge.checkMarkerAvailable?window.JBridge.checkMarkerAvailable(JSON.stringify({markerId:'br-live-driver'})):null}):null)",'contextId':context,'returnByValue':True})
                 raw=result.get('result',{}).get('result',{}).get('value')
                 if raw:
                     value=json.loads(raw)
@@ -125,14 +125,22 @@ def check_map(role,name,expected_lat=None):
     from io import BytesIO
     for _ in range(12):
         state=map_state(role)
-        (out/(name+'-mapa.json')).write_text(json.dumps({key:state.get(key) for key in ['ready','routePoints','gpsFresh','phase','error']}))
-        if state.get('ready') and state.get('routePoints',0)>2 and (expected_lat is None or state.get('gpsFresh') and abs(state.get('driverLat',0)-expected_lat)<0.0001):break
+        (out/(name+'-mapa.json')).write_text(json.dumps({key:state.get(key) for key in ['ready','routePoints','gpsFresh','nativeMarkerPresent','phase','error']}))
+        if state.get('ready') and state.get('routePoints',0)>2 and (expected_lat is None or state.get('gpsFresh') and abs(state.get('driverLat',0)-expected_lat)<0.0001 and state.get('nativeMarkerPresent') is True):break
         time.sleep(2)
     else:raise AssertionError('Mapa/rota/GPS não confirmados: '+role)
     # Save only the upper map area, excluding the private vehicle card entirely.
     for _ in range(6):
         image=Image.open(BytesIO(adb('exec-out','screencap','-p'))).convert('RGB')
-        safe=image.crop((0,int(image.height*.12),image.width,int(image.height*.40)))
+        ns=nodes()
+        headings=['Estimativa da viagem','Procurando motorista','Motorista a caminho','Motorista no embarque','Viagem em andamento','Nova solicitação','Viagem aceita','No local de embarque']
+        headers=[n for n in ns if n.get('text') in headings or role=='driver' and n.get('text')=='Fagner']
+        top=max(int(re.findall(r'\d+',n.get('bounds'))[-1]) for n in headers)
+        addresses=[n for n in ns if normalized(n.get('text','')).startswith('praca da se')]
+        assert addresses,'Endereço público de origem ausente para delimitar mapa'
+        bottom=min(int(re.findall(r'\d+',n.get('bounds'))[1]) for n in addresses)
+        assert bottom>top+100,'Área do mapa não foi alocada'
+        safe=image.crop((0,top,image.width,bottom))
         purple=sum(1 for r,g,b in safe.getdata() if abs(r-116)<6 and abs(g-52)<6 and abs(b-84)<6)
         if purple>30:break
         time.sleep(1)
@@ -241,7 +249,7 @@ try:
       'complete_persisted':True,'both_apps_display_all_trip_states':True,'process_recreation_restores_trip':True,
       'driver_returns_to_dashboard':True,'native_route_drawn_both_apps':True,
       'pickup_route_google_real':True,'android_gps_movement_received_by_passenger':True,
-      'gps_source':'emulator_location_provider',
+      'gps_source':'emulator_location_provider','native_passenger_vehicle_marker_exists':True,
       'driver_offline_after_test':True}
     (out/'acceptance.json').write_text(json.dumps(result,indent=2))
 finally:
