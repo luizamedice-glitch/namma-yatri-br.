@@ -1,0 +1,45 @@
+name: BR - Backup externo e monitoramento
+on:
+  schedule:
+    - cron: '45 3 * * *'
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+    inputs:
+      operation:
+        type: choice
+        options: [status, backup]
+        default: status
+        description: 'Backup cifrado com restauracao isolada ou monitoramento'
+  push:
+    branches: [codex/backup-monitor-schedule]
+    paths: ['.github/workflows/br-operations-schedule.yml']
+permissions:
+  contents: read
+concurrency:
+  group: lightsail-ssh-test
+  cancel-in-progress: false
+jobs:
+  operations:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # Isolate operational scheduling from the application branch. Only this
+      # tested immutable revision can consume AWS_SSH_KEY; no arbitrary input SHA.
+      - uses: actions/checkout@v4
+        with:
+          ref: 8d24ad18edebe754341e7839261122b70a440777
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Backup ou saude sem interromper a operacao
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+          YATRI_MAINTENANCE_OPERATION: ${{ (github.event.schedule == '45 3 * * *' || inputs.operation == 'backup') && 'backup' || 'status' }}
+        run: bash brasil/backend/ops/maintenance-ssh.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: encrypted-backup-and-health
+          path: ${{ runner.temp }}/maintenance-artifacts/
+          retention-days: 7
