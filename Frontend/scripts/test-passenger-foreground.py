@@ -161,7 +161,7 @@ try:
         same_foreground(pid);capture(phase)
     if os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true':
         states=safe_webview()
-        assert any(s.get('diagnostics') and s['diagnostics'].get('clock')=='native' and s['diagnostics'].get('ticks',0)>=4 for s in states),'Cadencia nativa nao confirmada'
+        assert any(s.get('diagnostics') and s['diagnostics'].get('clock')=='native' and s['diagnostics'].get('nativeTicks',0)>=4 for s in states),'Callbacks nativos nao chegaram ao frontend'
     tap(wait_label('Voltar ao início'));home()
     result={'acceptance':'passed','isolated_database':True,'driver_actions_real_http':True,'google_routes_real':True,
       'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'native_clock_required':os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true','idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','state_latency_seconds':timings,'apk_source_run':os.environ.get('PASSENGER_APK_SOURCE_RUN'),'apk_sha256':hashlib.sha256(next(Path('passenger-apk').glob('*.apk')).read_bytes()).hexdigest()}

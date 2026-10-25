@@ -24,7 +24,7 @@ function diagnostics(owner){
   if(owner!==listener)return;
   // Read-only counters for Android acceptance; no session, URL, address or vehicle data.
   window.__YATRI_PASSENGER_POLL__={ticks:owner.ticks,reads:owner.reads,errors:owner.errors,
-    polling:owner.polling,actionBusy:owner.busy,clock:owner.nativeClock?'native':'webview',stalledReadsRecovered:owner.stalledReadsRecovered||0,phase:owner.phase||'idle',lastSuccessAt:owner.lastSuccessAt||0};
+    polling:owner.polling,actionBusy:owner.busy,nativeTicks:owner.nativeTicks||0,clock:owner.nativeClock?'native':'webview',stalledReadsRecovered:owner.stalledReadsRecovered||0,phase:owner.phase||'idle',lastSuccessAt:owner.lastSuccessAt||0};
 }
 function rememberRide(owner,id){
   if(owner!==listener)return;
@@ -112,9 +112,10 @@ export const subscribe=origin=>destination=>changed=>error=>()=>{
   let timer,clockCallback;
   try{
     if(typeof window.JBridge.startYatriPassengerClock==='function'){
-      clockCallback=callbackMapper.map(wake);
+      const nativeWake=()=>{owner.nativeTicks=(owner.nativeTicks||0)+1;wake();};
+      clockCallback=callbackMapper.map(nativeWake);
       const callbacks=window.__YATRI_PASSENGER_CLOCK_CALLBACKS__||(window.__YATRI_PASSENGER_CLOCK_CALLBACKS__=Object.create(null));
-      callbacks[clockCallback]=wake;
+      callbacks[clockCallback]=nativeWake;
       owner.nativeClock=window.JBridge.startYatriPassengerClock(clockCallback)===true;
     }
   }catch(_){owner.nativeClock=false;}

@@ -138,9 +138,9 @@ public class MobilityCustomerBridge extends MobilityCommonBridge {
                 ((LifecycleOwner) activity).getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED);
             if (bridge.yatriClockResumed && bridge.bridgeComponents.getJsCallback() != null) {
                 String id = JSONObject.quote(callback);
-                // A cancelled subscription may have removed its callback already.
-                String script = "(function(){var a=window.__YATRI_PASSENGER_CLOCK_CALLBACKS__,r=window.__PROXY_FN,k=" + id +
-                    ",f=(a&&a[k])||(r instanceof Map?r.get(k):r&&r[k]);if(typeof f==='function')f();})()";
+                // Use the SDK's callback entry point, which routes into the consumer
+                // iframe. Arbitrary window globals belong to the SDK host context.
+                String script = "window.callUICallback(" + id + ", 'YATRI_PASSENGER_TICK');";
                 try {
                     bridge.bridgeComponents.getJsCallback().addJsToWebView(script);
                     bridge.yatriClockDispatches++;

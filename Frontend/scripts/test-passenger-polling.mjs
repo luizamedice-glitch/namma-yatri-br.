@@ -107,6 +107,7 @@ test('native foreground clock updates all states without a WebView interval and 
     h.ride.status=phase;window.__YATRI_PASSENGER_CLOCK_CALLBACKS__[nativeTick]();await tick();assert.equal(h.phases.at(-1),phase);
   }
   assert.equal(window.__YATRI_PASSENGER_POLL__.clock,'native');
+  assert.equal(window.__YATRI_PASSENGER_POLL__.nativeTicks,4,'Native scheduling alone is not proof of delivery to the consumer');
   h.close();assert.equal(stopped,nativeTick);assert.equal(Object.keys(window.__YATRI_PASSENGER_CLOCK_CALLBACKS__).length,0);
 }));
 test('a lost read callback cannot hold the polling lock forever or replace a recovered state',()=>harness(async h=>{
