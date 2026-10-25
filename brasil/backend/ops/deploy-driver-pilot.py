@@ -41,7 +41,7 @@ def caddy_config(original):
     }
     @yatriDriverUpdate {
         method POST
-        path /v1/driver/location /v1/driver/availability /v1/driver/pair /v1/passenger/pair /v1/quotes /v1/rides
+        path /v1/driver/location /v1/driver/availability /v1/driver/pair /v1/passenger/pair /v1/quotes /v1/rides /v1/places/reverse
     }
     handle @yatriDriverUpdate {
         reverse_proxy 127.0.0.1:8082
@@ -133,7 +133,7 @@ def main(source,sha):
     until=pilot_expiration(json.loads(override.read_text()) if override.exists() else None)
     config={'services':{'driver-pilot':{
         'image':image,'entrypoint':['node','src/driver-pilot-server.mjs'],'command':[],
-        'env_file':[str(env)],'environment':{'NODE_ENV':'development','HOST':'0.0.0.0','PORT':'8082',
+        'env_file':[str(env)]+([str(ROOT/'secrets/geoapify.env')] if (ROOT/'secrets/geoapify.env').is_file() else []),'environment':{'NODE_ENV':'development','HOST':'0.0.0.0','PORT':'8082',
             'YATRI_DRIVER_PILOT_MODE':'true','YATRI_DRIVER_PILOT_UNTIL':until},
         'ports':['127.0.0.1:8082:8082'],'networks':['driver_existing'],'restart':'unless-stopped',
         'read_only':True,'cap_drop':['ALL'],'security_opt':['no-new-privileges:true'],
@@ -160,7 +160,7 @@ def main(source,sha):
         else:raise RuntimeError('DRIVER_PILOT_UNHEALTHY')
         write(work/'Caddyfile.before-driver-pilot',original)
         write(CADDY,candidate,mode);run(['systemctl','reload','caddy'])
-        for method,path in [('GET','/v1/snapshot'),('POST','/v1/driver/location'),('POST','/v1/driver/availability')]:
+        for method,path in [('GET','/v1/snapshot'),('POST','/v1/driver/location'),('POST','/v1/driver/availability'),('POST','/v1/places/reverse')]:
             if status('https://'+HOST+path,method)!=401:raise RuntimeError('AUTH_BOUNDARY_FAILED')
         for method,path in [('POST','/v1/auth/register'),('POST','/v1/development/session'),('POST','/v1/rides/not-a-uuid/start'),('GET','/v1/events')]:
             if status('https://'+HOST+path,method)!=403:raise RuntimeError('UNRELATED_ROUTE_EXPOSED')

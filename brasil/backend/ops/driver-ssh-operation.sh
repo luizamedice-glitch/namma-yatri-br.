@@ -29,6 +29,17 @@ case "$YATRI_DRIVER_OPERATION" in
     openssl pkey -in "$work/key" -pubout -out "$RUNNER_TEMP/geocoding-server-public.pem" 2>/dev/null
     if [[ -n "${GH_TOKEN:-}" ]]; then echo 'GitHub secret writer configured: true'; else echo 'GitHub secret writer configured: false'; fi
     ;;
+  configure-geoapify)
+    base64 -d brasil/backend/ops/geoapify-key.sealed > "$work/geoapify.enc"
+    openssl pkeyutl -decrypt -inkey "$work/key" -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -in "$work/geoapify.enc" -out "$work/geoapify.key"
+    python3 -c 'import pathlib,re,sys;sys.exit(0 if re.fullmatch("[a-fA-F0-9]{32}",pathlib.Path(sys.argv[1]).read_text().strip()) else 1)' "$work/geoapify.key"
+    gh secret set GEOAPIFY_API_KEY --repo "$GITHUB_REPOSITORY" < "$work/geoapify.key"
+    remote_dir=$(ssh "${args[@]}" "$target" 'mktemp -d /tmp/yatri-geo.XXXXXX')
+    [[ "$remote_dir" =~ ^/tmp/yatri-geo\.[a-zA-Z0-9]+$ ]]
+    scp "${args[@]}" brasil/backend/ops/configure-geoapify.py "$target:$remote_dir/configure.py"
+    ssh "${args[@]}" "$target" "sudo -n python3 '$remote_dir/configure.py'" < "$work/geoapify.key"
+    ssh "${args[@]}" "$target" "rm -rf -- '$remote_dir'"
+    ;;
   geocoding-check)
     ssh "${args[@]}" "$target" "$remote --input-type=module" < brasil/backend/ops/check-geocoding.mjs
     ;;

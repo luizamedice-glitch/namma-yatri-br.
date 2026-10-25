@@ -99,6 +99,7 @@ export function createApi({ service, maps, pool, allowedOrigin = '', rateLimit =
         else if (url.pathname === '/v1/driver/availability') result = await service.availability(user, body);
         else if (url.pathname === '/v1/driver/location') result = await service.location(user, body);
         else if (url.pathname === '/v1/places/autocomplete') result = await maps.autocomplete(body.input, body.location);
+        else if (url.pathname === '/v1/places/reverse') result = await maps.reverse(body.location);
         else if (url.pathname === '/v1/places/details') result = await maps.details(body.placeId);
         else if (url.pathname === '/v1/routes') result = { routes: [await maps.route(body.origin, body.destination)] };
         else if (url.pathname === '/v1/quotes') result = await service.quote(user, body);

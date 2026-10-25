@@ -7,7 +7,7 @@ import {exchangePairing} from './driver-pairing.mjs';
 
 export const driverPilotRoutes = Object.freeze([
   'GET /v1/snapshot', 'POST /v1/driver/location', 'POST /v1/driver/availability', 'POST /v1/driver/pair',
-  'POST /v1/passenger/pair','POST /v1/quotes','POST /v1/rides'
+  'POST /v1/passenger/pair','POST /v1/places/reverse','POST /v1/quotes','POST /v1/rides'
 ]);
 export const driverPilotId = 'b1a51100-0000-4000-8000-000000000002';
 export const passengerPilotId = 'b1a51100-0000-4000-8000-000000000001';
