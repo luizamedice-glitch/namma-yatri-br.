@@ -127,7 +127,8 @@ try:
     assert ride['route']['distanceMeters']>0 and ride['route']['encodedPolyline']!='fixture-only'
     capture('procurando')
     # A genuine second authenticated actor changes this database while the UI remains open.
-    call('driver','/driver/location',{'lat':ride['origin']['lat'],'lng':ride['origin']['lng']})
+    driver_point={'lat':ride['origin']['lat']-0.001,'lng':ride['origin']['lng']+0.001}
+    call('driver','/driver/location',driver_point)
     call('driver','/driver/availability',{'available':True})
     assert any(r['id']==ride_id for r in call('driver','/snapshot')['offers'])
     timings={}
@@ -135,11 +136,11 @@ try:
     assert 0<=idle<=360
     for elapsed in range(0,idle,30):
         time.sleep(min(30,idle-elapsed));same_foreground(pid)
-        call('driver','/driver/location',{'lat':ride['origin']['lat'],'lng':ride['origin']['lng']})
+        call('driver','/driver/location',driver_point)
         print('Passageiro mantido em primeiro plano:',min(elapsed+30,idle),'s',flush=True)
     for action,phase,heading in [('accept','accepted','Motorista a caminho'),('arrive','arrived','Motorista no embarque'),('start','in_progress','Viagem em andamento'),('complete','completed','Viagem concluída')]:
         same_foreground(pid);started=time.monotonic()
-        call('driver','/driver/location',{'lat':ride['origin']['lat'],'lng':ride['origin']['lng']})
+        call('driver','/driver/location',driver_point)
         reconnect=action=='arrive' and os.environ.get('PASSENGER_RECONNECT')=='true'
         if reconnect:adb('reverse','--remove','tcp:8080')
         call('driver','/rides/'+ride_id+'/'+action,{})
