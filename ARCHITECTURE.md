@@ -1,5 +1,18 @@
 # Yatri Brasil — mapa arquitetural inicial
 
+## Atualização Geoapify — 25/10/2026
+
+`Development.Geocoding` é FFI fino; `GeocodingRuntime.mjs` gerencia assinatura,
+cache, tentativas limitadas e invalidação por posição/tela. `GeoBackend.mjs`
+reutiliza `NativeTransport.mjs` e a sessão passageiro privada para
+`POST /v1/places/reverse`. No backend, `src/geocoding.mjs` consulta Geoapify,
+com cache/coalescência, orçamento diário e timeout. Chave somente no servidor;
+`Development.GeoAttribution` apresenta os créditos nas telas originais.
+Geoapify resolve endereço GPS; Maps/Places/Routes mantêm suas funções Google.
+Implementação compilada e validada em Android 16 no run `40213953987`;
+serviço Lightsail implantado em `40215991172`, provedor verificado em `40216101093`.
+Detalhes e limites no relatório `Frontend/build-reports/passageiro-geoapify/RELATORIO.md`.
+
 Este documento é uma hipótese de trabalho a verificar no código. Não é declaração de que todas as integrações funcionam hoje.
 
 ## Camadas

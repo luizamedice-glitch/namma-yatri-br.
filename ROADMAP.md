@@ -1,5 +1,15 @@
 # Yatri Brasil — roadmap técnico
 
+## Marco atual — Geoapify e mapa, 25/10/2026
+
+Geocoding reverso autenticado, endereço GPS real e revisão dos marcadores/
+enquadramento do passageiro aprovados em Android 16 (`40213953987`) e
+implantados no Lightsail (`40215991172`); consulta real do provedor no serviço
+aprovada (`40216101093`). Preservadas as correções de runtime/reconexão.
+Próximos passos: confirmar o novo endereço GPS no aparelho físico, teste de rua
+em dois celulares, assinatura debug persistente e operação em segundo plano/push.
+Não confundir geocoding com substituição de Google Maps/Places/Routes.
+
 Cada fase deve entregar resultado verificável. O trabalho pode ser organizado em incrementos curtos, mas não se considera uma fase concluída sem os critérios abaixo.
 
 ## Incremento autorizado em 2026-10-23 — motor sem login no APK de teste

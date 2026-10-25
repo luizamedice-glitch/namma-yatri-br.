@@ -1,5 +1,13 @@
 # Geocodificação reversa do passageiro
 
+Estado em 25/10/2026: configuração `40212511493`, implantação do piloto
+`40215991172` e consulta real no serviço `40216101093` aprovadas. O envelope
+temporário já foi removido. Para repetir somente a consulta sem alterar
+configuração, executar `br-geocoding-check.yml` com `operation=geoapify-check`.
+Essa consulta usa ponto público de teste e não exibe chave nem endereço.
+APK/Android 16 aprovados em `40213953987`; evidências no relatório
+`Frontend/build-reports/passageiro-geoapify/RELATORIO.md`.
+
 `POST /v1/places/reverse` recebe `{ "location": { "lat": -23.5505, "lng": -46.6333 } }`
 e exige a sessão Bearer já utilizada pelo aplicativo. Responde com `address`,
 `location`, `provider: "geoapify"` e `attribution`. Endereço/coordenadas vêm do

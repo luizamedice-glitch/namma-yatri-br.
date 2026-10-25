@@ -2,6 +2,10 @@
 
 ## Estado atual — 25/10/2026
 
+- **Geoapify e melhorias do mapa concluídos no passageiro BR debug:** fontes `554c147e625b`, APK `12606883337`, build/aceite Android 16 `40213953987` aprovado, 42 testes Node. Endereço GPS real em português, atribuição Geoapify/© OpenStreetMap, preservação de origem manual, marcadores próprios, limpeza legada e enquadramento em dp. SHA256 APK `bb99fb16c554eba52b15c25e41a5a11adfbd07a656e0498a8ccdc0c9ac44e617`.
+- Lightsail atualizado pelo run `40215991172`, após proprietário encerrar corrida que bloqueava a tentativa anterior. Consulta real Geoapify no serviço implantado aprovada em `40216101093`; rota reversa autenticada, API/PostgreSQL/maps-test e janela até 31/10 preservados. Sem migration, provisionamento ou porta nova. Somente passageiro precisa ser reinstalado; nova ativação privada emitida em `40216103327`. Relatório `Frontend/build-reports/passageiro-geoapify/RELATORIO.md`.
+- Os itens abaixo sobre APK de reconexão são o marco anterior; sua correção e a confirmação física do runtime foram preservadas neste incremento.
+
 - Proprietário confirmou resolução do bloqueio no Samsung A07/Android 16 com o runtime anterior. Registros de incidente aberto abaixo são históricos. Teste de rua em dois celulares continua pendente.
 - Reconexão do passageiro implementada nas fontes `5833a5d5cb`: aviso persistente sem toasts repetitivos, limpeza do aviso na cotação recuperada e reconciliação de envio incerto antes de liberar outra tentativa. Retorno à Home disponível durante confirmação.
 - APK `12602430585`, build `40200987234` aprovado; mesmos bytes aprovados em Android 16 (`40202387656`) e Android 10 (`40201809248`). O run de build terminou vermelho por falha de sincronização no injetor do primeiro aceite, corrigida apenas nos testes posteriores. No Android 16: dois cortes reais, um POST/resposta real truncada após commit, recuperação automática e ciclo completo com mesmo PID. Android 10: controles na primeira abertura e restauração após recriar processo aprovados.

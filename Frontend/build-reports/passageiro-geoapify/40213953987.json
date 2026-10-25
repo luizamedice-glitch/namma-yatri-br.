@@ -1,0 +1,25 @@
+{
+  "acceptance": "passed",
+  "isolated_database": true,
+  "driver_actions_real_http": true,
+  "google_routes_real": true,
+  "passenger_remains_foreground": true,
+  "same_pid": true,
+  "restarts_during_trip": 0,
+  "native_clock_required": true,
+  "idle_seconds": 0,
+  "network_recovery": true,
+  "quote_recovery": true,
+  "gps_reverse_geocoding_real": true,
+  "geocoding_provider": "geoapify",
+  "committed_request_response_loss_recovered": true,
+  "network_fault": "tunnel_removed_and_existing_sockets_closed",
+  "state_latency_seconds": {
+    "accepted": 3.12,
+    "arrived": 24.24,
+    "in_progress": 6.63,
+    "completed": 6.71
+  },
+  "apk_source_run": "40213953987",
+  "apk_sha256": "bb99fb16c554eba52b15c25e41a5a11adfbd07a656e0498a8ccdc0c9ac44e617"
+}
