@@ -77,7 +77,7 @@ test('camera fits Google geometry plus live vehicle and does not refit an unchan
   globalThis.tripMapCameraTest={mapPayload};
   const runtime=await import('data:text/javascript;base64,'+Buffer.from('const {mapPayload}=globalThis.tripMapCameraTest;'+source).toString('base64')+'#camera');
   const cameras=[],clears=[];let ready;
-  globalThis.window={__OS:'ANDROID',__YATRI_BR_DEVELOPMENT__:true,JBridge:{getDeviceInfo:()=>JSON.stringify({package_name:'in.juspay.nammayatri.debug'}),
+  globalThis.window={devicePixelRatio:3,__OS:'ANDROID',__YATRI_BR_DEVELOPMENT__:true,JBridge:{getDeviceInfo:()=>JSON.stringify({package_name:'in.juspay.nammayatri.debug'}),
     showMap:()=>{},removeAllPolylines:value=>clears.push(JSON.parse(value)),drawRouteV2:()=>{},showMarker:()=>{},removeMarker:()=>{},
     getLayoutBounds:()=>JSON.stringify({width:320,height:240}),animateCamera:(...args)=>cameras.push(args)},__PROXY_FN:{}};
   const trip={polyline:'_p~iF~ps|UgEfEgEfE',gpsFresh:true,driverLat:38.505,driverLng:-120.205,phase:'accepted'};

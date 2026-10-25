@@ -23,7 +23,8 @@ function fitCamera(id,trip){
   const xs=points.map(p=>(p.lng+180)/360);
   const ys=points.map(p=>(1-Math.log(Math.tan(Math.PI/4+Math.max(-85,Math.min(85,p.lat))*Math.PI/360))/Math.PI)/2);
   const xmin=Math.min.apply(null,xs),xmax=Math.max.apply(null,xs),ymin=Math.min.apply(null,ys),ymax=Math.max.apply(null,ys);
-  const padding=passenger()?48*Math.max(1,Math.min(4,Number(window.devicePixelRatio)||1)):48;
+  // Native getLayoutBounds already returns dp, matching Google camera world units.
+  const padding=48;
   const zoom=Math.max(7,Math.min(18,Math.log2(Math.max(1,bounds.width-2*padding)/(256*Math.max(xmax-xmin,0.000001))),
     Math.log2(Math.max(1,bounds.height-2*padding)/(256*Math.max(ymax-ymin,0.000001)))));
   const lat=Math.atan(Math.sinh(Math.PI*(1-ymin-ymax)))*180/Math.PI;
