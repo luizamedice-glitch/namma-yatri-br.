@@ -25,10 +25,10 @@ def ui_button(pattern):
         ns=p.nodes()
         if any("Pixel Launcher isn't responding" in n.get('text','') for n in ns):
             close=next((n for n in ns if n.get('text','').casefold()=='close app'),None)
-            if close:p.tap(close);time.sleep(2);continue
+            if close is not None:p.tap(close);time.sleep(2);continue
         if any('use Location Accuracy' in n.get('text','') for n in ns):
             consent=next((n for n in ns if n.get('text','')=='Turn on'),None)
-            if consent:p.tap(consent);time.sleep(2);continue
+            if consent is not None:p.tap(consent);time.sleep(2);continue
         found=next((n for n in ns if re.fullmatch(pattern,n.get('text',''),re.I)),None)
         if found:return found
         time.sleep(2)
