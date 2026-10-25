@@ -41,6 +41,10 @@ def where(ns):return next((n for n in ns if n.get('content-desc') in {'Where To 
 def home():
     for _ in range(15):
         ns=nodes()
+        if any("Pixel Launcher isn't responding" in n.get('text','') for n in ns):
+            close=label(ns,'Close app')
+            assert close is not None,'Dialogo do launcher sem controle para fechar'
+            tap(close);time.sleep(2);continue
         if where(ns) is not None:return ns
         time.sleep(2)
     raise AssertionError('Home original do passageiro ausente')
