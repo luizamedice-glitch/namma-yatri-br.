@@ -78,14 +78,14 @@ try:
     states=p.safe_webview()
     if os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true':
         assert any(s.get('diagnostics',{}).get('nativeTicks',0)>=4 for s in states if s.get('diagnostics')),'Callbacks nativos nao recebidos apos abertura fria'
+    p.tap(p.wait_label('Voltar ao início'));p.home()
     if os.environ.get('PASSENGER_EXPECT_RUNTIME_V2')=='true':
         p.adb('shell','input','keyevent','KEYCODE_VOLUME_UP','KEYCODE_VOLUME_UP','KEYCODE_VOLUME_UP');time.sleep(1)
         native=json.loads(p.adb('shell','run-as',p.package,'cat','files/yatri-passenger-diagnostic.json'))
         assert native['revision']==2 and native['runtime']['phase']=='completed'
-        assert any(v['text']=='Viagem concluída' for v in native['visibleControls'])
+        assert native['nativeClock']['scheduled'] is False,'Relogio deve parar ao voltar a Home'
         save_native('native-diagnostic.json',native)
         report['safe_native_diagnostic_export']=True
-    p.tap(p.wait_label('Voltar ao início'));p.home()
     report['acceptance']='passed'
 finally:
     try:
