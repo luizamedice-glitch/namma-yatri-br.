@@ -49,6 +49,9 @@ def home():
             turn_on=label(ns,'Turn on')
             assert turn_on is not None,'Dialogo de localizacao sem controle'
             tap(turn_on);time.sleep(2);continue
+        permission=next((n for n in ns if 'permissioncontroller' in n.get('package','') and n.get('resource-id','').endswith((':id/permission_allow_foreground_only_button',':id/permission_allow_button'))),None)
+        if permission is not None:
+            tap(permission);time.sleep(1);continue
         if where(ns) is not None:return ns
         time.sleep(2)
     raise AssertionError('Home original do passageiro ausente')
@@ -110,68 +113,71 @@ def same_foreground(pid):
     activities=adb('shell','dumpsys','activity','activities').decode()
     assert any(package in line for line in activities.splitlines() if 'ResumedActivity' in line),'Passageiro saiu do primeiro plano'
 
-try:
-    # Private provisioning in disposable emulator before first launch; not embedded in APK.
-    values={'YATRI_PASSENGER_BACKEND_URL':base,'YATRI_PASSENGER_SESSION':sessions['passenger']}
-    root=ET.Element('map')
-    for key,value in values.items():ET.SubElement(root,'string',name=key).text=value
-    adb('shell','run-as',package,'mkdir','-p','shared_prefs')
-    subprocess.run(['adb','shell','run-as',package,'sh','-c','"cat > shared_prefs/godel.xml"'],input=ET.tostring(root),check=True,capture_output=True,timeout=30)
-    adb('reverse','tcp:8080','tcp:8080')
-    adb('shell','settings','put','system','screen_off_timeout','1800000')
-    adb('shell','svc','power','stayon','true')
-    adb('shell','settings','put','secure','location_mode','3')
-    adb('emu','geo','fix','-46.6333','-23.5505')
-    adb('shell','am','start','-W','-n',package+'/in.juspay.mobility.MainActivity')
-    home()
-    (out/'device.json').write_text(json.dumps({'api':adb('shell','getprop','ro.build.version.sdk').decode().strip(),'model':adb('shell','getprop','ro.product.model').decode().strip()}))
-    select_place('Avenida Paulista Sao Paulo','paulista',False)
-    select_place('Praca da Se Sao Paulo','praca da se',True)
-    tap(wait_label('Ver estimativa'));wait_label('Solicitar viagem')
-    tap(wait_label('Solicitar viagem'));wait_label('Procurando motorista')
-    pid=adb('shell','pidof',package).decode().strip()
-    ride=call('passenger','/snapshot')['rides'][0];ride_id=ride['id']
-    assert ride['route']['distanceMeters']>0 and ride['route']['encodedPolyline']!='fixture-only'
-    capture('procurando')
-    # A genuine second authenticated actor changes this database while the UI remains open.
-    driver_point={'lat':ride['origin']['lat']-0.001,'lng':ride['origin']['lng']+0.001}
-    call('driver','/driver/location',driver_point)
-    call('driver','/driver/availability',{'available':True})
-    assert any(r['id']==ride_id for r in call('driver','/snapshot')['offers'])
-    timings={}
-    idle=int(os.environ.get('PASSENGER_IDLE_SECONDS','0'))
-    assert 0<=idle<=360
-    for action,phase,heading in [('accept','accepted','Motorista a caminho'),('arrive','arrived','Motorista no embarque'),('start','in_progress','Viagem em andamento'),('complete','completed','Viagem concluída')]:
-        if action=='arrive':
-            for elapsed in range(0,idle,30):
-                time.sleep(min(30,idle-elapsed));same_foreground(pid)
-                call('driver','/driver/location',driver_point)
-                print('Passageiro mantido em primeiro plano:',min(elapsed+30,idle),'s',flush=True)
-        same_foreground(pid);started=time.monotonic()
+def main():
+    try:
+        # Private provisioning in disposable emulator before first launch; not embedded in APK.
+        values={'YATRI_PASSENGER_BACKEND_URL':base,'YATRI_PASSENGER_SESSION':sessions['passenger']}
+        root=ET.Element('map')
+        for key,value in values.items():ET.SubElement(root,'string',name=key).text=value
+        adb('shell','run-as',package,'mkdir','-p','shared_prefs')
+        subprocess.run(['adb','shell','run-as',package,'sh','-c','"cat > shared_prefs/godel.xml"'],input=ET.tostring(root),check=True,capture_output=True,timeout=30)
+        adb('reverse','tcp:8080','tcp:8080')
+        adb('shell','settings','put','system','screen_off_timeout','1800000')
+        adb('shell','svc','power','stayon','true')
+        adb('shell','settings','put','secure','location_mode','3')
+        adb('emu','geo','fix','-46.6333','-23.5505')
+        adb('shell','am','start','-W','-n',package+'/in.juspay.mobility.MainActivity')
+        home()
+        (out/'device.json').write_text(json.dumps({'api':adb('shell','getprop','ro.build.version.sdk').decode().strip(),'model':adb('shell','getprop','ro.product.model').decode().strip()}))
+        select_place('Avenida Paulista Sao Paulo','paulista',False)
+        select_place('Praca da Se Sao Paulo','praca da se',True)
+        tap(wait_label('Ver estimativa'));wait_label('Solicitar viagem')
+        tap(wait_label('Solicitar viagem'));wait_label('Procurando motorista')
+        pid=adb('shell','pidof',package).decode().strip()
+        ride=call('passenger','/snapshot')['rides'][0];ride_id=ride['id']
+        assert ride['route']['distanceMeters']>0 and ride['route']['encodedPolyline']!='fixture-only'
+        capture('procurando')
+        # A genuine second authenticated actor changes this database while the UI remains open.
+        driver_point={'lat':ride['origin']['lat']-0.001,'lng':ride['origin']['lng']+0.001}
         call('driver','/driver/location',driver_point)
-        reconnect=action=='arrive' and os.environ.get('PASSENGER_RECONNECT')=='true'
-        if reconnect:
-            adb('reverse','--remove','tcp:8080')
-            os.kill(int(os.environ['PASSENGER_TEST_API_PID']),signal.SIGUSR2)
-        call('driver','/rides/'+ride_id+'/'+action,{})
-        if reconnect:
-            time.sleep(12)
-            adb('reverse','tcp:8080','tcp:8080')
-        assert call('passenger','/rides/'+ride_id)['status']==phase
-        wait_label(heading,attempts=7)
-        timings[phase]=round(time.monotonic()-started,2)
-        same_foreground(pid);capture(phase)
-    if os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true':
-        states=safe_webview()
-        assert any(s.get('diagnostics') and s['diagnostics'].get('clock')=='native' and s['diagnostics'].get('nativeTicks',0)>=4 for s in states),'Callbacks nativos nao chegaram ao frontend'
-        if os.environ.get('PASSENGER_RECONNECT')=='true':
-            assert any(s.get('diagnostics',{}).get('errors',0)>0 for s in states if s.get('diagnostics')),'Corte de rede nao foi observado pelo cliente'
-    tap(wait_label('Voltar ao início'));home()
-    result={'acceptance':'passed','isolated_database':True,'driver_actions_real_http':True,'google_routes_real':True,
-      'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'native_clock_required':os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true','idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','network_fault':'tunnel_removed_and_existing_sockets_closed' if os.environ.get('PASSENGER_RECONNECT')=='true' else None,'state_latency_seconds':timings,'apk_source_run':os.environ.get('PASSENGER_APK_SOURCE_RUN'),'apk_sha256':hashlib.sha256(next(Path('passenger-apk').glob('*.apk')).read_bytes()).hexdigest()}
-    (out/'acceptance.json').write_text(json.dumps(result,indent=2))
-finally:
-    try:safe_webview()
-    except Exception as e:(out/'cdp-error.txt').write_text(type(e).__name__)
-    try:capture('final')
-    except Exception:pass
+        call('driver','/driver/availability',{'available':True})
+        assert any(r['id']==ride_id for r in call('driver','/snapshot')['offers'])
+        timings={}
+        idle=int(os.environ.get('PASSENGER_IDLE_SECONDS','0'))
+        assert 0<=idle<=360
+        for action,phase,heading in [('accept','accepted','Motorista a caminho'),('arrive','arrived','Motorista no embarque'),('start','in_progress','Viagem em andamento'),('complete','completed','Viagem concluída')]:
+            if action=='arrive':
+                for elapsed in range(0,idle,30):
+                    time.sleep(min(30,idle-elapsed));same_foreground(pid)
+                    call('driver','/driver/location',driver_point)
+                    print('Passageiro mantido em primeiro plano:',min(elapsed+30,idle),'s',flush=True)
+            same_foreground(pid);started=time.monotonic()
+            call('driver','/driver/location',driver_point)
+            reconnect=action=='arrive' and os.environ.get('PASSENGER_RECONNECT')=='true'
+            if reconnect:
+                adb('reverse','--remove','tcp:8080')
+                os.kill(int(os.environ['PASSENGER_TEST_API_PID']),signal.SIGUSR2)
+            call('driver','/rides/'+ride_id+'/'+action,{})
+            if reconnect:
+                time.sleep(12)
+                adb('reverse','tcp:8080','tcp:8080')
+            assert call('passenger','/rides/'+ride_id)['status']==phase
+            wait_label(heading,attempts=7)
+            timings[phase]=round(time.monotonic()-started,2)
+            same_foreground(pid);capture(phase)
+        if os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true':
+            states=safe_webview()
+            assert any(s.get('diagnostics') and s['diagnostics'].get('clock')=='native' and s['diagnostics'].get('nativeTicks',0)>=4 for s in states),'Callbacks nativos nao chegaram ao frontend'
+            if os.environ.get('PASSENGER_RECONNECT')=='true':
+                assert any(s.get('diagnostics',{}).get('errors',0)>0 for s in states if s.get('diagnostics')),'Corte de rede nao foi observado pelo cliente'
+        tap(wait_label('Voltar ao início'));home()
+        result={'acceptance':'passed','isolated_database':True,'driver_actions_real_http':True,'google_routes_real':True,
+          'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'native_clock_required':os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true','idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','network_fault':'tunnel_removed_and_existing_sockets_closed' if os.environ.get('PASSENGER_RECONNECT')=='true' else None,'state_latency_seconds':timings,'apk_source_run':os.environ.get('PASSENGER_APK_SOURCE_RUN'),'apk_sha256':hashlib.sha256(next(Path('passenger-apk').glob('*.apk')).read_bytes()).hexdigest()}
+        (out/'acceptance.json').write_text(json.dumps(result,indent=2))
+    finally:
+        try:safe_webview()
+        except Exception as e:(out/'cdp-error.txt').write_text(type(e).__name__)
+        try:capture('final')
+        except Exception:pass
+
+if __name__=="__main__":main()

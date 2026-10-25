@@ -11,6 +11,10 @@ on:
         type: choice
         options: ['29', '35', '36']
         default: '35'
+      cold_lifecycle:
+        description: Testar botoes na primeira abertura, retomada e processo frio
+        type: boolean
+        default: false
       expect_native_clock:
         description: Exigir cadencia Android nativa no APK corrigido
         type: boolean
@@ -187,8 +191,13 @@ jobs:
           profile: pixel_2
           ram-size: 4096M
           script: |
-            adb install -g passenger-apk/*.apk
-            python3 Frontend/scripts/test-passenger-foreground.py
+            if [[ '${{ inputs.cold_lifecycle }}' == true ]]; then
+              adb install passenger-apk/*.apk
+              python3 Frontend/scripts/test-passenger-cold.py
+            else
+              adb install -g passenger-apk/*.apk
+              python3 Frontend/scripts/test-passenger-foreground.py
+            fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
