@@ -16,13 +16,13 @@ export const subscribe=changed=>positionChanged=>()=>{
   if(pending)pending();const owner={changed,positionChanged};listener=owner;sequence++;
   return ()=>{if(listener===owner){listener=null;sequence++;if(pending)pending();}};
 };
-export const resolve=lat=>lng=>()=>{
+function resolveAt(lat,lng,attempt=0){
   if(!allowed()||!listener||!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180||(lat===0&&lng===0))return;
   const owner=listener,key=lat.toFixed(4)+','+lng.toFixed(4),cached=cache.get(key),now=Date.now();
   if(pending&&pendingKey===key)return;
   const version=++sequence;
   if(pending)pending();
-  if(cached&&now-cached.at<(cached.address?600000:30000)){
+  if(cached&&(cached.address||attempt===0)&&now-cached.at<(cached.address?600000:30000)){
     if(cached.address)Promise.resolve().then(()=>{if(listener===owner&&version===sequence)owner.changed(lat)(lng)(cached.address)();});
     return;
   }
@@ -35,13 +35,22 @@ export const resolve=lat=>lng=>()=>{
     cache.set(key,{at:Date.now(),address:valid?address.trim():''});if(cache.size>16)cache.delete(cache.keys().next().value);
     status(valid?'resolved':'unavailable');
     if(valid)Promise.resolve().then(()=>{if(listener===owner&&version===sequence)owner.changed(lat)(lng)(address.trim())();});
+    else if(attempt<2){
+      const retryTimer=setTimeout(()=>{
+        if(pending===cancelRetry)pending=null;
+        if(listener===owner&&version===sequence)resolveAt(lat,lng,attempt+1);
+      },1500);
+      const cancelRetry=()=>{clearTimeout(retryTimer);if(pending===cancelRetry)pending=null;};
+      pending=cancelRetry;pendingKey=key;
+    }
   };
   const cancel=()=>{done=true;clearTimeout(timer);if(id!==undefined)remove(id);if(pending===cancel)pending=null;};
   pending=cancel;pendingKey=key;
   timer=setTimeout(()=>finish('timeout',''),8000);
   try{id=callbackMapper.map(finish);if(window.JBridge.reverseGeocodeYatri(lat,lng,id)!==true)finish('unavailable','');}
   catch(_){finish('unavailable','');}
-};
+}
+export const resolve=lat=>lng=>()=>resolveAt(lat,lng);
 
 // Reuse the original GPS callback used by the recenter button. Defer UI delivery.
 export const position=lat=>lng=>()=>{

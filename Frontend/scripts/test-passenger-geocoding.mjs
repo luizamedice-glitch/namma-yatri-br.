@@ -52,3 +52,23 @@ test('recenter GPS is delivered after the click reducer and ignores a closed scr
  assert.deepEqual(h.positions,[{lat:'-23.55',lng:'-46.63'}]);
  h.ffi.position('-23.56')('-46.64')();h.stop();await flush();assert.equal(h.positions.length,1);
 }));
+test('transient provider failure retries and resolves on the same screen',()=>harness(async h=>{
+ const original=globalThis.setTimeout;const retries=[];
+ globalThis.setTimeout=(fn,ms)=>ms===1500?(retries.push(fn),999):original(fn,ms);
+ try{
+  h.ffi.resolve(-23.55)(-46.63)();h.native().callback('unavailable','');
+  assert.equal(h.count(),1);assert.equal(retries.length,1);
+  retries.shift()();assert.equal(h.count(),2);h.native().callback('ok','Endereço real na fronteira de teste');
+  await flush();assert.equal(h.results.length,1);assert.equal(window.__YATRI_GEOCODING__.successes,1);
+ }finally{globalThis.setTimeout=original;}
+}));
+test('persistent provider failure stops after three attempts without inventing an address',()=>harness(async h=>{
+ const original=globalThis.setTimeout;const retries=[];
+ globalThis.setTimeout=(fn,ms)=>ms===1500?(retries.push(fn),999):original(fn,ms);
+ window.JBridge.reverseGeocodeYatri=()=>false;
+ try{
+  h.ffi.resolve(-23.55)(-46.63)();while(retries.length)retries.shift()();
+  assert.equal(window.__YATRI_GEOCODING__.requests,3);assert.equal(h.results.length,0);
+  assert.equal(window.__YATRI_GEOCODING__.state,'unavailable');assert.equal(Object.keys(h.callbacks).length,0);
+ }finally{globalThis.setTimeout=original;}
+}));

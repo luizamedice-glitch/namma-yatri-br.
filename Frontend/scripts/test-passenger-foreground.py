@@ -112,7 +112,7 @@ def safe_webview():
             stage='enable';evaluate('Runtime.enable')
             for context in list(contexts):
                 stage='evaluate'
-                result=evaluate('Runtime.evaluate',{'expression':"JSON.stringify({geocoding:window.__YATRI_GEOCODING__||null,phase:window.__YATRI_PASSENGER_RIDE__&&window.__YATRI_PASSENGER_RIDE__.phase,diagnostics:window.__YATRI_PASSENGER_POLL__||null,callbacks:window.__YATRI_PASSENGER_CALLBACKS__||null,backEnabled:window.enableBackpress===true,nativeClock:window.JBridge.getYatriPassengerClockDiagnostics?JSON.parse(window.JBridge.getYatriPassengerClockDiagnostics()):null,hidden:document.hidden,visibility:document.visibilityState})",'contextId':context,'returnByValue':True})
+                result=evaluate('Runtime.evaluate',{'expression':"JSON.stringify({geocoding:window.__YATRI_GEOCODING__||null,nativeGeocoding:window.JBridge.getYatriGeocodingDiagnostics?JSON.parse(window.JBridge.getYatriGeocodingDiagnostics()):null,phase:window.__YATRI_PASSENGER_RIDE__&&window.__YATRI_PASSENGER_RIDE__.phase,diagnostics:window.__YATRI_PASSENGER_POLL__||null,callbacks:window.__YATRI_PASSENGER_CALLBACKS__||null,backEnabled:window.enableBackpress===true,nativeClock:window.JBridge.getYatriPassengerClockDiagnostics?JSON.parse(window.JBridge.getYatriPassengerClockDiagnostics()):null,hidden:document.hidden,visibility:document.visibilityState})",'contextId':context,'returnByValue':True})
                 value=result.get('result',{}).get('result',{}).get('value')
                 if value:states.append(json.loads(value))
         except Exception as e:states.append({'target':target_index,'stage':stage,'error':type(e).__name__})
@@ -152,7 +152,11 @@ def main():
             assert fields[0].get('text','')!='Localização atual' and not re.fullmatch(r'[-\d., ]+',fields[0].get('text',''))
             capture('gps-endereco-real')
             adb('shell','input','keyevent','KEYCODE_BACK');time.sleep(1)
-            if where(nodes()) is None:adb('shell','input','keyevent','KEYCODE_BACK')
+            if where(nodes()) is None:
+                fields=[n for n in nodes() if n.get('class')=='android.widget.EditText']
+                assert fields,'Busca original sem campo de origem'
+                x,y,xx,yy=map(int,re.findall(r'\d+',fields[0].get('bounds','')))
+                adb('shell','input','tap',str(round(x*0.32)),str((y+yy)//2))
             home()
         select_place('Avenida Paulista Sao Paulo','paulista',False)
         select_place('Praca da Se Sao Paulo','praca da se',True)

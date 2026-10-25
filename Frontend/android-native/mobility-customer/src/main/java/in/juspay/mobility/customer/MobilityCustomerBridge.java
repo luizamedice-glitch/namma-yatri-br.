@@ -170,6 +170,11 @@ public class MobilityCustomerBridge extends MobilityCommonBridge {
         } catch (Exception ignored) { return false; }
     }
 
+    private volatile String yatriGeocodingState = "idle";
+    @JavascriptInterface
+    public String getYatriGeocodingDiagnostics() {
+        return yatriPassengerMapsEnabled()?"{\"state\":"+JSONObject.quote(yatriGeocodingState)+"}":"{}";
+    }
     private static final AtomicBoolean yatriGeocodingBusy = new AtomicBoolean(false);
     private static final ExecutorService yatriGeocodingExecutor = Executors.newSingleThreadExecutor(task -> {
         Thread thread = new Thread(task, "yatri-geocoding");thread.setDaemon(true);return thread;
@@ -180,19 +185,22 @@ public class MobilityCustomerBridge extends MobilityCommonBridge {
     public boolean reverseGeocodeYatri(double lat, double lng, String callback) {
         if (!yatriPassengerMapsEnabled() || !Double.isFinite(lat) || !Double.isFinite(lng) ||
             Math.abs(lat)>90 || Math.abs(lng)>180 || (lat==0 && lng==0) || callback==null ||
-            callback.isEmpty() || callback.length()>256 || !Geocoder.isPresent() ||
-            !yatriGeocodingBusy.compareAndSet(false,true)) return false;
+            callback.isEmpty() || callback.length()>256) return false;
+        if (!Geocoder.isPresent()) {yatriGeocodingState="no_provider";return false;}
+        if (!yatriGeocodingBusy.compareAndSet(false,true)) {yatriGeocodingState="busy";return false;}
+        yatriGeocodingState="loading";
         final Context context = bridgeComponents.getContext().getApplicationContext();
         yatriGeocodingExecutor.execute(() -> {
-            String address = "";
+            String address = "";String state="empty";
             try {
                 List<Address> addresses = new Geocoder(context, new Locale("pt", "BR")).getFromLocation(lat,lng,1);
                 if (addresses!=null && !addresses.isEmpty()) {
                     String line=addresses.get(0).getAddressLine(0);
                     if(line!=null && line.trim().length()>=3 && line.length()<=1000) address=line.trim();
                 }
-            } catch (Exception ignored) { /* Client keeps GPS usable and may retry later. */ }
+            } catch (Exception ignored) { state="provider_error"; }
             finally { yatriGeocodingBusy.set(false); }
+            yatriGeocodingState=address.isEmpty()?state:"resolved";
             final String result = address;
             ExecutorManager.runOnMainThread(() -> {
                 if (!yatriPassengerMapsEnabled()) return;
