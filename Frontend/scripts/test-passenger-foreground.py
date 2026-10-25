@@ -131,9 +131,11 @@ try:
     assert 0<=idle<=360
     for elapsed in range(0,idle,30):
         time.sleep(min(30,idle-elapsed));same_foreground(pid)
+        call('driver','/driver/location',{'lat':ride['origin']['lat'],'lng':ride['origin']['lng']})
         print('Passageiro mantido em primeiro plano:',min(elapsed+30,idle),'s',flush=True)
     for action,phase,heading in [('accept','accepted','Motorista a caminho'),('arrive','arrived','Motorista no embarque'),('start','in_progress','Viagem em andamento'),('complete','completed','Viagem concluída')]:
         same_foreground(pid);started=time.monotonic()
+        call('driver','/driver/location',{'lat':ride['origin']['lat'],'lng':ride['origin']['lng']})
         reconnect=action=='arrive' and os.environ.get('PASSENGER_RECONNECT')=='true'
         if reconnect:adb('reverse','--remove','tcp:8080')
         call('driver','/rides/'+ride_id+'/'+action,{})
