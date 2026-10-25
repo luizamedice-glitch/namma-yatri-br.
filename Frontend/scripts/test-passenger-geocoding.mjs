@@ -37,3 +37,12 @@ test('invalid coordinates, production and unavailable native geocoder do not inv
  h.ffi.resolve(-23.55)(-46.63)();await flush();assert.equal(h.results.length,0);
  assert.equal(window.__YATRI_GEOCODING__.state,'unavailable');assert.equal(Object.keys(h.callbacks).length,0);
 }));
+test('timeout releases callback and ignores a late native result',()=>harness(async h=>{
+ const original=globalThis.setTimeout,clear=globalThis.clearTimeout;let expire;
+ globalThis.setTimeout=fn=>{expire=fn;return 999;};globalThis.clearTimeout=()=>{};
+ try{
+  h.ffi.resolve(-23.55)(-46.63)();const n=h.native();expire();
+  assert.equal(window.__YATRI_GEOCODING__.state,'unavailable');assert.equal(Object.keys(h.callbacks).length,0);
+  n.callback('ok','Resposta tardia');await flush();assert.equal(h.results.length,0);
+ }finally{globalThis.setTimeout=original;globalThis.clearTimeout=clear;}
+}));
