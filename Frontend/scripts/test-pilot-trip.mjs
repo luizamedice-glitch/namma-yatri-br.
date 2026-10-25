@@ -62,7 +62,9 @@ test('trip map uses the existing native bridge and updates the assigned GPS mark
   runtime.mountMapWithMapper('123',callback=>{ready=callback;return 'cb';});
   ready('MAP');
   assert.equal(calls[0],'mount');assert.equal(calls[2].routeConfigs[0].locations.points.length,3);
-  assert.equal(calls[3].lat,'-23.55');
+  assert.equal(calls.find(x=>x?.markerConfig?.markerId==='br-live-driver').lat,'-23.55');
+  assert.equal(JSON.parse(calls[2].routeConfigs[0].startMarkerConfig).pointerIcon,'');
+  assert.ok(calls[1]==='clear');
   runtime.updateTripMap({polyline:'_p~iF~ps|U_ulLnnqC_mqNvxq`@',gpsFresh:false,driverLat:0,driverLng:0,phase:'accepted'});
   assert.equal(calls.at(-1),'remove:br-live-driver');assert.equal(window.__YATRI_TRIP_MAP__.gpsFresh,false);
   runtime.releaseTripMap();assert.equal(window.__YATRI_TRIP_MAP__.ready,false);
@@ -83,7 +85,18 @@ test('camera fits Google geometry plus live vehicle and does not refit an unchan
     runtime.updateTripMap(trip);runtime.mountMapWithMapper('123',callback=>{ready=callback;return 'cb';});ready('MAP');
     await new Promise(resolve=>setTimeout(resolve,200));
     assert.equal(cameras.length,1);assert.ok(Math.abs(cameras[0][0]-38.5025)<0.0001);assert.ok(Math.abs(cameras[0][1]+120.2025)<0.0001);
-    assert.ok(cameras[0][2]>13&&cameras[0][2]<=18);assert.deepEqual(clears[0].markersToRemove,['br-origin','br-destination']);
+    assert.ok(cameras[0][2]>13&&cameras[0][2]<=18);assert.ok(clears[0].markersToRemove.includes('ny_ic_source_dot'));
+    assert.ok(clears[0].markersToRemove.includes('ny_ic_dest_marker'));
     runtime.updateTripMap({...trip});await new Promise(resolve=>setTimeout(resolve,200));assert.equal(cameras.length,1);
+    runtime.updateTripMap({...trip,driverLat:38.506});await new Promise(resolve=>setTimeout(resolve,200));assert.equal(cameras.length,1,'GPS updates must not keep overriding a manually panned camera');
   }finally{runtime.releaseTripMap();delete globalThis.window;delete globalThis.tripMapCameraTest;}
+});
+
+test('passenger route uses controlled markers while driver keeps original route contract',()=>{
+  const trip={polyline:'_p~iF~ps|U_ulLnnqC_mqNvxq`@'};
+  const passenger=mapPayload(trip,'map',true).routeConfigs[0],driver=mapPayload(trip,'map').routeConfigs[0];
+  assert.equal(passenger.routeKey,'BR_PASSENGER_ROUTE');assert.equal(passenger.routeColor,'#E6007E');
+  assert.equal(JSON.parse(passenger.endMarkerConfig).pointerIcon,'');
+  assert.equal(driver.routeKey,'DEFAULT');assert.equal(JSON.parse(driver.startMarkerConfig).pointerIcon,'ny_ic_source_dot');
+  assert.equal(driver.routeColor,'#743454');
 });

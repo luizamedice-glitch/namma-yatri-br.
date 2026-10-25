@@ -12,12 +12,12 @@ export function decodePolyline(encoded){
     points.push({lat:lat/1e5,lng:lng/1e5});}
   return points;
 }
-export function mapPayload(trip,id){
+export function mapPayload(trip,id,passenger=false){
   const points=decodePolyline(trip.polyline);
-  return {pureScriptID:id,routeConfigs:[{routeKey:'DEFAULT',locations:{points},isActual:true,
-    style:'LineString',routeColor:'#743454',routeWidth:8,routeType:'',
-    startMarkerConfig:JSON.stringify({pointerIcon:'ny_ic_source_dot',markerId:'br-origin'}),
-    endMarkerConfig:JSON.stringify({pointerIcon:'ny_ic_destination',markerId:'br-destination'}),stopMarkerConfigs:'[]',
-    mapRouteConfig:{sourceSpecialTagIcon:'',destSpecialTagIcon:'',vehicleSizeTagIcon:90,isAnimation:false,autoZoom:true,
+  return {pureScriptID:id,routeConfigs:[{routeKey:passenger?'BR_PASSENGER_ROUTE':'DEFAULT',locations:{points},isActual:true,
+    style:'LineString',routeColor:passenger?'#E6007E':'#743454',routeWidth:passenger?7:8,routeType:'',
+    startMarkerConfig:JSON.stringify({pointerIcon:passenger?'':'ny_ic_source_dot',markerId:'br-origin'}),
+    endMarkerConfig:JSON.stringify({pointerIcon:passenger?'':'ny_ic_destination',markerId:'br-destination'}),stopMarkerConfigs:'[]',
+    mapRouteConfig:{sourceSpecialTagIcon:'',destSpecialTagIcon:'',vehicleSizeTagIcon:90,isAnimation:false,autoZoom:!passenger,
       dashUnit:1,gapUnit:0,polylineAnimationConfig:{color:'',draw:0,fade:0,delay:0}}}]};
 }

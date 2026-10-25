@@ -13,6 +13,7 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Array (null)
 import Effect (Effect)
 import Development.Places as Places
+import Development.Geocoding as Geocoding
 import Development.Rides as Rides
 import Development.PilotTrip as Trip
 import Development.Booking as Booking
@@ -47,6 +48,7 @@ data Action = SelectHome | SelectWallet | SelectProfile | ProfileAction Profile.
   | PlaceLoaded Boolean Places.Place
   | PlacesFailed String
   | OpenBooking
+  | GpsAddress Number Number String
 
 instance showDevelopmentAction :: Show Action where
   show _ = ""
@@ -141,7 +143,8 @@ screen initialState =
   , view: \push state -> shell push (if state.props.currentStage == HomeScreen then "Início" else "") (homeContent push state)
   , name: "HomeScreen"
   , globalEvents:
-      [ \push -> do
+      [ \push -> Geocoding.subscribe (\lat lng address -> push $ GpsAddress lat lng address)
+      , \push -> do
           JB.requestLocation unit
           JB.getCurrentPosition push (\lat lng -> Original $ Home.UpdateCurrentLocation lat lng)
           pure (pure unit)
@@ -154,6 +157,11 @@ eval :: Action -> HomeScreenState -> Eval Action Route HomeScreenState
 eval SelectHome state = exit (HomeRoute state)
 eval SelectWallet state = exit (WalletRoute state)
 eval SelectProfile state = exit (ProfileRoute state)
+eval (GpsAddress lat lng address) state
+  | state.props.sourcePlaceId /= Nothing || state.props.currentStage /= HomeScreen = continue state
+  | state.props.sourceLat /= lat || state.props.sourceLong /= lng = continue state
+  | state.data.source == address = continue state
+  | otherwise = continue state {data {source = address, sourceAddress = HomeData.dummyAddress {street = Just address}}}
 eval OpenBooking state = exit (BookingRoute state)
 eval (ProfileAction (Profile.BackPressed _)) state = exit (HomeRoute state)
 eval (ProfileAction (Profile.GenericHeaderActionController Header.PrefixImgOnClick)) state = exit (HomeRoute state)
@@ -184,8 +192,8 @@ eval (PlaceLoaded field place) state = do
     [ do
         JB.animateCamera place.lat place.lng 16.0 "ZOOM"
         void $ JB.showMarker JB.defaultMarkerConfig
-          {markerId = if field then "ny_ic_src_marker" else "ny_ic_dest_marker", pointerIcon = if field then "ny_ic_src_marker" else "ny_ic_dest_marker"}
-          place.lat place.lng 110 0.5 0.9 (getNewIDWithTag "CustomerHomeScreen")
+          {markerId = if field then "ny_ic_src_marker" else "ny_ic_dest_marker", pointerIcon = if field then "yatri_map_origin" else "yatri_map_destination"}
+          place.lat place.lng 80 0.5 (if field then 0.5 else 0.95) (getNewIDWithTag "CustomerHomeScreen")
         pure (Original Home.NoAction)
     ]
 
@@ -313,14 +321,15 @@ unavailable state = do
 position :: HomeScreenState -> String -> String -> Eval Action Route HomeScreenState
 position state latitude longitude = case fromString latitude, fromString longitude of
   Just lat, Just lng | lat >= -90.0 && lat <= 90.0 && lng >= -180.0 && lng <= 180.0 && (lat /= 0.0 || lng /= 0.0) -> do
-    let label = latitude <> ", " <> longitude
+    let label = "Localização atual"
     if state.props.sourcePlaceId /= Nothing then
       continue state {props {currentLocation {lat = lat, lng = lng, place = label}}}
     else continueWithCmd state
       { props {sourceLat = lat, sourceLong = lng, currentLocation {lat = lat, lng = lng, place = label}}
-      , data {source = if state.props.currentStage == HomeScreen then label else state.data.source}
+      , data {source = if state.props.currentStage == HomeScreen && (state.props.sourceLat /= lat || state.props.sourceLong /= lng) then label else state.data.source}
       }
       [ do
+          Geocoding.resolve lat lng
           when (state.props.destinationPlaceId == Nothing || state.props.isSource == Just true) $ JB.animateCamera lat lng 16.0 "ZOOM"
           pure (Original Home.NoAction)
       ]
@@ -341,8 +350,8 @@ restoreMap state = do
   else JB.animateCamera state.props.destinationLat state.props.destinationLong 16.0 "ZOOM"
   where
   marker field lat lng = void $ JB.showMarker JB.defaultMarkerConfig
-    {markerId = if field then "ny_ic_src_marker" else "ny_ic_dest_marker", pointerIcon = if field then "ny_ic_src_marker" else "ny_ic_dest_marker"}
-    lat lng 110 0.5 0.9 (getNewIDWithTag "CustomerHomeScreen")
+    {markerId = if field then "ny_ic_src_marker" else "ny_ic_dest_marker", pointerIcon = if field then "yatri_map_origin" else "yatri_map_destination"}
+    lat lng 80 0.5 (if field then 0.5 else 0.95) (getNewIDWithTag "CustomerHomeScreen")
 
 -- Recentring the map must not erase a manually selected origin or destination.
 recenter :: Effect Unit

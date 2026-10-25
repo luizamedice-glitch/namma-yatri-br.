@@ -112,7 +112,7 @@ def safe_webview():
             stage='enable';evaluate('Runtime.enable')
             for context in list(contexts):
                 stage='evaluate'
-                result=evaluate('Runtime.evaluate',{'expression':"JSON.stringify({phase:window.__YATRI_PASSENGER_RIDE__&&window.__YATRI_PASSENGER_RIDE__.phase,diagnostics:window.__YATRI_PASSENGER_POLL__||null,callbacks:window.__YATRI_PASSENGER_CALLBACKS__||null,backEnabled:window.enableBackpress===true,nativeClock:window.JBridge.getYatriPassengerClockDiagnostics?JSON.parse(window.JBridge.getYatriPassengerClockDiagnostics()):null,hidden:document.hidden,visibility:document.visibilityState})",'contextId':context,'returnByValue':True})
+                result=evaluate('Runtime.evaluate',{'expression':"JSON.stringify({geocoding:window.__YATRI_GEOCODING__||null,phase:window.__YATRI_PASSENGER_RIDE__&&window.__YATRI_PASSENGER_RIDE__.phase,diagnostics:window.__YATRI_PASSENGER_POLL__||null,callbacks:window.__YATRI_PASSENGER_CALLBACKS__||null,backEnabled:window.enableBackpress===true,nativeClock:window.JBridge.getYatriPassengerClockDiagnostics?JSON.parse(window.JBridge.getYatriPassengerClockDiagnostics()):null,hidden:document.hidden,visibility:document.visibilityState})",'contextId':context,'returnByValue':True})
                 value=result.get('result',{}).get('result',{}).get('value')
                 if value:states.append(json.loads(value))
         except Exception as e:states.append({'target':target_index,'stage':stage,'error':type(e).__name__})
@@ -142,6 +142,16 @@ def main():
         adb('shell','am','start','-W','-n',package+'/in.juspay.mobility.MainActivity')
         home()
         (out/'device.json').write_text(json.dumps({'api':adb('shell','getprop','ro.build.version.sdk').decode().strip(),'model':adb('shell','getprop','ro.product.model').decode().strip()}))
+        if os.environ.get('PASSENGER_EXPECT_GEOCODING')=='true':
+            time.sleep(4)
+            states=safe_webview()
+            assert any((s.get('geocoding') or {}).get('successes',0)>0 for s in states),'Geocoder Android não retornou endereço real'
+            tap(where(home()));time.sleep(1)
+            fields=[n for n in nodes() if n.get('class')=='android.widget.EditText']
+            assert fields and len(fields[0].get('text','').strip())>=5
+            assert fields[0].get('text','')!='Localização atual' and not re.fullmatch(r'[-\d., ]+',fields[0].get('text',''))
+            capture('gps-endereco-real')
+            adb('shell','input','keyevent','KEYCODE_BACK');home()
         select_place('Avenida Paulista Sao Paulo','paulista',False)
         select_place('Praca da Se Sao Paulo','praca da se',True)
         tap(wait_label('Ver estimativa'));wait_label('Solicitar viagem')
@@ -210,7 +220,7 @@ def main():
                 assert any(s.get('diagnostics',{}).get('errors',0)>0 for s in states if s.get('diagnostics')),'Corte de rede nao foi observado pelo cliente'
         tap(wait_label('Voltar ao início'));home()
         result={'acceptance':'passed','isolated_database':True,'driver_actions_real_http':True,'google_routes_real':True,
-          'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'native_clock_required':os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true','idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','quote_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','committed_request_response_loss_recovered':os.environ.get('PASSENGER_RECONNECT')=='true','network_fault':'tunnel_removed_and_existing_sockets_closed' if os.environ.get('PASSENGER_RECONNECT')=='true' else None,'state_latency_seconds':timings,'apk_source_run':os.environ.get('PASSENGER_APK_SOURCE_RUN'),'apk_sha256':hashlib.sha256(next(Path('passenger-apk').glob('*.apk')).read_bytes()).hexdigest()}
+          'passenger_remains_foreground':True,'same_pid':True,'restarts_during_trip':0,'native_clock_required':os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true','idle_seconds':idle,'network_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','quote_recovery':os.environ.get('PASSENGER_RECONNECT')=='true','gps_reverse_geocoding_real':os.environ.get('PASSENGER_EXPECT_GEOCODING')=='true','committed_request_response_loss_recovered':os.environ.get('PASSENGER_RECONNECT')=='true','network_fault':'tunnel_removed_and_existing_sockets_closed' if os.environ.get('PASSENGER_RECONNECT')=='true' else None,'state_latency_seconds':timings,'apk_source_run':os.environ.get('PASSENGER_APK_SOURCE_RUN'),'apk_sha256':hashlib.sha256(next(Path('passenger-apk').glob('*.apk')).read_bytes()).hexdigest()}
         (out/'acceptance.json').write_text(json.dumps(result,indent=2))
     finally:
         try:

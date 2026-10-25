@@ -11,6 +11,15 @@ package in.juspay.mobility.customer;
 
 import android.app.Activity;
 import android.content.pm.ApplicationInfo;
+import android.location.Address;
+import android.location.Geocoder;
+import java.util.Locale;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.RoundCap;
+import com.google.android.gms.maps.model.JointType;
 import android.os.Handler;
 import android.os.Looper;
 import java.lang.ref.WeakReference;
@@ -150,6 +159,58 @@ public class MobilityCustomerBridge extends MobilityCommonBridge {
         }
     }
 
+
+    private boolean yatriPassengerMapsEnabled() {
+        try {
+            Context context = bridgeComponents.getContext();
+            int resource = context.getResources().getIdentifier("yatri_br_ride_pilot", "bool", context.getPackageName());
+            return "in.juspay.nammayatri.debug".equals(context.getPackageName()) &&
+                (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0 &&
+                resource != 0 && context.getResources().getBoolean(resource);
+        } catch (Exception ignored) { return false; }
+    }
+
+    private static final AtomicBoolean yatriGeocodingBusy = new AtomicBoolean(false);
+    private static final ExecutorService yatriGeocodingExecutor = Executors.newSingleThreadExecutor(task -> {
+        Thread thread = new Thread(task, "yatri-geocoding");thread.setDaemon(true);return thread;
+    });
+
+    // Real Android geocoder, off both UI and JavascriptInterface threads. No address logging.
+    @JavascriptInterface
+    public boolean reverseGeocodeYatri(double lat, double lng, String callback) {
+        if (!yatriPassengerMapsEnabled() || !Double.isFinite(lat) || !Double.isFinite(lng) ||
+            Math.abs(lat)>90 || Math.abs(lng)>180 || (lat==0 && lng==0) || callback==null ||
+            callback.isEmpty() || callback.length()>256 || !Geocoder.isPresent() ||
+            !yatriGeocodingBusy.compareAndSet(false,true)) return false;
+        final Context context = bridgeComponents.getContext().getApplicationContext();
+        yatriGeocodingExecutor.execute(() -> {
+            String address = "";
+            try {
+                List<Address> addresses = new Geocoder(context, new Locale("pt", "BR")).getFromLocation(lat,lng,1);
+                if (addresses!=null && !addresses.isEmpty()) {
+                    String line=addresses.get(0).getAddressLine(0);
+                    if(line!=null && line.trim().length()>=3 && line.length()<=1000) address=line.trim();
+                }
+            } catch (Exception ignored) { /* Client keeps GPS usable and may retry later. */ }
+            finally { yatriGeocodingBusy.set(false); }
+            final String result = address;
+            ExecutorManager.runOnMainThread(() -> {
+                if (!yatriPassengerMapsEnabled()) return;
+                bridgeComponents.getJsCallback().addJsToWebView("window.callUICallback(" + JSONObject.quote(callback) + "," +
+                    JSONObject.quote(result.isEmpty()?"unavailable":"ok") + "," + JSONObject.quote(result) + ");");
+            });
+        });
+        return true;
+    }
+
+    @Override
+    public PolylineDataPoints setRouteCustomTheme(PolylineOptions options, int color, String style, int width,
+            JSONObject config, GoogleMap map, Boolean overlay, String key, String mapKey) {
+        if (yatriPassengerMapsEnabled() && "BR_PASSENGER_ROUTE".equals(key)) {
+            options.startCap(new RoundCap()).endCap(new RoundCap()).jointType(JointType.ROUND).zIndex(5);
+        }
+        return super.setRouteCustomTheme(options,color,style,width,config,map,overlay,key,mapKey);
+    }
 
     private boolean yatriPassengerClockEnabled() {
         try {

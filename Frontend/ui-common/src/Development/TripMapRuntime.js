@@ -1,8 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import {mapPayload} from './TripMap.mjs';
-let current=null,latest=null,lastPolyline='',ready=false,callback,lastCamera='';
+let current=null,latest=null,lastPolyline='',ready=false,callback,lastCamera='',lastRoute=null,vehiclePoint=null,vehicleHeading=0;
 function allowed(){try{return window.__OS==='ANDROID'&&window.__YATRI_BR_DEVELOPMENT__===true&&
   ['in.juspay.nammayatri.debug','in.juspay.nammayatripartner.debug'].includes(JSON.parse(window.JBridge.getDeviceInfo()).package_name);}catch(_){return false;}}
+function passenger(){try{return JSON.parse(window.JBridge.getDeviceInfo()).package_name==='in.juspay.nammayatri.debug';}catch(_){return false;}}
+function markerIds(){return passenger()?['br-origin','br-destination','ny_ic_source_dot','ny_ic_destination','ny_ic_src_marker','ny_ic_dest_marker']:['br-origin','br-destination'];}
+function showPoint(id,point,icon,size,anchor=0.5,rotation=0){
+  const scale=Math.max(1,Math.min(4,Number(window.devicePixelRatio)||1));
+  window.JBridge.showMarker(JSON.stringify({purescriptId:current,lat:String(point.lat),lng:String(point.lng),
+    markerSize:Math.round(size*scale),anchorV:0.5,anchorV1:anchor,
+    markerConfig:{markerId:id,pointerIcon:icon,rotation:String(rotation),zIndex:id==='br-live-driver'?10:7,
+      animationConfig:{animationType:'NONE',animationDuration:0}}}));
+}
+function cameraKey(trip){return JSON.stringify(passenger()?[trip.polyline,['accepted','arrived'].includes(trip.phase)]:[trip.polyline,trip.gpsFresh,trip.driverLat,trip.driverLng]);}
 function fitCamera(id,trip){
   if(!ready||current!==id)return;
   const bounds=JSON.parse(window.JBridge.getLayoutBounds(id));
@@ -17,22 +27,38 @@ function fitCamera(id,trip){
     Math.log2((bounds.height-96)/(256*Math.max(ymax-ymin,0.000001)))));
   const lat=Math.atan(Math.sinh(Math.PI*(1-ymin-ymax)))*180/Math.PI;
   window.JBridge.animateCamera(lat,(xmin+xmax)*180-180,zoom,'ZOOM');
-  lastCamera=JSON.stringify([trip.polyline,trip.gpsFresh,trip.driverLat,trip.driverLng]);
+  lastCamera=cameraKey(trip);
 }
 function draw(){
   if(!allowed()||!ready||!latest||!current)return;
   try{
-    if(lastPolyline!==latest.polyline){
-      window.JBridge.removeAllPolylines(JSON.stringify({gmapPursId:current,markersToRemove:['br-origin','br-destination'],polyLinesToRemove:[]}));
-      const payload=mapPayload(latest,current);
+    const isPassenger=passenger(),pickup=['accepted','arrived'].includes(latest.phase);
+    const routeKey=latest.polyline+'|'+(isPassenger&&pickup);
+    if(lastRoute!==routeKey){
+      window.JBridge.removeAllPolylines(JSON.stringify({gmapPursId:current,markersToRemove:markerIds(),polyLinesToRemove:[]}));
+      const payload=mapPayload(latest,current,isPassenger);
       if(payload.routeConfigs[0].locations.points.length>=2)window.JBridge.drawRouteV2(JSON.stringify(payload));
-      lastPolyline=latest.polyline;
+      if(isPassenger){
+        const points=payload.routeConfigs[0].locations.points;
+        if(points.length){
+          if(!pickup)showPoint('br-origin',points[0],'yatri_map_origin',28);
+          showPoint('br-destination',points[points.length-1],pickup?'yatri_map_origin':'yatri_map_destination',pickup?28:38,pickup?0.5:0.92);
+        }
+      }
+      lastPolyline=latest.polyline;lastRoute=routeKey;
     }
-    if(latest.gpsFresh)window.JBridge.showMarker(JSON.stringify({purescriptId:current,lat:String(latest.driverLat),lng:String(latest.driverLng),
+    if(isPassenger&&latest.gpsFresh){
+      const point={lat:latest.driverLat,lng:latest.driverLng};
+      if(vehiclePoint){
+        const dy=(point.lat-vehiclePoint.lat)*111000,dx=(point.lng-vehiclePoint.lng)*111000*Math.cos(point.lat*Math.PI/180);
+        if(Math.hypot(dx,dy)>4)vehicleHeading=(Math.atan2(dx,dy)*180/Math.PI+360)%360;
+      }
+      showPoint('br-live-driver',point,'ny_ic_vehicle_nav_on_map',36,0.5,vehicleHeading);vehiclePoint=point;
+    }else if(latest.gpsFresh)window.JBridge.showMarker(JSON.stringify({purescriptId:current,lat:String(latest.driverLat),lng:String(latest.driverLng),
       markerSize:100,anchorV:0.5,anchorV1:0.5,markerConfig:{markerId:'br-live-driver',pointerIcon:'ny_ic_vehicle_nav_on_map',rotation:'0',zIndex:10,animationConfig:{animationType:'NONE',animationDuration:0}}}));
     else window.JBridge.removeMarker('br-live-driver');
-    const cameraKey=JSON.stringify([latest.polyline,latest.gpsFresh,latest.driverLat,latest.driverLng]);
-    if(cameraKey!==lastCamera){const owner=current,trip=latest;setTimeout(()=>{
+    const nextCamera=cameraKey(latest);
+    if(nextCamera!==lastCamera){const owner=current,trip=latest;setTimeout(()=>{
       if(current===owner&&latest===trip)try{fitCamera(owner,trip);}catch(_){}
     },150);}
     window.__YATRI_TRIP_MAP__={ready:true,routePoints:lastPolyline?mapPayload(latest,current).routeConfigs[0].locations.points.length:0,
@@ -41,14 +67,14 @@ function draw(){
 }
 export const mountMapWithMapper=(id,mapCallback)=>{
   if(!allowed()||current===id)return;
-  current=id;ready=false;lastPolyline='';lastCamera='';window.__YATRI_TRIP_MAP__={ready:false};
+  current=id;ready=false;lastPolyline='';lastCamera='';lastRoute=null;vehiclePoint=null;vehicleHeading=0;window.__YATRI_TRIP_MAP__={ready:false};
   callback=mapCallback(key=>{if(current===id&&key==='MAP'){ready=true;draw();}});
   window.JBridge.showMap(id,false,'normal',15,callback,'{}');
 };
 export const updateTripMap=trip=>{latest=trip;draw();};
 export const releaseTripMap=()=>{
   if(current&&allowed())window.JBridge.removeAllPolylines(JSON.stringify({gmapPursId:current,
-    markersToRemove:['br-live-driver','br-origin','br-destination'],polyLinesToRemove:[]}));
-  current=null;latest=null;ready=false;lastPolyline='';lastCamera='';if(allowed())window.__YATRI_TRIP_MAP__={ready:false};
+    markersToRemove:['br-live-driver',...markerIds()],polyLinesToRemove:[]}));
+  current=null;latest=null;ready=false;lastPolyline='';lastCamera='';lastRoute=null;vehiclePoint=null;if(allowed())window.__YATRI_TRIP_MAP__={ready:false};
   if(callback){const registry=window.__PROXY_FN;if(registry instanceof Map)registry.delete(callback);else if(registry)delete registry[callback];callback=null;}
 };
