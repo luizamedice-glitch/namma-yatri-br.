@@ -5,8 +5,9 @@ from pathlib import Path
 spec=importlib.util.spec_from_file_location('passenger',Path(__file__).with_name('test-passenger-foreground.py'))
 p=importlib.util.module_from_spec(spec);spec.loader.exec_module(p)
 report={'acceptance':'running','cases':[],'backend':'isolated_postgresql','driver_actor':'real_authenticated_http'}
-def launch():
-    p.adb('shell','am','start','-W','-n',p.package+'/in.juspay.mobility.MainActivity');p.home()
+def launch(expect_home=True):
+    p.adb('shell','am','start','-W','-n',p.package+'/in.juspay.mobility.MainActivity')
+    if expect_home:p.home()
 def pid():return p.adb('shell','pidof',p.package).decode().strip()
 def search_new(select=False):
     if select:
@@ -41,7 +42,7 @@ try:
     p.adb('shell','input','keyevent','KEYCODE_BACK');p.home()
     p.tap(p.wait_label('Acompanhar viagem'));p.wait_label('Procurando motorista')
     # Warm resume keeps the process and active ride, matching the reported recovery.
-    p.adb('shell','input','keyevent','KEYCODE_HOME');time.sleep(12);launch()
+    p.adb('shell','input','keyevent','KEYCODE_HOME');time.sleep(12);launch(False)
     assert pid()==first_pid
     if p.label(p.nodes(),'Procurando motorista') is None:
         p.tap(p.wait_label('Acompanhar viagem'));p.wait_label('Procurando motorista')
