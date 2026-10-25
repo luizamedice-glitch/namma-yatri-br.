@@ -1,5 +1,27 @@
 # Ambiente AWS de desenvolvimento — Alce Yatri Brasil
 
+## Backup e monitoramento — 25/10/2026
+
+Piloto atualizado para a mesma fonte em `40241930473`, sem corrida ativa e sem
+migrations. API principal/PostgreSQL/maps-test e janela até 31/10 preservados;
+proteção de socket/reconexão pertence ao piloto, não à API principal anterior.
+Não é necessário reinstalar APKs nem emitir novas ativações para esta etapa.
+
+Instalação `40241777998`, fonte `8d24ad18edebe754341e7839261122b70a440777`:
+`yatri-backup.timer` diário 03:15 UTC e `yatri-monitor.timer` cinco minutos ativos.
+Código revisionado em `/opt/yatri-brasil/operations`, sete backups cifrados em
+`/opt/yatri-brasil/backups`, chave **pública** `secrets/backup-recipient.pem`.
+Chave privada não enviada ao servidor. Primeira cópia externa restaurada em
+contêiner descartável, migrations/índices válidos, banco ativo preservado;
+saúde de ambos os serviços aprovada. Arquivos/diretórios 600/700.
+
+PR #5 contém somente cron externo na branch padrão, fixado na revisão testada;
+ainda não incorporado/ativo. Execução manual externa `40241825428` aprovada.
+Guardar PEM original fora da instância para recuperar `.ybk`; não substituí-lo
+sem plano para cópias anteriores. Nenhuma restauração ativa/porta/recurso AWS
+novo. Relatório/procedimento: `brasil/backend/ops/RECOVERY-REPORT-2026-10-25.md`
+e `brasil/backend/ops/BACKUPS.md`. Reconstrução completa de servidor não validada.
+
 ## Recuperação operacional atual — 25/10/2026
 
 Piloto atualizado para `f585ad66f82e12c230f3b2f627333560ba96aa28` no run

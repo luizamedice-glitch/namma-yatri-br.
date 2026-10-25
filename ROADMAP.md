@@ -1,5 +1,18 @@
 # Yatri Brasil — roadmap técnico
 
+## Marco atual — queda de banco e backup, 25/10/2026
+
+Queda/retorno real de PostgreSQL isolado e restauração de dump real do Lightsail
+aprovados em `40241759979`/`40241777998`. Backup cifrado diário e monitor local
+ativos; cópia externa verificada. PR #5 aguarda revisão para cron externo na main.
+Nenhuma troca de banco ativo ou reconstrução completa do servidor foi executada.
+Detalhes: `brasil/backend/ops/RECOVERY-REPORT-2026-10-25.md`.
+
+Próximos: carga/concorrência sustentada em ambiente isolado, duração prolongada
+em dois celulares e assinatura persistente. Medir RTO em instância alternativa
+com configurações/secrets revisados. Pagamentos/Firebase/autenticação definitiva
+permanecem adiados; proteção atual mantida.
+
 ## Marco atual — recuperação operacional, 25/10/2026
 
 Backend `f585ad66f82e` implantado em `40236965537`: reenvios após resposta perdida

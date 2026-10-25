@@ -1,5 +1,22 @@
 # Yatri Brasil — mapa arquitetural inicial
 
+## Resiliência PostgreSQL e operações — 25/10/2026
+
+`src/db.mjs` mantém listener de erro nos clientes, descarta conexão quebrada e
+preserva o erro original se ROLLBACK falhar. `src/http.mjs` responde 503 durante
+indisponibilidade, sem vazar dados nem reenviar POST automaticamente. Teste real
+interrompe banco descartável entre UPDATE/COMMIT, confirma rollback/retorno e
+restauração cifrada em outra instância isolada. Fonte `8d24ad18edebe754341e7839261122b70a440777`.
+
+`brasil/backend/ops/maintenance.py` faz pg_dump transmitido ao cifrador
+`backup-crypto.mjs` em contêiner sem rede; só ciphertext permanece no Lightsail.
+Timers systemd: backup diário/monitor cinco minutos. `maintenance-ssh.sh` exporta
+cifra, descriptografa temporariamente no runner e chama `verify-backup.py`, que
+restaura somente em novo PostgreSQL sem rede, portas ou montagem de host.
+Não existe operação de restore para o banco ativo. PR #5 separa o cron externo
+na main com fonte fixa; aguarda revisão, ainda inativo. Evidências e limites em
+`brasil/backend/ops/RECOVERY-REPORT-2026-10-25.md`.
+
 ## Recuperação operacional — 25/10/2026
 
 `domain.transition` reconhece uma repetição autorizada no estado de destino;
