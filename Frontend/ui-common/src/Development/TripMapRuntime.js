@@ -23,8 +23,9 @@ function fitCamera(id,trip){
   const xs=points.map(p=>(p.lng+180)/360);
   const ys=points.map(p=>(1-Math.log(Math.tan(Math.PI/4+Math.max(-85,Math.min(85,p.lat))*Math.PI/360))/Math.PI)/2);
   const xmin=Math.min.apply(null,xs),xmax=Math.max.apply(null,xs),ymin=Math.min.apply(null,ys),ymax=Math.max.apply(null,ys);
-  const zoom=Math.max(7,Math.min(18,Math.log2((bounds.width-96)/(256*Math.max(xmax-xmin,0.000001))),
-    Math.log2((bounds.height-96)/(256*Math.max(ymax-ymin,0.000001)))));
+  const padding=passenger()?48*Math.max(1,Math.min(4,Number(window.devicePixelRatio)||1)):48;
+  const zoom=Math.max(7,Math.min(18,Math.log2(Math.max(1,bounds.width-2*padding)/(256*Math.max(xmax-xmin,0.000001))),
+    Math.log2(Math.max(1,bounds.height-2*padding)/(256*Math.max(ymax-ymin,0.000001)))));
   const lat=Math.atan(Math.sinh(Math.PI*(1-ymin-ymax)))*180/Math.PI;
   window.JBridge.animateCamera(lat,(xmin+xmax)*180-180,zoom,'ZOOM');
   lastCamera=cameraKey(trip);
@@ -76,5 +77,5 @@ export const releaseTripMap=()=>{
   if(current&&allowed())window.JBridge.removeAllPolylines(JSON.stringify({gmapPursId:current,
     markersToRemove:['br-live-driver',...markerIds()],polyLinesToRemove:[]}));
   current=null;latest=null;ready=false;lastPolyline='';lastCamera='';lastRoute=null;vehiclePoint=null;if(allowed())window.__YATRI_TRIP_MAP__={ready:false};
-  if(callback){const registry=window.__PROXY_FN;if(registry instanceof Map)registry.delete(callback);else if(registry)delete registry[callback];callback=null;}
+  if(callback){const registry=window.__PROXY_FN;if(Object.prototype.toString.call(registry)==='[object Map]')registry.delete(callback);else if(registry)delete registry[callback];callback=null;}
 };
