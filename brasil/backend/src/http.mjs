@@ -1,5 +1,6 @@
 import http from 'node:http';
 import { ApiError, requireThat } from './domain.mjs';
+import { databaseUnavailable } from './db.mjs';
 
 export async function readBody(req) {
   let bytes = 0; const chunks = [];
@@ -32,7 +33,9 @@ export function createApi({ service, maps, pool, allowedOrigin = '', rateLimit =
     try {
       const url = new URL(req.url, 'http://localhost');
       if (url.pathname === '/health' && req.method === 'GET') {
-        await pool.query('SELECT 1'); return reply(res, 200, { status: 'ok', service: 'namma-yatri-br' });
+        try { await pool.query('SELECT 1'); }
+        catch { return reply(res, 503, { status: 'unavailable', service: 'namma-yatri-br' }); }
+        return reply(res, 200, { status: 'ok', service: 'namma-yatri-br' });
       }
       const now = Date.now();
       for (const [k, v] of buckets) if (v.until < now) buckets.delete(k);
@@ -118,9 +121,11 @@ export function createApi({ service, maps, pool, allowedOrigin = '', rateLimit =
     } catch (e) {
       if (res.headersSent) { res.end(); return; }
       const conflict = e.code === '23505';
-      const status = e.status || (conflict ? 409 : 500);
+      const unavailable = !e.status && databaseUnavailable(e);
+      const status = e.status || (unavailable ? 503 : conflict ? 409 : 500);
+      if(unavailable)res.setHeader('Retry-After','5');
       if (status >= 500) console.error('Falha API:', e.name, e.code || 'INTERNAL');
-      reply(res, status, { error: e.status ? e.message : conflict ? 'Cadastro duplicado ou corrida ativa já existente' : 'Erro interno do serviço' });
+      reply(res, status, { error: e.status ? e.message : unavailable ? 'Serviço temporariamente indisponível. Tente novamente.' : conflict ? 'Cadastro duplicado ou corrida ativa já existente' : 'Erro interno do serviço' });
     }
   });
   server.requestTimeout = 20000; server.headersTimeout = 15000;
