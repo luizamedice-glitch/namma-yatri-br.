@@ -5,6 +5,19 @@ from pathlib import Path
 spec=importlib.util.spec_from_file_location('passenger',Path(__file__).with_name('test-passenger-foreground.py'))
 p=importlib.util.module_from_spec(spec);spec.loader.exec_module(p)
 report={'acceptance':'running','cases':[],'backend':'isolated_postgresql','driver_actor':'real_authenticated_http'}
+def save_native(name,native):
+    encoded=json.dumps(native,ensure_ascii=False,indent=2)
+    assert all(token not in encoded for token in p.sessions.values()),'Private session in diagnostic export'
+    assert 'TST1A23' not in encoded,'Vehicle data in diagnostic export'
+    def check(value):
+        if isinstance(value,dict):
+            assert not set(k.lower() for k in value).intersection({'token','session','password','url','address','plate','rideid','userid','lat','lng'}),'Private field in diagnostic export'
+            for child in value.values():check(child)
+        elif isinstance(value,list):
+            for child in value:check(child)
+    check(native)
+    (p.out/name).write_text(encoded)
+
 def launch(expect_home=True):
     p.adb('shell','am','start','-W','-n',p.package+'/in.juspay.mobility.MainActivity')
     if expect_home:p.home()
@@ -70,7 +83,7 @@ try:
         native=json.loads(p.adb('shell','run-as',p.package,'cat','files/yatri-passenger-diagnostic.json'))
         assert native['revision']==2 and native['runtime']['phase']=='completed'
         assert any(v['text']=='Viagem concluída' for v in native['visibleControls'])
-        (p.out/'native-diagnostic.json').write_text(json.dumps(native,indent=2))
+        save_native('native-diagnostic.json',native)
         report['safe_native_diagnostic_export']=True
     p.tap(p.wait_label('Voltar ao início'));p.home()
     report['acceptance']='passed'
@@ -78,7 +91,7 @@ finally:
     try:
         p.adb('shell','input','keyevent','KEYCODE_VOLUME_UP','KEYCODE_VOLUME_UP','KEYCODE_VOLUME_UP');time.sleep(1)
         native=json.loads(p.adb('shell','run-as',p.package,'cat','files/yatri-passenger-diagnostic.json'))
-        (p.out/'native-diagnostic-final.json').write_text(json.dumps(native,indent=2))
+        save_native('native-diagnostic-final.json',native)
     except Exception:pass
     (p.out/'cold-acceptance.json').write_text(json.dumps(report,indent=2))
     try:p.safe_webview()
