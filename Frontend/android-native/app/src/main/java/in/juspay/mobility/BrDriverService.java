@@ -32,6 +32,7 @@ public final class BrDriverService extends Service implements LocationListener {
     private SharedPreferences prefs,diagnostics;
     private int uploads,snapshots,alerts,errors;
     private String displayedOffer="";
+    private String foregroundContent="";
 
     static boolean enabled(Context c){
         return BuildConfig.DEBUG&&BuildConfig.BR_TEST_MODE&&BuildConfig.BR_RIDE_PILOT
@@ -92,8 +93,8 @@ public final class BrDriverService extends Service implements LocationListener {
         if(!authorized()){halt("session_expired");return;}
         try{
             Location point=latest;boolean fresh=fresh(point);
-            if(fresh){call("/driver/location",new JSONObject().put("lat",point.getLatitude()).put("lng",point.getLongitude()));uploads++;}
-            JSONObject snapshot=call("/snapshot",null);snapshots++;
+            if(fresh){call("/driver/location",new JSONObject().put("lat",point.getLatitude()).put("lng",point.getLongitude()));if(closed)return;uploads++;}
+            JSONObject snapshot=call("/snapshot",null);if(closed)return;snapshots++;
             if(!"driver".equals(snapshot.getJSONObject("user").getString("role"))){halt("invalid_role");return;}
             JSONArray rides=snapshot.getJSONArray("rides"),offers=snapshot.getJSONArray("offers");
             if(fresh&&!snapshot.optBoolean("available")&&rides.length()==0){halt("offline");return;}
@@ -104,16 +105,21 @@ public final class BrDriverService extends Service implements LocationListener {
                     // Persist only deduplication ID, never passenger/route data or credentials.
                     String previous=diagnostics.getString("lastOffer","");
                     if(!offer.equals(previous)){
-                        manager.notify(OFFER,notification(OFFERS,"Nova solicitação de corrida","Abra o AlceYatri para consultar e aceitar.")
+                        notifyRunning(OFFER,notification(OFFERS,"Nova solicitação de corrida","Abra o AlceYatri para consultar e aceitar.")
                             .setCategory(NotificationCompat.CATEGORY_EVENT).setPriority(NotificationCompat.PRIORITY_HIGH)
                             .setAutoCancel(true).setTimeoutAfter(600000).build());
                         alerts++;diagnostics.edit().putString("lastOffer",offer).apply();
                     }
-                }else manager.cancel(OFFER);
+                }else main.post(()->{if(!closed)getSystemService(NotificationManager.class).cancel(OFFER);});
                 displayedOffer=offer;
             }
-            manager.notify(FOREGROUND,notification(TRACKING,rides.length()>0?"Corrida em andamento":"Motorista online",
-                fresh?"Compartilhando localização. Toque para abrir.":"GPS sem atualização. Ative a localização do celular.").setOngoing(true).build());
+            String title=rides.length()>0?"Corrida em andamento":"Motorista online";
+            String text=fresh?"Compartilhando localização. Toque para abrir.":"GPS sem atualização. Ative a localização do celular.";
+            String content=title+"\n"+text;
+            if(!content.equals(foregroundContent)){
+                notifyRunning(FOREGROUND,notification(TRACKING,title,text).setOngoing(true).setOnlyAlertOnce(true).build());
+                foregroundContent=content;
+            }
             record(fresh?"running":"waiting_gps");
         }catch(Unauthorized ignored){halt("session_rejected");}
         catch(Exception ignored){errors++;record("reconnecting");}
@@ -143,11 +149,12 @@ public final class BrDriverService extends Service implements LocationListener {
         }finally{connection.disconnect();}
     }
     private static final class Unauthorized extends Exception{}
-    private void record(String state){diagnostics.edit().putString("state",state).putInt("uploads",uploads).putInt("snapshots",snapshots)
+    private void notifyRunning(int id,Notification notification){main.post(()->{if(!closed)getSystemService(NotificationManager.class).notify(id,notification);});}
+    private void record(String state){if(closed)return;diagnostics.edit().putString("state",state).putInt("uploads",uploads).putInt("snapshots",snapshots)
         .putInt("notifications",alerts).putInt("errors",errors).putLong("observedAt",System.currentTimeMillis()).apply();}
     private void halt(String reason){record(reason);main.post(this::stopSelf);}
     @Override public void onDestroy(){
-        closed=true;worker.shutdownNow();if(locations!=null)locations.removeUpdates(this);
+        closed=true;worker.shutdownNow();main.removeCallbacksAndMessages(null);if(locations!=null)locations.removeUpdates(this);
         getSystemService(NotificationManager.class).cancel(OFFER);stopForeground(true);
         diagnostics.edit().putBoolean("stopped",true).apply();super.onDestroy();
     }

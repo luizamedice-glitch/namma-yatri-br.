@@ -1,10 +1,15 @@
 name: BR - Motorista GPS em segundo plano
 on:
-  push:
-    branches: [codex/issue-1-purescript-memory]
-    paths: ['.github/workflows/br-driver-background.yml']
   workflow_dispatch:
     inputs:
+      bundle_apk_run_id:
+        description: APK aprovado cujo bundle identico sera reutilizado para ajuste apenas nativo
+        type: string
+        default: ''
+      build_only:
+        description: Apenas gerar APK; executar aceites separadamente com o mesmo arquivo
+        type: boolean
+        default: false
       apk_run_id:
         description: Reutilizar APK deste workflow sem nova compilacao
         type: string
@@ -31,10 +36,12 @@ jobs:
           node-version: '18.20.8'
       - run: node --test Frontend/scripts/test-driver-operations.mjs Frontend/scripts/test-pilot-trip.mjs
       - name: Comparar todas as fontes com compilacao aprovada
+        if: ${{ !inputs.bundle_apk_run_id }}
         run: |
           git fetch origin 5900d9a2ab5315767b0a6e8606131ec2454825a5
           git diff --exit-code FETCH_HEAD HEAD -- Frontend/ui-driver Frontend/ui-common Frontend/packages.dhall ':!Frontend/ui-driver/src/Development/Driver.js' ':!Frontend/ui-common/src/Development/TripMapRuntime.js' ':!Frontend/ui-common/src/Development/TripMap.mjs'
       - uses: actions/cache/restore@v4
+        if: ${{ !inputs.bundle_apk_run_id }}
         id: cache
         with:
           path: |
@@ -44,6 +51,7 @@ jobs:
           key: ride-v2-motorista-${{ runner.os }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-40143012209-1
           fail-on-cache-miss: true
       - name: Atualizar somente FFI e bundle mantendo o PureScript compilado
+        if: ${{ !inputs.bundle_apk_run_id }}
         working-directory: Frontend/ui-driver
         run: |
           test -s output/Development.Driver/index.js
@@ -51,6 +59,39 @@ jobs:
           npm install --legacy-peer-deps
           npm run bundle:android
           node --check dist/android/index_bundle.js
+      - name: Validar reaproveitamento estrito do bundle para ajuste nativo
+        if: inputs.bundle_apk_run_id
+        uses: actions/github-script@v7
+        env:
+          SOURCE_RUN: ${{ inputs.bundle_apk_run_id }}
+        with:
+          script: |
+            const id=Number(process.env.SOURCE_RUN);
+            if(!Number.isSafeInteger(id)||id<=0)throw Error('Run invalido');
+            const {data:run}=await github.rest.actions.getWorkflowRun({...context.repo,run_id:id});
+            if(run.path!=='.github/workflows/br-driver-background.yml')throw Error('Workflow de origem invalido');
+            const {data}=await github.rest.actions.listJobsForWorkflowRun({...context.repo,run_id:id});
+            if(!data.jobs.some(j=>j.name==='build'&&j.conclusion==='success'))throw Error('Build de origem nao aprovado');
+            await exec.exec('git',['fetch','origin',run.head_sha]);
+            await exec.exec('git',['diff','--exit-code',run.head_sha,'HEAD','--','Frontend/ui-driver','Frontend/ui-common','Frontend/packages.dhall']);
+      - uses: actions/download-artifact@v4
+        if: inputs.bundle_apk_run_id
+        with:
+          name: ride-motorista-apk
+          path: bundle-source-apk
+          run-id: ${{ inputs.bundle_apk_run_id }}
+          github-token: ${{ github.token }}
+      - name: Extrair bundle identico sem npm ou PureScript
+        if: inputs.bundle_apk_run_id
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          files=list(Path('bundle-source-apk').glob('*.apk'));assert len(files)==1
+          target=Path('Frontend/ui-driver/dist/android/index_bundle.js');target.parent.mkdir(parents=True,exist_ok=True)
+          with ZipFile(files[0]) as apk:target.write_bytes(apk.read('assets/juspay/index_bundle.js'))
+          PY
+          node --check Frontend/ui-driver/dist/android/index_bundle.js
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -75,7 +116,7 @@ jobs:
           if-no-files-found: error
   background:
     needs: build
-    if: ${{ always() && !cancelled() && (needs.build.result == 'success' || inputs.apk_run_id) }}
+    if: ${{ always() && !cancelled() && !inputs.build_only && (needs.build.result == 'success' || inputs.apk_run_id) }}
     runs-on: ubuntu-latest
     timeout-minutes: 22
     services:
