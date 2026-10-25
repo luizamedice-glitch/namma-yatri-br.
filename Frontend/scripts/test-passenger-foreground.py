@@ -144,8 +144,11 @@ def main():
         (out/'device.json').write_text(json.dumps({'api':adb('shell','getprop','ro.build.version.sdk').decode().strip(),'model':adb('shell','getprop','ro.product.model').decode().strip()}))
         if os.environ.get('PASSENGER_EXPECT_GEOCODING')=='true':
             time.sleep(4)
-            states=safe_webview()
-            assert any((s.get('geocoding') or {}).get('successes',0)>0 for s in states),'Geocoder Android não retornou endereço real'
+            for _ in range(4):
+                states=safe_webview()
+                if any((s.get('geocoding') or {}).get('successes',0)>0 for s in states):break
+                time.sleep(2)
+            else:raise AssertionError('Geocoder Android não retornou endereço real após tentativas limitadas')
             tap(where(home()));time.sleep(1)
             fields=[n for n in nodes() if n.get('class')=='android.widget.EditText']
             assert fields and len(fields[0].get('text','').strip())>=5
