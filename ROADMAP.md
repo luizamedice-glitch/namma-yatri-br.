@@ -1,5 +1,20 @@
 # Yatri Brasil — roadmap técnico
 
+## Marco atual — piloto em segundo plano, 25/10/2026
+
+Motorista com GPS e alertas nativos independente do WebView aprovado em Android
+16/10: `40222825183`/`40222827520`, APK build `40222415126`. Proprietário optou
+por consulta periódica nativa para testes e adiou Firebase. Fonte de verdade
+permanece no backend existente; sem novas rotas/migrations/deploy.
+
+Próximo aceite: instalar motorista atualizado, conceder localização precisa e
+notificações, ficar disponível, bloquear a tela e testar chamada/deslocamento
+em dois celulares contra Lightsail. Confirmar mapa do passageiro, retorno pela
+notificação e parada ao ficar offline. O aceite emulador validou a posição pela
+API de passageiro; não substitui esse teste físico. Depois: bateria/Doze/OEM,
+reconexão nativa, assinatura debug persistente e Firebase/push remoto. Forçar
+parada pelo sistema exige reabrir o app e não é corrigido por Firebase.
+
 ## Marco atual — Geoapify e mapa, 25/10/2026
 
 Geocoding reverso autenticado, endereço GPS real e revisão dos marcadores/

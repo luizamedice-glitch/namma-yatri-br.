@@ -1,5 +1,25 @@
 # Yatri Brasil — mapa arquitetural inicial
 
+## Motorista em segundo plano — piloto de 25/10/2026
+
+`BrDriverService` no módulo Android app mantém LocationManager e um worker HTTP
+independentes do WebView, enquanto o motorista está online ou em corrida.
+Publica GPS de até 30 s em `/v1/driver/location`, consulta `/v1/snapshot` e
+mostra alertas Android deduplicados. Toque abre MainActivity; o aceite continua
+na view original e autorizado pelo backend. Não há Firebase neste transporte
+de testes, por decisão do proprietário. Forçar parada exige reabrir o app.
+
+`MobilityDriverBridge` exige pacote debug BR/piloto, sessão e permissões, inicia
+somente com Activity retomada e coordena com `Development.Driver`. Quando o
+serviço assume GPS, o adaptador JavaScript não duplica a publicação. Offline sem
+viagem para o serviço; consultas nativas encerram ao rejeitar a sessão. Serviço
+não exportado e sem receiver de boot. Produção/serviços legados preservados.
+
+APK `61d9290c43f5` testado em API 36/29 nos runs `40222825183`/`40222827520`.
+Banco/API isolados e GPS do emulador; sessão passageiro verifica a nova posição
+via HTTP, sem segundo APK nesse roteiro. Backend existente e passageiro
+Geoapify não exigem atualização. Relatório `Frontend/build-reports/motorista-segundo-plano/RELATORIO.md`.
+
 ## Atualização Geoapify — 25/10/2026
 
 `Development.Geocoding` é FFI fino; `GeocodingRuntime.mjs` gerencia assinatura,
