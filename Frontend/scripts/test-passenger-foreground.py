@@ -99,7 +99,7 @@ def safe_webview():
             stage='enable';evaluate('Runtime.enable')
             for context in list(contexts):
                 stage='evaluate'
-                result=evaluate('Runtime.evaluate',{'expression':"JSON.stringify({phase:window.__YATRI_PASSENGER_RIDE__&&window.__YATRI_PASSENGER_RIDE__.phase,diagnostics:window.__YATRI_PASSENGER_POLL__||null,nativeClock:window.JBridge.getYatriPassengerClockDiagnostics?JSON.parse(window.JBridge.getYatriPassengerClockDiagnostics()):null,hidden:document.hidden,visibility:document.visibilityState})",'contextId':context,'returnByValue':True})
+                result=evaluate('Runtime.evaluate',{'expression':"JSON.stringify({phase:window.__YATRI_PASSENGER_RIDE__&&window.__YATRI_PASSENGER_RIDE__.phase,diagnostics:window.__YATRI_PASSENGER_POLL__||null,callbacks:window.__YATRI_PASSENGER_CALLBACKS__||null,backEnabled:window.enableBackpress===true,nativeClock:window.JBridge.getYatriPassengerClockDiagnostics?JSON.parse(window.JBridge.getYatriPassengerClockDiagnostics()):null,hidden:document.hidden,visibility:document.visibilityState})",'contextId':context,'returnByValue':True})
                 value=result.get('result',{}).get('result',{}).get('value')
                 if value:states.append(json.loads(value))
         except Exception as e:states.append({'target':target_index,'stage':stage,'error':type(e).__name__})

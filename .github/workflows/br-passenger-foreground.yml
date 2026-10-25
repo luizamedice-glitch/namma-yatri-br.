@@ -15,6 +15,10 @@ on:
         description: Testar botoes na primeira abertura, retomada e processo frio
         type: boolean
         default: false
+      expect_runtime_v2:
+        description: Exigir exportacao segura do diagnostico nativo
+        type: boolean
+        default: false
       expect_native_clock:
         description: Exigir cadencia Android nativa no APK corrigido
         type: boolean
@@ -43,7 +47,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '18.20.8'
-      - run: node --test Frontend/scripts/test-passenger-native-clock.mjs Frontend/scripts/test-passenger-polling.mjs Frontend/scripts/test-pilot-trip.mjs Frontend/scripts/test-driver-operations.mjs
+      - run: node --test Frontend/scripts/test-passenger-runtime.mjs Frontend/scripts/test-passenger-native-clock.mjs Frontend/scripts/test-passenger-polling.mjs Frontend/scripts/test-pilot-trip.mjs Frontend/scripts/test-driver-operations.mjs
       - run: npm install --global purescript@0.15.14 spago@0.21.0
       - uses: actions/cache/restore@v4
         id: cache
@@ -148,6 +152,7 @@ jobs:
         options: --health-cmd "pg_isready -U yatri_test" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DATABASE_URL: postgresql://yatri_test:fixture-only@127.0.0.1:5432/passenger_foreground
+      PASSENGER_EXPECT_RUNTIME_V2: ${{ inputs.expect_runtime_v2 && 'true' || 'false' }}
       PASSENGER_EXPECT_NATIVE_CLOCK: ${{ inputs.expect_native_clock && 'true' || 'false' }}
       PASSENGER_APK_SOURCE_RUN: ${{ inputs.apk_run_id || github.run_id }}
       PASSENGER_IDLE_SECONDS: ${{ inputs.idle_seconds || '0' }}
@@ -164,7 +169,7 @@ jobs:
           path: passenger-apk
           run-id: ${{ inputs.apk_run_id || github.run_id }}
           github-token: ${{ github.token }}
-      - run: node --test Frontend/scripts/test-passenger-native-clock.mjs Frontend/scripts/test-passenger-polling.mjs Frontend/scripts/test-pilot-trip.mjs Frontend/scripts/test-driver-operations.mjs
+      - run: node --test Frontend/scripts/test-passenger-runtime.mjs Frontend/scripts/test-passenger-native-clock.mjs Frontend/scripts/test-passenger-polling.mjs Frontend/scripts/test-pilot-trip.mjs Frontend/scripts/test-driver-operations.mjs
       - run: npm ci --prefix brasil/backend
       - name: Iniciar API e banco isolados
         run: |

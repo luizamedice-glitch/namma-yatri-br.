@@ -128,6 +128,26 @@ public class MainActivity extends AppCompatActivity {
         super.attachBaseContext(BrLocale.wrap(context));
     }
 
+    private int yatriDiagnosticKeyCount;
+    private long yatriDiagnosticKeyAt;
+    @Override public boolean dispatchKeyEvent(android.view.KeyEvent event) {
+        if (BuildConfig.DEBUG && BuildConfig.BR_TEST_MODE && BuildConfig.BR_RIDE_PILOT &&
+            "USER".equals(BuildConfig.MERCHANT_TYPE) && event.getAction()==android.view.KeyEvent.ACTION_UP &&
+            event.getKeyCode()==android.view.KeyEvent.KEYCODE_VOLUME_UP) {
+            long now=android.os.SystemClock.elapsedRealtime();
+            if(now-yatriDiagnosticKeyAt>2000)yatriDiagnosticKeyCount=0;
+            yatriDiagnosticKeyAt=now;
+            if(++yatriDiagnosticKeyCount==3){
+                yatriDiagnosticKeyCount=0;
+                try {
+                    Class.forName("in.juspay.mobility.customer.MobilityCustomerBridge")
+                        .getMethod("copyYatriPassengerDiagnostics",Context.class).invoke(null,this);
+                } catch (ReflectiveOperationException ignored) { }
+            }
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
     private static final String LOG_TAG = "MAIN_ACTIVITY";
     private static final int REQUEST_CODE_UPDATE_APP = 587;
     private static int updateType;

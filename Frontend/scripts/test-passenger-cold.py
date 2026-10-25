@@ -62,9 +62,24 @@ try:
         p.wait_label(heading);assert p.call('passenger','/rides/'+ride['id'])['status']==phase
         p.same_foreground(cold_pid);p.capture('cold-restored-'+phase)
     report['cases'].append({'case':'cold_process_restore_controls_and_all_states','passed':True,'restarts_during_states':0})
+    states=p.safe_webview()
+    if os.environ.get('PASSENGER_EXPECT_NATIVE_CLOCK')=='true':
+        assert any(s.get('diagnostics',{}).get('nativeTicks',0)>=4 for s in states if s.get('diagnostics')),'Callbacks nativos nao recebidos apos abertura fria'
+    if os.environ.get('PASSENGER_EXPECT_RUNTIME_V2')=='true':
+        p.adb('shell','input','keyevent','KEYCODE_VOLUME_UP','KEYCODE_VOLUME_UP','KEYCODE_VOLUME_UP');time.sleep(1)
+        native=json.loads(p.adb('shell','run-as',p.package,'cat','files/yatri-passenger-diagnostic.json'))
+        assert native['revision']==2 and native['runtime']['phase']=='completed'
+        assert any(v['text']=='Viagem concluída' for v in native['visibleControls'])
+        (p.out/'native-diagnostic.json').write_text(json.dumps(native,indent=2))
+        report['safe_native_diagnostic_export']=True
     p.tap(p.wait_label('Voltar ao início'));p.home()
     report['acceptance']='passed'
 finally:
+    try:
+        p.adb('shell','input','keyevent','KEYCODE_VOLUME_UP','KEYCODE_VOLUME_UP','KEYCODE_VOLUME_UP');time.sleep(1)
+        native=json.loads(p.adb('shell','run-as',p.package,'cat','files/yatri-passenger-diagnostic.json'))
+        (p.out/'native-diagnostic-final.json').write_text(json.dumps(native,indent=2))
+    except Exception:pass
     (p.out/'cold-acceptance.json').write_text(json.dumps(report,indent=2))
     try:p.safe_webview()
     except Exception:pass

@@ -16,7 +16,7 @@ test('Android clock reaches the consumer iframe through the actual SDK callback 
   const consumerCallback=index.slice(index.indexOf('window.callUICallback = function'),index.indexOf('window.onResumeListeners ='));
   const received=[],errors=[],callback='customer_42';
   const consumer={__PROXY_FN:{[callback]:(...args)=>received.push(args)}};
-  vm.runInNewContext(consumerCallback,{window:consumer,console:{error:(...args)=>errors.push(args),warn:()=>{}}});
+  vm.runInNewContext(consumerCallback,{window:consumer,isBrPassengerRuntime:true,console:{error:(...args)=>errors.push(args),warn:()=>{}}});
   const host={mapps:{customer:{contentWindow:consumer}},__BOOT_LOADER:{}};
   const realm=vm.createContext({window:host,console:{error:(...args)=>errors.push(args)}});
   vm.runInContext(sdkRouter,realm);

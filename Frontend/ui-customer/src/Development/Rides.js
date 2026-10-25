@@ -25,6 +25,15 @@ function diagnostics(owner){
   // Read-only counters for Android acceptance; no session, URL, address or vehicle data.
   window.__YATRI_PASSENGER_POLL__={ticks:owner.ticks,reads:owner.reads,errors:owner.errors,
     polling:owner.polling,actionBusy:owner.busy,nativeTicks:owner.nativeTicks||0,clock:owner.nativeClock?'native':'webview',stalledReadsRecovered:owner.stalledReadsRecovered||0,phase:owner.phase||'idle',lastSuccessAt:owner.lastSuccessAt||0};
+  if(typeof window.JBridge.recordYatriPassengerDiagnostics==='function')try{
+    const callbacks=window.__YATRI_PASSENGER_CALLBACKS__||{};
+    window.JBridge.recordYatriPassengerDiagnostics(JSON.stringify({...window.__YATRI_PASSENGER_POLL__,
+      callbackReceived:callbacks.received||0,callbackFailed:callbacks.failed||0,callbackClock:callbacks.clock||0,
+      callbackOther:callbacks.other||0,callbackLastError:callbacks.lastErrorName||'',registryType:callbacks.registryType||'unknown',
+      registryMapFlag:window.__PROXY_FN_MAP_TYPE===true,backEnabled:window.enableBackpress===true,
+      screen:typeof window.__dui_screen==='string'?window.__dui_screen:''}));
+  }catch(_){}
+
 }
 function rememberRide(owner,id){
   if(owner!==listener)return;
