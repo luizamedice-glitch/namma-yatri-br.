@@ -50,3 +50,18 @@ persistida antes de consultar/cachear a rota motorista→embarque; ambos os perf
 compartilham uma consulta por 30 s. Durante a viagem usa a rota da cotação.
 A menos de 25 m do embarque não solicita uma rota Google de distância zero.
 Não há migration, cobrança financeira nem navegação curva a curva neste incremento.
+
+## Cadência do passageiro — corrigida e verificada em 25/10/2026
+
+No passageiro BR debug, `MobilityCustomerBridge.PassengerClock` acorda o cliente
+a cada 3 s com a Activity retomada. O script usa `window.callUICallback`, cujo
+roteador original do SDK entrega o ID ao consumidor PureScript; variáveis de
+callbacks do consumidor não devem ser procuradas diretamente no contexto host.
+`nativeTicks` conta o recebimento, separado dos disparos/scheduling Android.
+API 36 confirmou 130/130 entregas sem reinício e parada ao voltar à Home.
+
+A autoridade continua sendo a API autenticada/PostgreSQL: o relógio só solicita
+uma leitura, sem carregar URL, credencial ou resposta operacional. Estados são
+publicados sem aguardar Google Routes, e respostas antigas mantêm os guards
+existentes. Gate exclusivo do pacote passageiro debug, recurso de piloto e
+sessão privada. Produção, motorista e navegação visual permanecem preservados.

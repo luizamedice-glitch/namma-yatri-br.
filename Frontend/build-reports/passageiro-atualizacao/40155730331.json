@@ -1,0 +1,224 @@
+{
+  "date": "2026-10-25",
+  "branch": "codex/issue-1-purescript-memory",
+  "baseline_source": "647a945dca5b76a80d968e4b12f3498eaeed51ab",
+  "baseline_run": 40154207135,
+  "baseline": {
+    "phase": "searching",
+    "diagnostics": {
+      "ticks": 1,
+      "reads": 2,
+      "errors": 0,
+      "polling": false,
+      "actionBusy": false,
+      "clock": "native",
+      "stalledReadsRecovered": 0,
+      "phase": "searching",
+      "lastSuccessAt": 1792895744572
+    },
+    "nativeClock": {
+      "scheduled": true,
+      "ticks": 14,
+      "dispatches": 14,
+      "resumed": true,
+      "windowFocused": true
+    },
+    "hidden": false,
+    "visibility": "visible"
+  },
+  "fix_source": "6dd0c19d8382c66233752809ccd28a07abe60589",
+  "build_run": 40155730331,
+  "apk_artifact": 12584645727,
+  "apk": {
+    "source": "6dd0c19d8382c66233752809ccd28a07abe60589",
+    "apk_sha256": "c55ecc33cae835219d1605596158c29de09dec39e8462a6266b4caa046e137be",
+    "apk_bytes": 127819163,
+    "bundle_matches": true,
+    "native_counter_in_bundle": true,
+    "certificate_matches_previous_debug_apk": false
+  },
+  "compiler": {
+    "version": "0.15.14",
+    "seconds": 16.64,
+    "sampled_peak_rss_mib": 406.81,
+    "batches": 22,
+    "compiled_modules": [
+      "Development.Rides"
+    ]
+  },
+  "tests": {
+    "local_node": 25,
+    "api36": {
+      "run": 40155730331,
+      "evidence_artifact": 12585156286,
+      "acceptance": {
+        "acceptance": "passed",
+        "isolated_database": true,
+        "driver_actions_real_http": true,
+        "google_routes_real": true,
+        "passenger_remains_foreground": true,
+        "same_pid": true,
+        "restarts_during_trip": 0,
+        "native_clock_required": true,
+        "idle_seconds": 330,
+        "network_recovery": true,
+        "state_latency_seconds": {
+          "accepted": 6.23,
+          "arrived": 14.62,
+          "in_progress": 5.99,
+          "completed": 5.98
+        },
+        "apk_source_run": "40155730331",
+        "apk_sha256": "c55ecc33cae835219d1605596158c29de09dec39e8462a6266b4caa046e137be"
+      },
+      "frontend": {
+        "ticks": 131,
+        "reads": 132,
+        "errors": 0,
+        "polling": false,
+        "actionBusy": false,
+        "nativeTicks": 130,
+        "clock": "native",
+        "stalledReadsRecovered": 0,
+        "phase": "completed",
+        "lastSuccessAt": 1792897614908
+      },
+      "android_clock": {
+        "scheduled": false,
+        "ticks": 130,
+        "dispatches": 130,
+        "resumed": true,
+        "windowFocused": true
+      },
+      "auxiliary_cdp_timeouts": 2
+    },
+    "api29": {
+      "run": 40156371386,
+      "evidence_artifact": 12585490262,
+      "acceptance": {
+        "acceptance": "passed",
+        "isolated_database": true,
+        "driver_actions_real_http": true,
+        "google_routes_real": true,
+        "passenger_remains_foreground": true,
+        "same_pid": true,
+        "restarts_during_trip": 0,
+        "native_clock_required": true,
+        "idle_seconds": 0,
+        "network_recovery": true,
+        "state_latency_seconds": {
+          "accepted": 3.93,
+          "arrived": 15.65,
+          "in_progress": 6.51,
+          "completed": 6.57
+        },
+        "apk_source_run": "40155730331",
+        "apk_sha256": "c55ecc33cae835219d1605596158c29de09dec39e8462a6266b4caa046e137be"
+      },
+      "frontend": {
+        "ticks": 21,
+        "reads": 22,
+        "errors": 0,
+        "polling": false,
+        "actionBusy": false,
+        "nativeTicks": 20,
+        "clock": "native",
+        "stalledReadsRecovered": 0,
+        "phase": "completed",
+        "lastSuccessAt": 1792897294181
+      },
+      "android_clock": {
+        "scheduled": false,
+        "ticks": 20,
+        "dispatches": 20,
+        "resumed": true,
+        "windowFocused": true
+      },
+      "auxiliary_cdp_timeouts": 0
+    },
+    "api29_actual_network_fault": {
+      "run": 40156836847,
+      "evidence_artifact": 12584806510,
+      "acceptance": {
+        "acceptance": "passed",
+        "isolated_database": true,
+        "driver_actions_real_http": true,
+        "google_routes_real": true,
+        "passenger_remains_foreground": true,
+        "same_pid": true,
+        "restarts_during_trip": 0,
+        "native_clock_required": true,
+        "idle_seconds": 0,
+        "network_recovery": true,
+        "network_fault": "tunnel_removed_and_existing_sockets_closed",
+        "state_latency_seconds": {
+          "accepted": 3.8,
+          "arrived": 14.75,
+          "in_progress": 3.8,
+          "completed": 4.7
+        },
+        "apk_source_run": "40155730331",
+        "apk_sha256": "c55ecc33cae835219d1605596158c29de09dec39e8462a6266b4caa046e137be"
+      },
+      "frontend": {
+        "ticks": 18,
+        "reads": 19,
+        "errors": 4,
+        "polling": false,
+        "actionBusy": false,
+        "nativeTicks": 17,
+        "clock": "native",
+        "stalledReadsRecovered": 0,
+        "phase": "completed",
+        "lastSuccessAt": 1792897751905
+      },
+      "android_clock": {
+        "scheduled": false,
+        "ticks": 17,
+        "dispatches": 17,
+        "resumed": true,
+        "windowFocused": true
+      },
+      "auxiliary_cdp_timeouts": 0
+    }
+  },
+  "scope": {
+    "backend_source_changed": false,
+    "driver_changed": false,
+    "purescript_views_changed": false,
+    "google_routes_preserved": true,
+    "database": "isolated_postgresql16",
+    "driver_actor": "authenticated_real_http",
+    "gps": "explicit_emulator_and_test_actor_coordinates",
+    "vehicle": "explicit_isolated_fixture_TST1A23"
+  },
+  "activation_delivery": {
+    "run": 40156602394,
+    "profile": "passenger",
+    "expires_at": "2026-10-26T03:00:54.938Z",
+    "redeemed": false,
+    "deploy_and_provision_skipped": true,
+    "plaintext_outside_git": true
+  },
+  "limitations": [
+    "Physical device still requires confirmation with this APK.",
+    "Background/push and field driving not covered.",
+    "Known duplicate origin pins retained.",
+    "Debug certificate differs from the checked previous reference; reinstall may be required.",
+    "API36 tunnel-removal scenario did not prove a broken persistent connection; actual socket failure was separately confirmed on API29."
+  ],
+  "changed_files": [
+    ".github/workflows/br-passenger-foreground.yml",
+    "Frontend/android-native/mobility-customer/src/main/java/in/juspay/mobility/customer/MobilityCustomerBridge.java",
+    "Frontend/scripts/serve-passenger-foreground.mjs",
+    "Frontend/scripts/test-passenger-foreground.py",
+    "Frontend/scripts/test-passenger-native-clock.mjs",
+    "Frontend/scripts/test-passenger-polling.mjs",
+    "Frontend/ui-customer/src/Development/Rides.js",
+    "PROJECT_STATUS.md",
+    "ARCHITECTURE.md",
+    "ROADMAP.md",
+    "Frontend/build-reports/passageiro-atualizacao/40155730331.json",
+    "Frontend/build-reports/passageiro-atualizacao/RELATORIO.md"
+  ]
+}

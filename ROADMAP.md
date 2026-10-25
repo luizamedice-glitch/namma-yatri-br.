@@ -104,3 +104,11 @@ com dois celulares; corrigir a chave legada de limpeza dos pinos de origem;
 operação em segundo plano/push. Relatório em
 Frontend/build-reports/mapa-corrida/RELATORIO.md. Pagamentos e navegação curva
 a curva continuam fora do aceite.
+
+25/10/2026: bloqueio na primeira busca reproduzido no API 36 e corrigido pelo
+roteamento original de callbacks do SDK. APK `40155730331` aprovado no Android
+16 com 330 s em espera e ciclo completo sem reabrir; mesmo APK aprovado no
+Android 10 e com corte efetivo/recuperação da conexão (`40156836847`). Confirmar
+este APK no celular do proprietário antes do próximo teste de campo. Preservar
+mapas/rotas atuais; segundo plano/push e limpeza de pinos permanecem pendentes.
+Relatório: `Frontend/build-reports/passageiro-atualizacao/RELATORIO.md`.

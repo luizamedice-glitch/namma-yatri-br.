@@ -20,7 +20,7 @@ def nodes():
             if attempt==2:raise
             time.sleep(2)
 def capture(name):
-    # Only pre-assignment/public-place screens are captured; no real plate/code.
+    # Screens contain only isolated CI accounts/vehicle fixtures and public places.
     ns=nodes();(out/(name+'.png')).write_bytes(adb('exec-out','screencap','-p'))
     return ns
 def tap(node):

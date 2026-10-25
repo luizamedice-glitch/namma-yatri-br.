@@ -399,3 +399,12 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
   celulares, push/GPS com app fechado, navegação curva a curva e pagamentos
   permanecem pendentes. Ativações de uso único entregues em arquivo privado;
   código/sessão não publicados no Git/logs.
+
+### Passageiro — primeira busca atualizada sem reabrir, 25/10/2026
+
+- Retomadas as alterações do proprietário até `647a945dca`, incluindo mapas/rotas e relógio nativo. Reproduzido bloqueio em API 36 no run `40154207135`: backend aceito, UI procurando; 14 disparos Android e apenas um tick no frontend. Script procurava o callback no contexto do SDK.
+- Corrigido em `6dd0c19d83`: usar a entrada original `window.callUICallback` para encaminhar ao consumidor. Aceite exige callbacks efetivamente recebidos; views PureScript, mapas, autenticação, backend e motorista preservados. Teste com roteador SDK original falha na ponte antiga e passa na atual.
+- **COMPILADO/TESTADO:** `40155730331 success`, Android 16/API 36; busca → aceite → chegada → início → conclusão sem reinício, 330 s em espera e 130/130 callbacks recebidos. Mesmo APK aprovado no API 29 (`40156371386`). Rede efetivamente cortada e restaurada no API 29 (`40156836847`): quatro erros observados e recuperação automática. 25 testes Node aprovados. API/PostgreSQL isolados; Google real; motorista por HTTP autenticado, sem alterar corridas do Lightsail.
+- Cache: somente Development.Rides recompilado, 16,64 s de compilador, 406,81 MiB RSS amostrado e 22 lotes; HomeScreen/Main preservados. APK **12584645727**, fontes `6dd0c19d83`, SHA256 interno `c55ecc33cae835219d1605596158c29de09dec39e8462a6266b4caa046e137be`. Capturas API 36 **12585156286** e rede API 29 **12584806510** conferidas. Relatório `Frontend/build-reports/passageiro-atualizacao/RELATORIO.md`.
+- Assinatura debug diferente da referência anterior; reinstalação pode ser necessária. Ativação privada somente passageiro emitida em `40156602394`, válida até `2026-10-26T03:00:54.938Z`; texto fora do Git e código não consumido. Nenhum deploy/provisionamento, alteração de viagem ou invalidação de sessão do motorista.
+- Limites: confirmação física, segundo plano/push, teste de rua e pinos verdes duplicados continuam pendentes. O corte real de conexões foi comprovado no segundo aceite API 29; a remoção isolada do túnel nos primeiros testes não comprovava falha de rede.
