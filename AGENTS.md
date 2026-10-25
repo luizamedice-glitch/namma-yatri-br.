@@ -31,6 +31,15 @@ Leia antes de modificar o código:
 6. Resuma commits, testes, problemas abertos e próximo passo.
 
 ## Objetivo imediato
+Atualização de prioridade: backend/driver f585ad66f82e com recuperação entregue.
+Piloto implantado em 40236965537, APK build 40236963482, aprovado em API 36/29
+(40237490959/40238396498). Leia Frontend/build-reports/recuperacao-operacional/RELATORIO.md.
+Proprietário confirmou a versão anterior operacional e adiou pagamentos,
+Firebase e autenticação definitiva para os ajustes finais. Preserve proteção
+atual e passageiro; próximos aceites são teste físico prolongado, bateria,
+falha/retorno de PostgreSQL, backup/observabilidade, carga e assinatura persistente.
+A referência abaixo é o marco anterior de segundo plano.
+
 Consolidar o piloto dos dois APKs. Motorista com serviço nativo de GPS/alertas em segundo plano, fonte 61d9290c43f5, build 40222415126, aprovado em API 36/29 (40222825183/40222827520). Leia Frontend/build-reports/motorista-segundo-plano/RELATORIO.md: API/banco isolados, passageiro por HTTP e sensor emulado; confirmação física em dois celulares pendente. Proprietário adiou Firebase e escolheu transporte nativo de testes. Passageiro Geoapify 554c147e625b e backend Lightsail 40215991172 preservados. Próximos incrementos: teste físico com tela bloqueada/mapa, bateria/reconexão nativa, assinatura persistente e Firebase posteriormente. Preserve fonte única do backend, produção e telas originais. Reaproveitamento de bundle exige comparação estrita; alterações Java sempre exigem novo APK e aceite Android.
 
 ## Servidor de desenvolvimento AWS

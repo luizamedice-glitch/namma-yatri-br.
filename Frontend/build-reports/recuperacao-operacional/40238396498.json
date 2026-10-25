@@ -1,0 +1,55 @@
+{
+  "acceptance": {
+    "acceptance": "passed",
+    "backend": "isolated_postgresql",
+    "push_transport": "native_service_polling_not_fcm",
+    "cases": [
+      {
+        "case": "native_network_recovery_locked_screen",
+        "passed": true,
+        "same_pid": true
+      },
+      {
+        "case": "gps_disable_stale_eligibility_reenable_locked_screen",
+        "passed": true,
+        "same_pid": true
+      },
+      {
+        "case": "locked_screen_gps_and_deduplicated_offer",
+        "passed": true,
+        "native_uploads": 14
+      },
+      {
+        "case": "notification_opens_offer_and_assigned_gps_reaches_passenger",
+        "passed": true,
+        "same_pid": true
+      },
+      {
+        "case": "offline_without_ride_stops_gps_service",
+        "passed": true
+      }
+    ],
+    "api": "29",
+    "apk_sha256": "bd01032f34172576c0b279350da26faad006abae5b451effdcc98a7cddd2043f",
+    "apk_source_run": "40236963482"
+  },
+  "native": {
+    "snapshots": "43",
+    "stopped": "true",
+    "observedAt": "1792966224053",
+    "state": "running",
+    "notifications": "1",
+    "errors": "1",
+    "uploads": "31"
+  },
+  "fatal": {
+    "fatalCount": 0,
+    "lines": []
+  },
+  "notificationTap": {
+    "method": "api29_fixed_profile_first_notification",
+    "x": 540,
+    "y": 634,
+    "system_notification_verified": true
+  }
+}

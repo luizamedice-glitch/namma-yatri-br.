@@ -1,5 +1,20 @@
 # Yatri Brasil — mapa arquitetural inicial
 
+## Recuperação operacional — 25/10/2026
+
+`domain.transition` reconhece uma repetição autorizada no estado de destino;
+`mobility.change` não atualiza versão/eventos nesse caso. Comandos fora da etapa
+e terceiros continuam recusados. Transações/índices únicos mantêm a exclusividade.
+Teste HTTP após COMMIT/reinício real de Node confirma dados/sessões persistidos.
+
+Snapshot distingue `online` (intenção) de `available` (elegibilidade com GPS
+recebido há menos de 60 s). Driver.js/BrDriverService mantêm o serviço pela
+intenção enquanto o servidor filtra ofertas por elegibilidade. Notificação
+indica conexão indisponível ou GPS sem atualização; sem novos endpoints,
+migrations, dependências ou alteração no passageiro. Backend `f585ad66f82e`
+implantado em `40236965537`, APK aprovado em API 36/29 (`40237490959`/`40238396498`).
+Relatório `Frontend/build-reports/recuperacao-operacional/RELATORIO.md`.
+
 ## Motorista em segundo plano — piloto de 25/10/2026
 
 `BrDriverService` no módulo Android app mantém LocationManager e um worker HTTP

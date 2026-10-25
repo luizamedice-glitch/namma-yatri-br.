@@ -1,5 +1,17 @@
 # Ambiente AWS de desenvolvimento — Alce Yatri Brasil
 
+## Recuperação operacional atual — 25/10/2026
+
+Piloto atualizado para `f585ad66f82e12c230f3b2f627333560ba96aa28` no run
+`40236965537`, aprovado após contratos HTTP/PostgreSQL e recuperação de resposta
+truncada após COMMIT/reinício de Node. Mesmo schema, contas, portas e janela até
+`2026-10-31T18:16:18.740028+00:00`. API principal/PostgreSQL/maps-test preservados;
+nenhuma corrida ativa durante a troca. Sem novas rotas públicas, autorização
+mantida. Snapshot distingue intenção `online` de elegibilidade `available`;
+repetições no estado de destino não duplicam eventos. Ativação privada motorista
+emitida separadamente em `40237536697`, sem novo deploy. Aceites Android usam
+API/banco isolados; ver `Frontend/build-reports/recuperacao-operacional/RELATORIO.md`.
+
 ## Motor de mapas sem autenticação para testes — 2026-10-23
 
 Autorização explícita do proprietário nesta sessão para contornar autenticação

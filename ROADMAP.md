@@ -1,5 +1,19 @@
 # Yatri Brasil — roadmap técnico
 
+## Marco atual — recuperação operacional, 25/10/2026
+
+Backend `f585ad66f82e` implantado em `40236965537`: reenvios após resposta perdida
+não duplicam transições/eventos; PostgreSQL/API com SIGKILL de Node aprovados.
+Motorista recupera rede/GPS e preserva intenção online sem ofertas com GPS antigo.
+APK `40236963482` aprovado em Android 16/10 (`40237490959`/`40238396498`).
+Proprietário confirmou a versão anterior operacional; falta confirmação física
+desta recuperação nova em corrida completa com dois celulares e tela bloqueada.
+
+Depois: duração prolongada/bateria/Doze/OEM, falha/retorno do PostgreSQL,
+backup/observabilidade, carga isolada e assinatura persistente. Pagamentos,
+Firebase e autenticação definitiva ficam para os ajustes finais por orientação
+explícita; não retirar a proteção das sessões/perfis de teste existentes.
+
 ## Marco atual — piloto em segundo plano, 25/10/2026
 
 Motorista com GPS e alertas nativos independente do WebView aprovado em Android

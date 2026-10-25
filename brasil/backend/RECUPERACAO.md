@@ -42,4 +42,7 @@ o transporte Google é fixture declarada; não usa Lightsail.
 `Frontend/scripts/test-driver-background.py` validam o Android com corte real
 do túnel TCP, fechamento das conexões existentes, desligamento e retorno do
 GPS e envelhecimento real das janelas de 30/60 s. Sem reiniciar o aplicativo
-nem acordar o WebView pelo debugger. Roteiro Android em validação neste registro.
+nem acordar o WebView pelo debugger. Android 16 `40237490959` e Android 10
+`40238396498` aprovados com o mesmo APK; backend implantado em `40236965537`.
+Fontes `f585ad66f82e`. Evidências e limites em
+`Frontend/build-reports/recuperacao-operacional/RELATORIO.md`.
