@@ -4,7 +4,7 @@ import {createOperationsClient} from '../../../ui-driver/src/Development/Operati
 import {createNativeFetch} from '../../../ui-driver/src/Development/NativeTransport.mjs';
 import {updateTripMap,releaseTripMap} from '../../../ui-common/src/Development/TripMapRuntime.js';
 import {tripView} from '../../../ui-common/src/Development/PilotTrip.mjs';
-let listener,clockSequence=0;
+let listener;
 const rideKey='YATRI_PASSENGER_ACTIVE_RIDE';
 export const enabled=()=>{
   try{return window.__OS==='ANDROID'&&window.__YATRI_BR_DEVELOPMENT__===true&&
@@ -112,20 +112,20 @@ export const subscribe=origin=>destination=>changed=>error=>()=>{
   let timer,clockCallback;
   try{
     if(typeof window.JBridge.startYatriPassengerClock==='function'){
-      clockCallback='br-passenger-'+(++clockSequence);
+      clockCallback=callbackMapper.map(wake);
       const callbacks=window.__YATRI_PASSENGER_CLOCK_CALLBACKS__||(window.__YATRI_PASSENGER_CLOCK_CALLBACKS__=Object.create(null));
       callbacks[clockCallback]=wake;
       owner.nativeClock=window.JBridge.startYatriPassengerClock(clockCallback)===true;
     }
   }catch(_){owner.nativeClock=false;}
-  if(!owner.nativeClock){if(clockCallback)delete window.__YATRI_PASSENGER_CLOCK_CALLBACKS__[clockCallback];timer=setInterval(()=>tick(owner),3000);}
+  if(!owner.nativeClock){if(clockCallback){delete window.__YATRI_PASSENGER_CLOCK_CALLBACKS__[clockCallback];const registry=window.__PROXY_FN;if(registry instanceof Map)registry.delete(clockCallback);else if(registry)delete registry[clockCallback];}timer=setInterval(()=>tick(owner),3000);}
   const resumed=window.onResumeListeners;
   if(Array.isArray(resumed))resumed.push(wake);
   if(window.addEventListener)window.addEventListener('online',wake);
   owner.stop=()=>{
     if(timer!==undefined)clearInterval(timer);
     if(owner.nativeClock)try{window.JBridge.stopYatriPassengerClock(clockCallback);}catch(_){}
-    if(clockCallback)delete window.__YATRI_PASSENGER_CLOCK_CALLBACKS__[clockCallback];
+    if(clockCallback){delete window.__YATRI_PASSENGER_CLOCK_CALLBACKS__[clockCallback];const registry=window.__PROXY_FN;if(registry instanceof Map)registry.delete(clockCallback);else if(registry)delete registry[clockCallback];}
     owner.revision++;
     if(Array.isArray(resumed)){const index=resumed.indexOf(wake);if(index>=0)resumed.splice(index,1);}
     if(window.removeEventListener)window.removeEventListener('online',wake);

@@ -96,7 +96,7 @@ def safe_webview():
             stage='enable';evaluate('Runtime.enable')
             for context in list(contexts):
                 stage='evaluate'
-                result=evaluate('Runtime.evaluate',{'expression':"JSON.stringify({phase:window.__YATRI_PASSENGER_RIDE__&&window.__YATRI_PASSENGER_RIDE__.phase,diagnostics:window.__YATRI_PASSENGER_POLL__||null,hidden:document.hidden,visibility:document.visibilityState})",'contextId':context,'returnByValue':True})
+                result=evaluate('Runtime.evaluate',{'expression':"JSON.stringify({phase:window.__YATRI_PASSENGER_RIDE__&&window.__YATRI_PASSENGER_RIDE__.phase,diagnostics:window.__YATRI_PASSENGER_POLL__||null,nativeClock:window.JBridge.getYatriPassengerClockDiagnostics?JSON.parse(window.JBridge.getYatriPassengerClockDiagnostics()):null,hidden:document.hidden,visibility:document.visibilityState})",'contextId':context,'returnByValue':True})
                 value=result.get('result',{}).get('result',{}).get('value')
                 if value:states.append(json.loads(value))
         except Exception as e:states.append({'target':target_index,'stage':stage,'error':type(e).__name__})
@@ -118,6 +118,8 @@ try:
     adb('shell','run-as',package,'mkdir','-p','shared_prefs')
     subprocess.run(['adb','shell','run-as',package,'sh','-c','"cat > shared_prefs/godel.xml"'],input=ET.tostring(root),check=True,capture_output=True,timeout=30)
     adb('reverse','tcp:8080','tcp:8080')
+    adb('shell','settings','put','system','screen_off_timeout','1800000')
+    adb('shell','svc','power','stayon','true')
     adb('shell','settings','put','secure','location_mode','3')
     adb('emu','geo','fix','-46.6333','-23.5505')
     adb('shell','am','start','-W','-n',package+'/in.juspay.mobility.MainActivity')

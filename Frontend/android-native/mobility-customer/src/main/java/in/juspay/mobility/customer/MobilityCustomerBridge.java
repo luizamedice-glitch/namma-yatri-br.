@@ -65,11 +65,15 @@ import in.juspay.hyper.core.JuspayLogger;
 import in.juspay.mobility.common.MapRemoteConfig;
 import in.juspay.mobility.common.MobilityCommonBridge;
 import android.view.accessibility.AccessibilityManager;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 
 public class MobilityCustomerBridge extends MobilityCommonBridge {
     // Foreground cadence only. Never contains a URL, token, or operational response.
     private final Handler yatriClockHandler = new Handler(Looper.getMainLooper());
-    private PassengerClock yatriPassengerClock;
+    private volatile PassengerClock yatriPassengerClock;
+    private volatile int yatriClockTicks, yatriClockDispatches;
+    private volatile boolean yatriClockResumed, yatriClockFocused;
 
     private boolean yatriPassengerClockEnabled() {
         try {
@@ -88,6 +92,7 @@ public class MobilityCustomerBridge extends MobilityCommonBridge {
         if (!yatriPassengerClockEnabled() || callback == null || callback.isEmpty() || callback.length() > 256) return false;
         ExecutorManager.runOnMainThread(() -> {
             if (yatriPassengerClock != null) yatriClockHandler.removeCallbacks(yatriPassengerClock);
+            yatriClockTicks = 0; yatriClockDispatches = 0;
             yatriPassengerClock = new PassengerClock(this, callback);
             yatriClockHandler.postDelayed(yatriPassengerClock, 3000);
         });
@@ -104,6 +109,16 @@ public class MobilityCustomerBridge extends MobilityCommonBridge {
         });
     }
 
+    @JavascriptInterface
+    public String getYatriPassengerClockDiagnostics() {
+        if (!yatriPassengerClockEnabled()) return "{}";
+        try {
+            return new JSONObject().put("scheduled", yatriPassengerClock != null)
+                .put("ticks", yatriClockTicks).put("dispatches", yatriClockDispatches)
+                .put("resumed", yatriClockResumed).put("windowFocused", yatriClockFocused).toString();
+        } catch (JSONException ignored) { return "{}"; }
+    }
+
     private static final class PassengerClock implements Runnable {
         private final WeakReference<MobilityCustomerBridge> reference;
         private final String callback;
@@ -117,12 +132,19 @@ public class MobilityCustomerBridge extends MobilityCommonBridge {
             if (activity == null || activity.isFinishing() || activity.isDestroyed() || !bridge.yatriPassengerClockEnabled()) {
                 bridge.yatriPassengerClock = null; return;
             }
-            if (activity.hasWindowFocus() && bridge.bridgeComponents.getJsCallback() != null) {
+            bridge.yatriClockTicks++;
+            bridge.yatriClockFocused = activity.hasWindowFocus();
+            bridge.yatriClockResumed = activity instanceof LifecycleOwner &&
+                ((LifecycleOwner) activity).getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED);
+            if (bridge.yatriClockResumed && bridge.bridgeComponents.getJsCallback() != null) {
                 String id = JSONObject.quote(callback);
                 // A cancelled subscription may have removed its callback already.
-                String script = "(function(){var r=window.__YATRI_PASSENGER_CLOCK_CALLBACKS__,k=" + id +
-                    ",f=r&&r[k];if(typeof f==='function')f();})()";
-                bridge.bridgeComponents.getJsCallback().addJsToWebView(script);
+                String script = "(function(){var a=window.__YATRI_PASSENGER_CLOCK_CALLBACKS__,r=window.__PROXY_FN,k=" + id +
+                    ",f=(a&&a[k])||(r instanceof Map?r.get(k):r&&r[k]);if(typeof f==='function')f();})()";
+                try {
+                    bridge.bridgeComponents.getJsCallback().addJsToWebView(script);
+                    bridge.yatriClockDispatches++;
+                } catch (RuntimeException ignored) { /* Retry while the Activity is resumed. */ }
             }
             bridge.yatriClockHandler.postDelayed(this, 3000);
         }
