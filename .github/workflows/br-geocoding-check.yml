@@ -1,6 +1,9 @@
 name: BR - Verificar Geocoding Google no servidor
 on:
   workflow_dispatch:
+  push:
+    branches: [codex/issue-1-purescript-memory]
+    paths: [.github/workflows/br-geocoding-check.yml]
 permissions:
   contents: read
 concurrency:
