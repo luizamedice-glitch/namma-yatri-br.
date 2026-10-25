@@ -3,11 +3,24 @@
 No CDP/debugger/timer wake-up and no HTTP GPS injection after going online.
 """
 import importlib.util,json,os,re,time,subprocess,xml.etree.ElementTree as ET,hashlib
+from threading import Event,Thread
 from pathlib import Path
 spec=importlib.util.spec_from_file_location('helpers',Path(__file__).with_name('test-passenger-foreground.py'))
 p=importlib.util.module_from_spec(spec);spec.loader.exec_module(p)
 p.package='in.juspay.nammayatripartner.debug';p.out=Path('driver-background-evidence');p.out.mkdir(exist_ok=True)
 report={'acceptance':'running','backend':'isolated_postgresql','push_transport':'native_service_polling_not_fcm','cases':[]}
+gps_point=(-46.6333,-23.5505);gps_stop=Event()
+def fix(lng,lat):
+    global gps_point
+    gps_point=(lng,lat);p.adb('emu','geo','fix',str(lng),str(lat))
+def pulse_gps():
+    # A real location provider emits fresh stationary fixes too. Drive only the
+    # emulator sensor, never the API or a JS callback; native code must publish it.
+    while not gps_stop.is_set():
+        point=gps_point
+        try:p.adb('emu','geo','fix',str(point[0]),str(point[1]))
+        except subprocess.CalledProcessError:return
+        gps_stop.wait(5)
 def native():
     root=ET.fromstring(p.adb('shell','run-as',p.package,'cat','shared_prefs/yatri_br_tracking_diagnostic.xml'))
     allowed={'state','uploads','snapshots','notifications','errors','observedAt','stopped'}
@@ -42,9 +55,9 @@ try:
     p.adb('reverse','tcp:8080','tcp:8080')
     p.adb('shell','settings','put','system','screen_off_timeout','1800000')
     p.adb('shell','settings','put','secure','location_mode','3')
-    p.adb('emu','geo','fix','-46.6333','-23.5505')
+    fix(-46.6333,-23.5505);Thread(target=pulse_gps,daemon=True).start()
     launch();time.sleep(12)
-    p.tap(ui_button(r'go online|ficar dispon.vel|ativar'))
+    button=ui_button(r'go online|ficar dispon.vel|ativar');time.sleep(5);p.tap(button)
     started=await_native(lambda s:int(s.get('uploads','0'))>=2,'Serviço nativo não enviou GPS após ativação')
     assert p.call('driver','/snapshot')['available'] is True
     pid=p.adb('shell','pidof',p.package).decode().strip()
@@ -56,7 +69,7 @@ try:
     activities=p.adb('shell','dumpsys','activity','activities').decode()
     assert not any(p.package in line for line in activities.splitlines() if 'ResumedActivity' in line),'Motorista permaneceu em primeiro plano'
     locked_uploads=int(native()['uploads'])
-    p.adb('emu','geo','fix','-46.6319','-23.5514')
+    fix(-46.6319,-23.5514)
     await_native(lambda s:int(s.get('uploads','0'))>=locked_uploads+3,'GPS não continuou com tela bloqueada')
     origin={'lat':-23.5514,'lng':-46.6319,'address':'Embarque público do teste em São Paulo'}
     destination={'lat':-23.5614,'lng':-46.6559,'address':'Destino público do teste na Avenida Paulista'}
@@ -77,7 +90,7 @@ try:
     p.tap(p.wait_label('Aceitar viagem'));p.wait_label('Cheguei ao embarque')
     assert p.call('passenger','/rides/'+ride['id'])['status']=='accepted'
     p.adb('shell','input','keyevent','KEYCODE_HOME');p.adb('shell','input','keyevent','KEYCODE_SLEEP')
-    p.adb('emu','geo','fix','-46.6329','-23.5507')
+    fix(-46.6329,-23.5507)
     for _ in range(20):
         snapshot=p.call('passenger','/rides/'+ride['id'])
         if abs(snapshot.get('driver_lat',0)+23.5507)<0.0001 and abs(snapshot.get('driver_lng',0)+46.6329)<0.0001:break
@@ -87,7 +100,7 @@ try:
     report['cases'].append({'case':'notification_opens_offer_and_assigned_gps_reaches_passenger','passed':True,'same_pid':True})
     # Cancel through the actual passenger actor, then explicitly go offline remotely.
     p.call('passenger','/rides/'+ride['id']+'/cancel',{})
-    p.adb('emu','geo','fix','-46.6329','-23.5507')
+    fix(-46.6329,-23.5507)
     p.call('driver','/driver/availability',{'available':False})
     await_native(lambda s:s.get('stopped')=='true','Serviço não parou ao ficar offline sem corrida')
     report['cases'].append({'case':'offline_without_ride_stops_gps_service','passed':True})
@@ -95,6 +108,7 @@ try:
     report['apk_sha256']=hashlib.sha256(next(Path('driver-apk').glob('*.apk')).read_bytes()).hexdigest()
     report['apk_source_run']=os.environ.get('DRIVER_APK_SOURCE_RUN');report['acceptance']='passed'
 finally:
+    gps_stop.set()
     try:(p.out/'native-diagnostic.json').write_text(json.dumps(native(),indent=2))
     except Exception:pass
     (p.out/'acceptance.json').write_text(json.dumps(report,indent=2))
