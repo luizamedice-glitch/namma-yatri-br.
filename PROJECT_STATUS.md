@@ -1,5 +1,14 @@
 # Yatri Brasil — situação do projeto
 
+## Ícone exclusivo do motorista — 26/10/2026
+
+- IMPLEMENTADO: arte oficial vinho com inscrição Driver nas cinco densidades,
+  ícones adaptativos e legado circular, restritos ao overlay motorista debug.
+- Reutilização estrita do bundle motorista aprovado 40236963482 e Android atual,
+  preservando novos commits de GPS/reconexão, sem compilação PureScript.
+- COMPILADO e TESTADO EM ANDROID: pendentes desta execução.
+- Fonte, reprodução e escopo: `Frontend/branding/driver/README.md`.
+
 ## Estado atual — 25/10/2026
 
 - **Recuperação de PostgreSQL e backup real verificados:** fonte `8d24ad18edebe754341e7839261122b70a440777`; CI `40241759979`, instalação/cópia externa/restauração `40241777998`, monitor externo manual `40241825428` aprovados. API sobrevive à queda real de banco isolado, descarta conexões quebradas, retorna 503 e recupera sem conclusão parcial. 25 testes Node + dois Python aprovados.

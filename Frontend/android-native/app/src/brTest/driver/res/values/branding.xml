@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="br_brand_blue">#0732B6</color>
-    <color name="br_icon_blue">#FF00BE</color>
+    <color name="br_icon_blue">#800253</color>
     <color name="br_brand_pink">#FF00BE</color>
     <!-- Nomes usados pelos componentes originais; resolução local sem CDN. -->
     <item type="drawable" name="ny_ic_logo_dark">@drawable/br_logo_transparent</item>

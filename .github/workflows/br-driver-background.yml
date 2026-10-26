@@ -2,6 +2,10 @@ name: BR - Motorista GPS em segundo plano
 on:
   workflow_dispatch:
     inputs:
+      verify_driver_icon:
+        description: Conferir novos icones no APK e capturar launcher antes do aceite operacional
+        type: boolean
+        default: false
       bundle_apk_run_id:
         description: APK aprovado cujo bundle identico sera reutilizado para ajuste apenas nativo
         type: string
@@ -109,6 +113,17 @@ jobs:
           cp android-native/local-temp.properties android-native/local.properties
           cd android-native
           bash gradlew :app:assembleNyDriverProdDebug -PbrTestMode=true -PbrRidePilot=true --no-daemon --max-workers=2 --stacktrace
+      - name: Conferir pixels dos icones e preservacao dos assets aprovados
+        if: inputs.verify_driver_icon
+        run: |
+          test -n '${{ inputs.bundle_apk_run_id }}'
+          python3 -m pip install Pillow==11.3.0
+          python3 Frontend/scripts/verify-driver-icon-apk.py
+      - uses: actions/upload-artifact@v4
+        if: inputs.verify_driver_icon
+        with:
+          name: driver-icon-apk-integrity
+          path: driver-icon-evidence/
       - uses: actions/upload-artifact@v4
         with:
           name: ride-motorista-apk
@@ -131,6 +146,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://yatri_test:fixture-only@127.0.0.1:5432/driver_background
       PASSENGER_FOREGROUND_SESSIONS: ${{ github.workspace }}/../background-sessions.json
+      VERIFY_DRIVER_ICON: ${{ inputs.verify_driver_icon }}
       DRIVER_APK_SOURCE_RUN: ${{ inputs.apk_run_id || github.run_id }}
     steps:
       - uses: actions/checkout@v4
@@ -165,7 +181,15 @@ jobs:
           arch: x86_64
           profile: pixel_2
           ram-size: 4096M
-          script: adb install -g driver-apk/*.apk && python3 Frontend/scripts/test-driver-background.py
+          script: |
+            adb install -g driver-apk/*.apk
+            if [ "$VERIFY_DRIVER_ICON" = true ]; then python3 Frontend/scripts/test-driver-icon.py; fi
+            python3 Frontend/scripts/test-driver-background.py
+      - uses: actions/upload-artifact@v4
+        if: always() && inputs.verify_driver_icon
+        with:
+          name: driver-icon-launcher-evidence
+          path: driver-icon-evidence/
       - uses: actions/upload-artifact@v4
         if: always()
         with:
