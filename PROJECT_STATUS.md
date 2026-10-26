@@ -6,7 +6,19 @@
   ícones adaptativos e legado circular, restritos ao overlay motorista debug.
 - Reutilização estrita do bundle motorista aprovado 40236963482 e Android atual,
   preservando novos commits de GPS/reconexão, sem compilação PureScript.
-- COMPILADO e TESTADO EM ANDROID: pendentes desta execução.
+- COMPILADO: fonte `cbdec7f37119`, run `40257355937`, APK `12623317227`;
+  SHA256 `f192046cc1f2de5c4c8812b157da43af976cf99c1179aa29c267da3d9684d6d6`.
+  Etapa Android 3min05s, zero PureScript, 76 assets intactos e 15 PNGs conferidos.
+- TESTADO EM ANDROID 16: `40258541630` aprovado, mesmos bytes; ícone/abertura
+  no launcher, cinco casos rede/GPS/oferta/notificação/aceite/parada aprovados,
+  zero fatal. 16 testes Node. Sessão passageiro por HTTP, API/PG isolados.
+- Durante a retomada, deploy antigo foi repetido indevidamente; corrigido pela
+  reaplicação aprovada `40241930473` tentativa 2, revisão `8d24ad18edebe754341e7839261122b70a440777`;
+  serviços/janela/autorizações preservados. Detalhes no relatório do incremento.
+- Ativação privada motorista emitida em `40258702334`, uso único até
+  `2026-10-27T02:21:49.613Z`, fora do Git. Pode ser necessária reinstalação
+  apenas do motorista devido à assinatura debug efêmera.
+- Relatório/evidências: `Frontend/build-reports/motorista-icone/RELATORIO.md`.
 - Fonte, reprodução e escopo: `Frontend/branding/driver/README.md`.
 
 ## Estado atual — 25/10/2026

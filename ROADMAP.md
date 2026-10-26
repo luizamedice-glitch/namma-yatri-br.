@@ -188,3 +188,11 @@ controles e processo frio no mesmo APK. Fontes `5833a5d5cb`, relatório
 Frontend/build-reports/passageiro-reconexao/RELATORIO.md. Próximo ajuste de
 distribuição: assinatura debug persistente para evitar reinstalações; depois
 pinos legados e teste de rua quando houver dois aparelhos disponíveis.
+
+
+26/10/2026: ícone exclusivo do motorista (arte vinho Driver) compilado no run
+40257355937 e aprovado em Android 16 no 40258541630, incluindo cinco casos
+operacionais de recuperação/GPS/oferta/aceite/parada. Fontes recentes preservadas,
+76 assets/bundle intactos; zero compilação PureScript. Assinatura persistente e
+teste físico prolongado continuam pendentes. Relatório
+Frontend/build-reports/motorista-icone/RELATORIO.md.

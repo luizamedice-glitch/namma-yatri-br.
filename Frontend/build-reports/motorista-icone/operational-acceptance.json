@@ -1,0 +1,34 @@
+{
+  "acceptance": "passed",
+  "backend": "isolated_postgresql",
+  "push_transport": "native_service_polling_not_fcm",
+  "cases": [
+    {
+      "case": "native_network_recovery_locked_screen",
+      "passed": true,
+      "same_pid": true
+    },
+    {
+      "case": "gps_disable_stale_eligibility_reenable_locked_screen",
+      "passed": true,
+      "same_pid": true
+    },
+    {
+      "case": "locked_screen_gps_and_deduplicated_offer",
+      "passed": true,
+      "native_uploads": 13
+    },
+    {
+      "case": "notification_opens_offer_and_assigned_gps_reaches_passenger",
+      "passed": true,
+      "same_pid": true
+    },
+    {
+      "case": "offline_without_ride_stops_gps_service",
+      "passed": true
+    }
+  ],
+  "api": "36",
+  "apk_sha256": "f192046cc1f2de5c4c8812b157da43af976cf99c1179aa29c267da3d9684d6d6",
+  "apk_source_run": "40257355937"
+}
