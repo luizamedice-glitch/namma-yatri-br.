@@ -19,7 +19,17 @@ icon=next((n for n in items if 'Alce' in (n.get('text','')+' '+n.get('content-de
 assert icon is not None,'Driver icon not found in launcher drawer'
 screenshot('launcher-driver')
 x1,y1,x2,y2=map(int,re.findall(r'\d+',icon.get('bounds','')))
-adb('shell','input','tap',str((x1+x2)//2),str((y1+y2)//2));time.sleep(20)
+adb('shell','input','tap',str((x1+x2)//2),str((y1+y2)//2));time.sleep(12)
+# The stock Google APIs emulator may ask for Location Accuracy on first launch.
+# Answer that real system dialog explicitly; do not count the overlay as the app.
+for _ in range(4):
+    current=nodes()
+    accuracy=any('location accuracy' in n.get('text','').lower() for n in current)
+    consent=next((n for n in current if n.get('text','').lower()=='turn on'),None)
+    if not accuracy or consent is None:break
+    screenshot('google-location-accuracy')
+    a,b,c,d=map(int,re.findall(r'\d+',consent.get('bounds','')))
+    adb('shell','input','tap',str((a+c)//2),str((b+d)//2));time.sleep(4)
 screenshot('driver-opening')
 activities=adb('shell','dumpsys','activity','activities').decode(errors='replace')
 resumed=[line for line in activities.splitlines() if 'ResumedActivity' in line]
