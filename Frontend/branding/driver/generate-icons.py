@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Resample supplied artwork only; no redrawing/removal of the original design.
 
-Requires Pillow. The complete source sits in 70/108 dp. Its visible artwork is
+Requires Pillow. The complete source sits in 68/108 dp. Its visible artwork is
 inside the adaptive 66 dp safe circle. Legacy icons use the central 72 dp viewport.
 """
 from pathlib import Path
@@ -15,7 +15,7 @@ background = '#800253'
 for density, scale in [('mdpi',1),('hdpi',1.5),('xhdpi',2),('xxhdpi',3),('xxxhdpi',4)]:
     directory = res / ('mipmap-' + density)
     directory.mkdir(parents=True, exist_ok=True)
-    side, art_side = round(108*scale), round(70*scale)
+    side, art_side = round(108*scale), round(68*scale)
     layer = Image.new('RGBA',(side,side),background)
     art = source.resize((art_side,art_side),Image.Resampling.LANCZOS)
     inset = (side-art_side)//2

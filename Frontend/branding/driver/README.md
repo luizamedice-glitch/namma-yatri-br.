@@ -6,7 +6,7 @@ Sem geração de imagem, remoção de fundo ou redesenho da marca.
 
 `generate-icons.py` usa Pillow apenas como ferramenta de reamostragem: cria os
 15 PNGs nas cinco densidades (48 dp legado, 108 dp adaptativo). A arte completa
-ocupa 70 dp centralizados; o símbolo e o texto permanecem na área segura de
+ocupa 68 dp centralizados; o símbolo e o texto permanecem na área segura de
 66 dp. `launcher-masks.png` permite conferir máscaras quadrada, circular e
 arredondada. O fundo adaptativo é #800253. Não há ícone monocromático temático:
 esta entrega preserva as cores fornecidas.
