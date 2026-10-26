@@ -1,0 +1,46 @@
+{
+  "source_commit": "9afffb8eb3bf354e51652b89d1f8a591aa5b2b4e",
+  "run_id": 40113362115,
+  "deployment": "passed",
+  "https_base": "https://52-67-246-31.sslip.io",
+  "expires_at": "2026-10-31T16:50:03.171005+00:00",
+  "service": "driver-pilot",
+  "bind": "127.0.0.1:8082",
+  "checks": {
+    "contracts_postgresql": "passed",
+    "driver_pilot_guards": "passed",
+    "caddy_operations_tests": "passed",
+    "public_health": 200,
+    "anonymous_snapshot": 401,
+    "anonymous_location": 401,
+    "anonymous_availability": 401,
+    "register": 403,
+    "development_session": 403,
+    "rides_post": 403,
+    "existing_services_unchanged": true,
+    "migrations_unchanged": true
+  },
+  "readiness": {
+    "driver_exists": false,
+    "vehicle_exists": false,
+    "vehicle_environment_configured": false,
+    "active_rides_at_inspection": 0
+  },
+  "android_authenticated_remote": "not_validated",
+  "pending": [
+    "Placa, modelo e cor reais do veiculo de Giselo.",
+    "Cadastrar motorista/veiculo pelo comando privado e emitir sessao fora do APK.",
+    "Provisionar URL/sessao no Android e testar GPS/disponibilidade por HTTPS real."
+  ],
+  "preserved": [
+    "API principal",
+    "PostgreSQL e dados existentes",
+    "maps-test",
+    "firewall e portas publicas",
+    "APK passageiro"
+  ],
+  "limits": [
+    "Somente tres rotas autenticadas; sem cadastro, login, ofertas ou acoes de corrida publicas.",
+    "Sessao de operador permanece obrigatoria; bypass visual debug nao torna a API anonima."
+  ]
+}

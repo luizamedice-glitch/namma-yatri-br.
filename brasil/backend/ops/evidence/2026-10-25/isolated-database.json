@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "databaseUnavailableHttp": 503,
+  "apiProcessSurvived": true,
+  "uncommittedMutationRolledBack": true,
+  "sessionSurvived": true,
+  "encryptedDumpRestored": true,
+  "restoreIsolated": true,
+  "sourceRideCompletedOnce": true
+}

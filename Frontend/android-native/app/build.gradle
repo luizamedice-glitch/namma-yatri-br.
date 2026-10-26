@@ -46,6 +46,9 @@ android {
     }
 
     defaultConfig {
+        buildConfigField "boolean", "BR_TEST_MODE", brTestMode.toString()
+        buildConfigField "boolean", "BR_RIDE_PILOT", (brTestMode && (project.findProperty('brRidePilot') ?: 'false').toString().toBoolean()).toString()
+        resValue "bool", "yatri_br_ride_pilot", (brTestMode && (project.findProperty('brRidePilot') ?: 'false').toString().toBoolean()).toString()
         minSdkVersion 24
         targetSdkVersion 34
     versionCode 192
@@ -257,6 +260,17 @@ android {
         abortOnError false
     }
     sourceSets {
+        if (brTestMode) {
+            debug.manifest.srcFile 'src/brTest/AndroidManifest.xml'
+            debug.assets.srcDir 'src/brTest/assets'
+            maybeCreate('nyUserProdDebug').assets.srcDir layout.buildDirectory.dir('generated/brPlacesAssets')
+            maybeCreate('nyUserProdDebug').assets.srcDir 'src/brTest/passenger/assets'
+            maybeCreate('nyUserProdDebug').manifest.srcFile 'src/brTest/passenger/AndroidManifest.xml'
+            maybeCreate('nyUserProdDebug').res.srcDir 'src/brTest/res'
+            maybeCreate('nyDriverProdDebug').manifest.srcFile 'src/brTest/driver/AndroidManifest.xml'
+            maybeCreate('nyDriverProdDebug').res.srcDir 'src/brTest/driver/res'
+            maybeCreate('nyDriverProdDebug').assets.srcDir 'src/brTest/driver/assets'
+        }
         nyUser.setRoot('src/user/nammaYatri')
         myUser.setRoot('src/user/manaYatri')
         oyUser.setRoot('src/user/odishaYatri')
@@ -551,4 +565,30 @@ void browserify(String inPath, String outPath, boolean shouldMinify) {
         throw new Error(result.toString())
     }
     println "Processed and packaged at " + result
+}
+
+// Brazilian development only. Never embed a Google server key or driver credential.
+if (brTestMode) {
+    android.defaultConfig.manifestPlaceholders['brPassengerMapsApiKey'] = System.getenv('GOOGLE_MAPS_API_KEY') ?: ''
+    def placesConfigTask = tasks.register('generateBrPlacesConfig') {
+        def backendUrl = providers.environmentVariable('YATRI_BACKEND_URL').orElse('')
+        def passengerKey = providers.environmentVariable('YATRI_PASSENGER_DEV_KEY').orElse('')
+        def mapsTestMode = providers.environmentVariable('YATRI_MAPS_TEST_MODE').orElse('false')
+        inputs.property('backendUrl', backendUrl)
+        inputs.property('mapsTestMode', mapsTestMode)
+        // Disable caching/up-to-date reuse of credential-bearing assets.
+        outputs.upToDateWhen { false }
+        doLast {
+            def target = layout.buildDirectory.file('generated/brPlacesAssets/juspay/yatri_places_config.json').get().asFile
+            target.parentFile.mkdirs()
+            def anonymousMaps = mapsTestMode.get() == 'true'
+            target.text = groovy.json.JsonOutput.toJson([backendUrl: backendUrl.get(), mapsTestMode: anonymousMaps,
+                passengerCredential: anonymousMaps ? '' : passengerKey.get()])
+        }
+    }
+    tasks.configureEach { task ->
+        if (task.name == 'mergeNyUserProdDebugAssets') {
+            task.dependsOn(placesConfigTask)
+        }
+    }
 }

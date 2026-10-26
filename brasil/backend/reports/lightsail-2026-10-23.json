@@ -1,0 +1,38 @@
+{
+  "implementation_commit": "45f32bdf3a185c2a889ba0bc7f4f8c0d4c2e20e3",
+  "remote": {
+    "url": "https://52-67-246-31.sslip.io",
+    "health_status": 200,
+    "operational_routes_status": 403,
+    "deployed_by_this_execution": false,
+    "deployed_revision": "not_inspected_no_remote_access",
+    "ssh_secret_binding_available": false,
+    "tcp_grant_available": false,
+    "aws_connector": "reauthentication_required"
+  },
+  "ci": {
+    "backend_run": 39974516114,
+    "backend_conclusion": "success",
+    "integration_run": 39974511131,
+    "integration_conclusion": "success"
+  },
+  "local_verification": {
+    "unit_tests": 10,
+    "postgresql_integration_suites": 3,
+    "cli_startup": "passed",
+    "docker_node_22_build": "passed",
+    "docker_healthcheck": "passed",
+    "deployment_into_existing_isolated_compose": "passed",
+    "image_revision_verified": true,
+    "intentional_failed_startup_rollback": "passed",
+    "postgres_container_preserved": true,
+    "sentinel_row_preserved": true,
+    "changed_migration_rejected_before_recreation": true,
+    "fixtures": "Google route fixture in ride integration tests; deployment PostgreSQL was disposable and isolated"
+  },
+  "not_validated": [
+    "SSH inspection and deployment on Lightsail",
+    "Google Places server credentials, quota and live results",
+    "Remote passenger session and Android integration"
+  ]
+}

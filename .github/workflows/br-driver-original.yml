@@ -1,0 +1,271 @@
+name: BR - Motorista original sem login
+on:
+  push:
+    branches: [codex/issue-1-purescript-memory]
+    paths: ['.github/workflows/br-driver-original.yml']
+  workflow_dispatch:
+    inputs:
+      runtime_cache_run_id:
+        description: 'Reutilizar compilacao aprovada para mudanca exclusiva no runtime de mapa'
+        type: string
+        required: false
+      passenger_bundle_run_id:
+        description: 'Reutilizar bundle passageiro aprovado quando suas fontes estao identicas'
+        type: string
+        required: false
+      ride_pair:
+        description: 'Compilar e testar a chamada entre os dois APKs originais'
+        type: boolean
+        default: false
+      remote_test:
+        description: 'Conectar pelo codigo no Android e validar contra Lightsail real'
+        type: boolean
+        default: false
+      apk_run_id:
+        description: 'Repetir aceite Android usando APK original já compilado'
+        type: string
+        required: false
+      bundle_run_id:
+        description: 'Reutilizar bundle original aprovado, sem recompilar PureScript'
+        type: string
+        required: false
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: br-driver-original-${{ github.ref }}-${{ inputs.apk_run_id || inputs.runtime_cache_run_id || 'build' }}
+  cancel-in-progress: true
+jobs:
+  ride-pair:
+    if: ${{ inputs.ride_pair }}
+    uses: ./.github/workflows/br-ride-pilot.yml
+    secrets: inherit
+    with:
+      runtime_cache_run_id: ${{ inputs.runtime_cache_run_id || '' }}
+      apk_run_id: ${{ inputs.apk_run_id || '' }}
+      passenger_bundle_run_id: ${{ inputs.passenger_bundle_run_id || '' }}
+  original:
+    if: ${{ !inputs.ride_pair && !inputs.bundle_run_id && !inputs.apk_run_id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18.20.8'
+      - run: node --test Frontend/scripts/test-driver-operations.mjs
+      - run: npm install --global purescript@0.15.14 spago@0.21.0
+      - uses: actions/cache/restore@v4
+        id: cache
+        with:
+          path: |
+            Frontend/ui-driver/.spago
+            Frontend/ui-driver/output
+            ~/.cache/dhall
+          key: purs-driver-original-v1-${{ runner.os }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/ui-driver/spago.dhall') }}-${{ github.run_id }}
+          restore-keys: purs-driver-original-v1-${{ runner.os }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/ui-driver/spago.dhall') }}-
+      - name: Instalar dependencias historicas sem alterar manifestos
+        working-directory: Frontend/ui-driver
+        run: |
+          npm install --legacy-peer-deps
+          spago -j 2 install
+      - name: Compilar apenas o painel original e suas dependencias em lotes
+        env:
+          GHCRTS: '-N1 -M512m'
+        run: python3 Frontend/scripts/diagnose-purescript.py --app motorista --compiler-version 0.15.14 --mode staged --target-module Development.Driver --warmup-module Resource.Localizable.StringsV2OG --batch-size 25 --heap 10g --timeout-seconds 600 --stall-seconds 300 --rss-limit-mib 12288 --label driver
+      - name: Empacotar entrada de teste sem o fluxo indiano
+        working-directory: Frontend/ui-driver
+        env:
+          YATRI_DRIVER_TEST_BUILD: 'true'
+          NODE_OPTIONS: '--openssl-legacy-provider --max-old-space-size=6144'
+        run: |
+          npm run bundle:android
+          node --check dist/android/index_bundle.js
+      - uses: actions/cache/save@v4
+        if: always() && steps.cache.outcome == 'success'
+        with:
+          path: |
+            Frontend/ui-driver/.spago
+            Frontend/ui-driver/output
+            ~/.cache/dhall
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: motorista-original-diagnostico
+          path: purescript-diagnostics/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: motorista-original-bundle
+          path: Frontend/ui-driver/dist/android/
+  android:
+    if: always() && !cancelled() && !inputs.ride_pair && !inputs.apk_run_id && (needs.original.result == 'success' || inputs.bundle_run_id)
+    needs: original
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar bundle aprovado e identidade dos fontes
+        if: inputs.bundle_run_id
+        uses: actions/github-script@v7
+        env:
+          SOURCE_RUN: ${{ inputs.bundle_run_id }}
+        with:
+          script: |
+            const id = Number(process.env.SOURCE_RUN);
+            if (!Number.isSafeInteger(id) || id <= 0) throw Error('Run inválido');
+            const {data: run} = await github.rest.actions.getWorkflowRun({...context.repo, run_id:id});
+            if (run.path !== '.github/workflows/br-driver-original.yml') throw Error('Workflow de origem inválido');
+            const {data} = await github.rest.actions.listJobsForWorkflowRun({...context.repo, run_id:id});
+            if (!data.jobs.some(j=>j.name === 'original' && j.conclusion === 'success')) throw Error('Bundle não aprovado');
+            await exec.exec('git',['fetch','origin',run.head_sha]);
+            await exec.exec('git',['diff','--exit-code',run.head_sha,'HEAD','--',
+              'Frontend/ui-driver/src','Frontend/ui-driver/index.js','Frontend/ui-driver/webpack*.js',
+              'Frontend/ui-driver/webpack*.cjs','Frontend/ui-driver/ps-lazy-loader.js','Frontend/ui-driver/package*.json',
+              'Frontend/ui-driver/spago.dhall','Frontend/ui-common','Frontend/packages.dhall']);
+      - uses: actions/download-artifact@v4
+        with:
+          name: motorista-original-bundle
+          path: Frontend/ui-driver/dist/android
+          run-id: ${{ inputs.bundle_run_id || github.run_id }}
+          github-token: ${{ github.token }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+          log-accepted-android-sdk-licenses: false
+      - name: Integrar bundle original e compilar APK de motorista BR
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.Google_Maps_API_Key }}
+        working-directory: Frontend
+        run: |
+          cp ui-driver/dist/android/index_bundle.js android-native/app/src/driver/nammaYatriPartner/assets/juspay/index_bundle.js
+          bash driverJuspayAssets.sh nammaYatriPartner
+          cp android-native/local-temp.properties android-native/local.properties
+          cd android-native
+          bash gradlew :app:assembleNyDriverProdDebug -PbrTestMode=true --no-daemon --max-workers=2 --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: alce-yatri-motorista-original-apk
+          path: Frontend/android-native/app/build/outputs/apk/nyDriverProd/debug/*.apk
+          if-no-files-found: error
+
+  contracts:
+    if: ${{ !inputs.ride_pair }}
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: yatri_test
+          POSTGRES_PASSWORD: fixture-only
+          POSTGRES_DB: driver_contract
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U yatri_test" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://yatri_test:fixture-only@127.0.0.1:5432/driver_contract
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix brasil/backend
+      - run: node --test Frontend/scripts/test-driver-operations.mjs Frontend/scripts/test-driver-backend.integration.mjs
+  emulator:
+    if: always() && !cancelled() && !inputs.ride_pair && (needs.android.result == 'success' || inputs.apk_run_id)
+    needs: android
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: yatri_test
+          POSTGRES_PASSWORD: fixture-only
+          POSTGRES_DB: driver_acceptance
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U yatri_test" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://yatri_test:fixture-only@127.0.0.1:5432/driver_acceptance
+      DRIVER_ACCEPTANCE_SESSION_FILE: ${{ github.workspace }}/../driver-session.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validar origem do APK reutilizado
+        if: inputs.apk_run_id
+        uses: actions/github-script@v7
+        env:
+          SOURCE_RUN: ${{ inputs.apk_run_id }}
+        with:
+          script: |
+            const id=Number(process.env.SOURCE_RUN);
+            if(!Number.isSafeInteger(id)||id<=0)throw Error('Run inválido');
+            const {data:run}=await github.rest.actions.getWorkflowRun({...context.repo,run_id:id});
+            if(run.path!=='.github/workflows/br-driver-original.yml')throw Error('Origem inválida');
+            const {data}=await github.rest.actions.listJobsForWorkflowRun({...context.repo,run_id:id});
+            if(!data.jobs.some(j=>j.name==='android'&&j.conclusion==='success'))throw Error('APK não aprovado');
+            await exec.exec('git',['fetch','origin',run.head_sha]);
+            await exec.exec('git',['diff','--exit-code',run.head_sha,'HEAD','--','Frontend/android-native','Frontend/ui-driver/src','Frontend/ui-driver/webpack*.js','Frontend/ui-driver/index.js','Frontend/ui-common']);
+      - uses: actions/download-artifact@v4
+        with:
+          name: alce-yatri-motorista-original-apk
+          path: driver-apk
+          run-id: ${{ inputs.apk_run_id || github.run_id }}
+          github-token: ${{ github.token }}
+      - run: npm ci --prefix brasil/backend
+      - name: Iniciar API e contas persistidas do aceite isolado
+        if: ${{ !inputs.remote_test }}
+        run: |
+          node Frontend/scripts/serve-driver-acceptance.mjs > "$RUNNER_TEMP/driver-api.log" 2>&1 &
+          for attempt in $(seq 1 30); do
+            test -s "$DRIVER_ACCEPTANCE_SESSION_FILE" && break
+            sleep 1
+          done
+          test -s "$DRIVER_ACCEPTANCE_SESSION_FILE"
+      - name: Preparar ativacao privada do aceite remoto
+        if: ${{ inputs.remote_test }}
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+          YATRI_DRIVER_OPERATION: activate
+        run: |
+          umask 077
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out "$RUNNER_TEMP/test-delivery.key" 2>/dev/null
+          openssl pkey -in "$RUNNER_TEMP/test-delivery.key" -pubout -out "$RUNNER_TEMP/test-delivery.pub"
+          export YATRI_DRIVER_PUBLIC_FILE="$RUNNER_TEMP/test-delivery.pub"
+          bash brasil/backend/ops/driver-ssh-operation.sh
+          base64 -d "$RUNNER_TEMP/driver-activation.enc" > "$RUNNER_TEMP/test-activation.bin"
+          openssl pkeyutl -decrypt -inkey "$RUNNER_TEMP/test-delivery.key" -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -in "$RUNNER_TEMP/test-activation.bin" -out "$RUNNER_TEMP/test-activation.json"
+          echo 'DRIVER_REMOTE=true' >> "$GITHUB_ENV"
+          echo "DRIVER_REMOTE_ACTIVATION_FILE=$RUNNER_TEMP/test-activation.json" >> "$GITHUB_ENV"
+      - name: Habilitar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Preparar diagnóstico somente leitura do WebView
+        run: |
+          python3 -m venv "$RUNNER_TEMP/driver-cdp"
+          "$RUNNER_TEMP/driver-cdp/bin/pip" install websocket-client==1.8.0
+          echo "CDP_PYTHON=$RUNNER_TEMP/driver-cdp/bin/python" >> "$GITHUB_ENV"
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          script: |
+            adb install -g driver-apk/*.apk
+            adb shell settings put secure location_mode 3
+            python3 Frontend/scripts/test-driver-original.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: motorista-original-aceite-android
+          path: driver-original-evidence/
+          if-no-files-found: warn

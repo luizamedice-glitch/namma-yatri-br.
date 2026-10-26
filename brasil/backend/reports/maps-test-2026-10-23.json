@@ -1,0 +1,34 @@
+{
+  "sourceCommit": "3155e664ceddeb5979ee1601c85e8233eda817c3",
+  "serverDeploymentRun": 40002766100,
+  "buildAndAndroidRun": 40005145677,
+  "apkArtifact": 12524197861,
+  "androidEvidenceArtifact": 12523888694,
+  "apkSha256": "ec9ada60615126b4efb68943895ee936c733fa7b343aad0ee3002e202ddeca05",
+  "android": "API 29 emulator",
+  "authentication": "anonymous maps test only; no session/OTP/registration",
+  "purescriptRecompiled": false,
+  "compiledCacheRun": 39866367286,
+  "gradleSeconds": 215,
+  "mainApiUnchanged": true,
+  "operationalRoutesBlocked": true,
+  "expiresAt": "2026-10-30T18:22:42.727971Z",
+  "placesAcceptance": {
+    "acceptance": "passed",
+    "provider": "Yatri backend / Google Places",
+    "destination": {
+      "placeId": "EjJBdi4gUGF1bGlzdGEgLSBCZWxhIFZpc3RhLCBTw6NvIFBhdWxvIC0gU1AsIEJyYXppbCIuKiwKFAoSCRWjCtrIWc6UEWp3yfIxlJ_VEhQKEglhPUZWt1nOlBFkCfT35tHzCQ",
+      "address": "Av. Paulista - Bela Vista, São Paulo - SP, Brasil",
+      "lat": -23.5660919,
+      "lng": -46.6508025
+    },
+    "source": {
+      "placeId": "EjdQcmHDp2EgZGEgU8OpIC0gU8OpLCBTw6NvIFBhdWxvIC0gU1AsIDAxMDAxLTAwMCwgQnJhemlsIi4qLAoUChIJM0KuqqtZzpQRscVLca9vGNkSFAoSCb10CyKqWc6UERlMYGPSqhJk",
+      "address": "Praça da Sé - Sé, São Paulo - SP, 01001-000, Brasil",
+      "lat": -23.5503099,
+      "lng": -46.6342009
+    }
+  },
+  "visualReview": "real map tiles and camera over selected Sao Paulo areas; original UI/branding preserved",
+  "fullRideValidated": false
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Private LAN backend, exclusively for nyDriverProdDebug with BR mode enabled. -->
+    <application android:usesCleartextTraffic="true" tools:replace="android:usesCleartextTraffic">
+        <activity android:name="in.juspay.mobility.BrDriverSetupActivity"
+            android:exported="false" android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Material.Light.NoActionBar" />
+        <meta-data android:name="com.google.android.geo.API_KEY"
+            android:value="${brPassengerMapsApiKey}" tools:replace="android:value" />
+        <activity android:name="in.juspay.mobility.MainActivity"
+            android:theme="@style/BrBrandTheme" />
+    </application>
+</manifest>

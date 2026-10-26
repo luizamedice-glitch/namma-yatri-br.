@@ -41,7 +41,12 @@ if (window.JOS.self != "in.mobility.core") {
 
 const blackListFunctions = new Set(["getFromSharedPrefs", "getKeysInSharedPref", "setInSharedPrefs", "requestPendingLogs", "sessioniseLogs", "setKeysInSharedPrefs", "getLayoutBounds", "addToLogList"])
 
-if (window.JBridge.firebaseLogEventWithParams && window.__OS != "IOS"){  
+// The BR passenger has no operational analytics dependency. Do not wrap the
+// shared native bridge: wrappers can also be installed again on SDK re-entry.
+const isBrPassengerRuntime = window.__OS === "ANDROID" &&
+  window.__YATRI_BR_DEVELOPMENT__ === true && window.__YATRI_BR_PT_BR__ === true;
+
+if (!isBrPassengerRuntime && window.JBridge.firebaseLogEventWithParams && window.__OS != "IOS"){
   Object.getOwnPropertyNames(window.JBridge).filter((fnName) => {
     return !blackListFunctions.has(fnName);
   }).forEach(fnName => {
@@ -171,6 +176,11 @@ let purescript = null;
 function getPureScript () {
   if (purescript == null) {
     purescript = require("./output/Main");
+    if (isBrPassengerRuntime) {
+      // Core imports can replace the SDK registry. Preserve its entries and
+      // synchronize the mapper flag after those imports, including cross-realm Maps.
+      window.__PROXY_FN_MAP_TYPE = Object.prototype.toString.call(window.__PROXY_FN) === "[object Map]";
+    }
   }
   return purescript;
 }
@@ -321,22 +331,36 @@ window.callUICallback = function () {
   const functionArgs = args.slice(1)
   let currTime;
   let timeDiff;
+  const invoke = () => {
+    const registry = window.__PROXY_FN;
+    const map = Object.prototype.toString.call(registry) === "[object Map]";
+    if (isBrPassengerRuntime) window.__PROXY_FN_MAP_TYPE = map;
+    const callback = isBrPassengerRuntime && map && registry.has(fName) ? registry.get(fName) : registry[fName];
+    let stats;
+    if (isBrPassengerRuntime) {
+      stats = window.__YATRI_PASSENGER_CALLBACKS__ || (window.__YATRI_PASSENGER_CALLBACKS__ = {received:0,clock:0,other:0,failed:0});
+      stats.received++;stats[functionArgs[0] === "YATRI_PASSENGER_TICK" ? "clock" : "other"]++;
+      stats.registryType = map ? "Map" : "object";
+    }
+    try { return callback.apply(null, functionArgs); }
+    catch (error) { if (stats) { stats.failed++;stats.lastErrorName = error.name; } throw error; }
+  };
   if (fName && functionArgs[0] !== "TIMEOUT") {
     if (window.__THROTTELED_ACTIONS && window.__THROTTELED_ACTIONS.indexOf(fName) == -1) {
-      window.__PROXY_FN[fName].apply(null, functionArgs);
+      invoke();
     } else if (window.__LAST_FN_CALLED && (fName == window.__LAST_FN_CALLED.fName)) {
       currTime = getCurrTime();
       timeDiff = currTime - window.__LAST_FN_CALLED.timeStamp;
 
       if (timeDiff >= 100) {
-        window.__PROXY_FN[fName].apply(null, functionArgs);
+        invoke();
         window.__LAST_FN_CALLED.timeStamp = currTime;
       } else {
         console.warn("function throtteled", fName);
         console.warn("time diff", timeDiff);
       }
     } else {
-      window.__PROXY_FN[fName].apply(null, functionArgs);
+      invoke();
       window.__LAST_FN_CALLED = {
         timeStamp: (new Date()).getTime(),
         fName: fName

@@ -1,0 +1,32 @@
+name: BR - Configuracao privada do geocoding
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        type: choice
+        options: [export-public-key, geocoding-check, configure-geoapify, geoapify-check]
+        default: export-public-key
+permissions:
+  contents: read
+concurrency:
+  group: lightsail-ssh-test
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Consulta somente leitura sem expor a chave
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+          YATRI_DRIVER_OPERATION: ${{ inputs.operation }}
+          GH_TOKEN: ${{ secrets.IMPORT_GH_PAT }}
+        run: bash brasil/backend/ops/driver-ssh-operation.sh
+      - uses: actions/upload-artifact@v4
+        if: inputs.operation == 'export-public-key'
+        with:
+          name: geocoding-server-public-key
+          path: ${{ runner.temp }}/geocoding-server-public.pem
+          retention-days: 1

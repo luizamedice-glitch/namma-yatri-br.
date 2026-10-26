@@ -1,0 +1,75 @@
+{
+  "appSourceSha": "cbdec7f371194ba86def5bd903c757d2da553786",
+  "testSourceSha": "3ba772e6d4624ae2028ef65c81c09395d24b8d78",
+  "buildRun": 40257355937,
+  "android36Run": 40258541630,
+  "apkArtifact": 12623317227,
+  "launcherEvidenceArtifact": 12624130679,
+  "operationalEvidenceArtifact": 12623294704,
+  "gradleStepSeconds": 185,
+  "purescriptCompilerExecuted": false,
+  "localNodeTestsPassed": 16,
+  "apk": {
+    "sha256": "f192046cc1f2de5c4c8812b157da43af976cf99c1179aa29c267da3d9684d6d6",
+    "bytes": 271139319,
+    "all_baseline_assets_identical": true,
+    "assets_checked": 76,
+    "icon_pngs_checked": 15,
+    "pureScript_compiler_executed": false
+  },
+  "launcher": {
+    "launcher_icon_present": true,
+    "launch_from_icon": true,
+    "startup_no_fatal_exception": true,
+    "scope": "icon and startup only; no new ride-flow test"
+  },
+  "operational": {
+    "acceptance": "passed",
+    "backend": "isolated_postgresql",
+    "push_transport": "native_service_polling_not_fcm",
+    "cases": [
+      {
+        "case": "native_network_recovery_locked_screen",
+        "passed": true,
+        "same_pid": true
+      },
+      {
+        "case": "gps_disable_stale_eligibility_reenable_locked_screen",
+        "passed": true,
+        "same_pid": true
+      },
+      {
+        "case": "locked_screen_gps_and_deduplicated_offer",
+        "passed": true,
+        "native_uploads": 13
+      },
+      {
+        "case": "notification_opens_offer_and_assigned_gps_reaches_passenger",
+        "passed": true,
+        "same_pid": true
+      },
+      {
+        "case": "offline_without_ride_stops_gps_service",
+        "passed": true
+      }
+    ],
+    "api": "36",
+    "apk_sha256": "f192046cc1f2de5c4c8812b157da43af976cf99c1179aa29c267da3d9684d6d6",
+    "apk_source_run": "40257355937"
+  },
+  "native": {
+    "snapshots": "34",
+    "stopped": "true",
+    "observedAt": "1792981560580",
+    "state": "offline",
+    "notifications": "1",
+    "errors": "1",
+    "uploads": "22"
+  },
+  "fatalCount": 0,
+  "privateActivationRun": 40258702334,
+  "privateActivationExpiresAt": "2026-10-27T02:21:49.613Z",
+  "restoredPilotRevision": "8d24ad18edebe754341e7839261122b70a440777",
+  "restorationRun": 40241930473,
+  "restorationAttempt": 2
+}

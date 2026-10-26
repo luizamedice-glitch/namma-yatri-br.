@@ -1,0 +1,105 @@
+{
+  "apk": {
+    "source": "5833a5d5cbbe104d4438ef42d0fc95f3701e722b",
+    "run": 40200987234,
+    "artifact": 12602430585,
+    "bytes": 127819351,
+    "sha256": "b729712c73dafb11b2530c6841dff918c42892f542113047e4c28c3061da8398",
+    "markers_verified": true,
+    "credential_not_embedded": true
+  },
+  "compiler": {
+    "recompiled_modules": [
+      "Development.Rides",
+      "Development.Booking"
+    ],
+    "batches": 22,
+    "seconds": 16.25,
+    "peak_sampled_rss_mib": 417.17,
+    "artifact": 12601689808
+  },
+  "node_tests": {
+    "passed": 32,
+    "failed": 0
+  },
+  "android36": {
+    "run": 40202387656,
+    "artifact": 12603090072,
+    "acceptance": {
+      "acceptance": "passed",
+      "isolated_database": true,
+      "driver_actions_real_http": true,
+      "google_routes_real": true,
+      "passenger_remains_foreground": true,
+      "same_pid": true,
+      "restarts_during_trip": 0,
+      "native_clock_required": true,
+      "idle_seconds": 0,
+      "network_recovery": true,
+      "quote_recovery": true,
+      "committed_request_response_loss_recovered": true,
+      "network_fault": "tunnel_removed_and_existing_sockets_closed",
+      "state_latency_seconds": {
+        "accepted": 6.96,
+        "arrived": 23.15,
+        "in_progress": 7.55,
+        "completed": 3.4
+      },
+      "apk_source_run": "40200987234",
+      "apk_sha256": "b729712c73dafb11b2530c6841dff918c42892f542113047e4c28c3061da8398"
+    },
+    "faults": {
+      "armed": false,
+      "requests": 1,
+      "droppedResponses": 1,
+      "cuts": 2
+    }
+  },
+  "android29": {
+    "run": 40201809248,
+    "artifact": 12601474628,
+    "acceptance": {
+      "acceptance": "passed",
+      "cases": [
+        {
+          "case": "first_cold_controls",
+          "passed": true,
+          "same_pid": true
+        },
+        {
+          "case": "warm_resume",
+          "passed": true,
+          "same_pid": true
+        },
+        {
+          "case": "cold_process_restore_controls_and_all_states",
+          "passed": true,
+          "restarts_during_states": 0
+        }
+      ],
+      "backend": "isolated_postgresql",
+      "driver_actor": "real_authenticated_http",
+      "safe_native_diagnostic_export": true
+    }
+  },
+  "signing_certificate_matches_previous": false,
+  "physical_test_this_increment": false,
+  "failures": [
+    {
+      "run": 40200987234,
+      "build": "success",
+      "acceptance": "failure",
+      "reason": "socket-cut signal raced driver HTTP actor"
+    },
+    {
+      "run": 40201807259,
+      "acceptance": "failure",
+      "reason": "request counter assertion; actual counters not preserved"
+    },
+    {
+      "run": 40202286354,
+      "acceptance": "cancelled",
+      "reason": "test injector revised; same APK reused"
+    }
+  ]
+}

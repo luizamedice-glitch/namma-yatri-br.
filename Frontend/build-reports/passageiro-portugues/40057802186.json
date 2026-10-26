@@ -1,0 +1,34 @@
+{
+  "source_commit": "a181256b8e",
+  "workflow_run": 40057802186,
+  "apk_artifact": 12546092608,
+  "evidence_artifact": 12546645793,
+  "apk_sha256": "66b601fcbb2713d3b0662615e637b2109e99380832f9b24f0f8b337fc3b56b60",
+  "android_build_seconds": 174.94,
+  "purescript_modules_recompiled": 0,
+  "android_api": 29,
+  "portuguese": {
+    "locale": "pt-BR",
+    "catalog_messages": 1789,
+    "acceptance": "passed",
+    "main_labels": [
+      "#sejaLivre #escolhaLivre",
+      "O app sem comissão mais amado ❤️",
+      "Para onde você vai?",
+      "Peça sua viagem,",
+      "Tem um código?",
+      "Ver estatísticas ao vivo",
+      "para qualquer lugar da cidade"
+    ]
+  },
+  "places_acceptance": "passed",
+  "visual_review": [
+    "home-online-1.png",
+    "home-places-source-results.png"
+  ],
+  "limitations": [
+    "Secondary features retain initial automatic translations pending contextual review.",
+    "Map tiles were blank in the reviewed Home capture; this translation task does not validate tile rendering.",
+    "Android 12 was not retested in this run."
+  ]
+}

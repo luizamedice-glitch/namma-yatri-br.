@@ -1,0 +1,34 @@
+{
+  "source_commit": "3205157dc5a7e7b86811dc7b12bdc5bd8ac4cf49",
+  "workflow_run_id": 40040469420,
+  "apk_artifact_id": 12539172465,
+  "evidence_artifact_id": 12539816223,
+  "apk_sha256": "7d0825b5d8cb3b9bff15ee3aa26e0b52d572b4aa39a84af5af48d8e1c9e1cc2e",
+  "animation": {
+    "duration_ms": 2500,
+    "background": "#FF00BE",
+    "rendered_format": "GIF on native Android Canvas",
+    "original_mp4_preserved": true,
+    "playback_completed": true,
+    "loop": false
+  },
+  "validation": {
+    "device": "Pixel 2 emulator",
+    "android_api": 29,
+    "build": "passed",
+    "home_and_navigation": "passed",
+    "places": "passed",
+    "visual_review": {
+      "solid_pink_without_frame_or_gradient": true,
+      "transparent_header_logo": true,
+      "launcher_icon": true,
+      "home_white_background_restored": true
+    }
+  },
+  "limitations": [
+    "Android 12+ visual behavior has not been tested",
+    "Debug APK; signing key may differ from a previously installed build"
+  ],
+  "purescript_bundle_reused_from": 40005145677,
+  "server_changed": false
+}

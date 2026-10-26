@@ -346,7 +346,12 @@
             "type": "object"
           },
           "available": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Elegibilidade para ofertas: motorista online com GPS recebido nos últimos 60 segundos."
+          },
+          "online": {
+            "type": "boolean",
+            "description": "Intenção persistida do motorista de ficar online, preservada durante perda de GPS. False para passageiro."
           },
           "rides": {
             "type": "array",

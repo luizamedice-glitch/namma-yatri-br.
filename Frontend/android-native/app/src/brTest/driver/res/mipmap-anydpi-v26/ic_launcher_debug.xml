@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/br_icon_blue" />
+    <!-- Arte Driver centralizada em 68/108 dp; simbolo e texto na area segura. -->
+    <foreground android:drawable="@mipmap/br_launcher_foreground" />
+</adaptive-icon>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<in.juspay.mobility.BrandVideoSplash xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/splash" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:visibility="visible">
+    <!-- ID retained for original native callbacks; the video is local and offline. -->
+    <com.airbnb.lottie.LottieAnimationView android:id="@+id/splash_lottie"
+        android:layout_width="match_parent" android:layout_height="match_parent"
+        android:visibility="gone" />
+</in.juspay.mobility.BrandVideoSplash>

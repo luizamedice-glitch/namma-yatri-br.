@@ -15,6 +15,7 @@
 module Engineering.Helpers.Utils where
 
 import Prelude
+import Engineering.Helpers.BrazilianMobileNumber as BR
 import Common.Types.App (CalendarModalDateObject, CalendarModalWeekObject, GlobalPayload(..), MobileNumberValidatorResp(..), ModifiedCalendarObject, Payload(..), LazyCheck(..), City(..))
 import Control.Monad.Except (runExcept)
 import Control.Monad.Except.Trans (lift)
@@ -129,6 +130,7 @@ mobileNumberValidator _ countryShortCode mobileNumber =
     maxLen = mobileNumberMaxLength countryShortCode
   in
     if len <= maxLen then case countryShortCode of
+      "BR" -> if BR.isValid mobileNumber then Valid else if BR.isValidPrefix mobileNumber then ValidPrefix else Invalid
       "IN" -> case (charAt 0 mobileNumber) of
         Just a ->
           if a == '0' || a == '1' || a == '2' || a == '3' || a == '4' then
@@ -158,6 +160,7 @@ mobileNumberValidator _ countryShortCode mobileNumber =
 
 mobileNumberMaxLength :: String -> Int
 mobileNumberMaxLength countryShortCode = case countryShortCode of
+  "BR" -> 11
   "IN" -> 10
   "FR" -> 9
   "BD" -> 10

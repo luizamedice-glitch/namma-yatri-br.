@@ -113,6 +113,63 @@ public class MobilityDriverBridge extends MobilityCommonBridge {
 
     private static final String LOG_TAG = "MobilityDriverBridge";
 
+    private boolean yatriTrackingScope() {
+        Context c=bridgeComponents.getContext();
+        int flag=c.getResources().getIdentifier("yatri_br_ride_pilot","bool",c.getPackageName());
+        return "in.juspay.nammayatripartner.debug".equals(c.getPackageName())
+            &&(c.getApplicationInfo().flags&android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE)!=0
+            &&flag!=0&&c.getResources().getBoolean(flag)
+            &&getKeysInSharedPref("YATRI_DRIVER_SESSION").matches("[a-f0-9]{64}");
+    }
+
+    @JavascriptInterface
+    public boolean supportsYatriDriverTracking() {
+        return yatriTrackingScope();
+    }
+
+    @JavascriptInterface
+    public boolean prepareYatriDriverTracking() {
+        if(!yatriTrackingScope())return false;
+        Activity activity=bridgeComponents.getActivity();
+        if(activity==null||activity.isFinishing()||!(activity instanceof LifecycleOwner)
+            ||!((LifecycleOwner)activity).getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED))return false;
+        java.util.ArrayList<String> needed=new java.util.ArrayList<>();
+        if(ContextCompat.checkSelfPermission(activity,Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED){
+            // Android 12+ requires coarse and fine in the same precision request.
+            needed.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+            needed.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if(Build.VERSION.SDK_INT>=33&&ContextCompat.checkSelfPermission(activity,Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)needed.add(Manifest.permission.POST_NOTIFICATIONS);
+        if(!needed.isEmpty()){
+            activity.runOnUiThread(()->ActivityCompat.requestPermissions(activity,needed.toArray(new String[0]),7415));
+            return false;
+        }
+        return true;
+    }
+
+    @JavascriptInterface
+    public boolean isYatriDriverTrackingActive() {
+        if(!yatriTrackingScope())return false;
+        android.content.SharedPreferences p=bridgeComponents.getContext().getSharedPreferences("yatri_br_tracking_diagnostic",Context.MODE_PRIVATE);
+        return !p.getBoolean("stopped",true)&&System.currentTimeMillis()-p.getLong("observedAt",0)<30000;
+    }
+
+    @JavascriptInterface
+    public void setYatriDriverTracking(boolean wanted) {
+        if(!yatriTrackingScope())return;
+        Context c=bridgeComponents.getContext().getApplicationContext();
+        Intent service=new Intent().setClassName(c,"in.juspay.mobility.BrDriverService");
+        if(!wanted){c.stopService(service);return;}
+        // Periodic snapshots never open permission prompts. Only the explicit
+        // online button calls prepareYatriDriverTracking to request consent.
+        Activity activity=bridgeComponents.getActivity();
+        if(isYatriDriverTrackingActive()||activity==null||!(activity instanceof LifecycleOwner)
+            ||!((LifecycleOwner)activity).getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)
+            ||ContextCompat.checkSelfPermission(c,Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED
+            ||Build.VERSION.SDK_INT>=33&&ContextCompat.checkSelfPermission(c,Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)return;
+        try{ContextCompat.startForegroundService(c,service);}catch(RuntimeException ignored){ }
+    }
+
     // Media Utils
     public static YouTubePlayerView youTubePlayerView;
     public static YouTubePlayer youtubePlayer;

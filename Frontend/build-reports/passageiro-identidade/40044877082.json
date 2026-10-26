@@ -1,0 +1,75 @@
+{
+  "source_commit": "42a52876f0f0ac8d1725c840bb0e50a90ddeed50",
+  "build_run_id": 40044877082,
+  "apk_artifact_id": 12541475126,
+  "apk_sha256": "d8a9b24376885d35eaec0608f55be497f770a12c15bf8c814a31d6a3757badfe",
+  "animation": {
+    "duration_ms": 2500,
+    "fade_advanced_ms": 267,
+    "background": "#FF00BE",
+    "launch_window_poster": true,
+    "android12_system_monogram": true
+  },
+  "header": {
+    "old_dp": [
+      93,
+      32
+    ],
+    "new_dp": [
+      136,
+      44
+    ],
+    "compact_dp": [
+      116,
+      44
+    ],
+    "compact_below_width_dp": 380,
+    "observed_bounds_px": [
+      167,
+      116,
+      524,
+      232
+    ],
+    "observed_size_px": [
+      357,
+      116
+    ],
+    "adapter_contract": "original 93x32 dp ImageView in the row containing Navigation : Button",
+    "scope": "BR passenger debug only"
+  },
+  "validation": {
+    "android10": {
+      "status": "passed",
+      "evidence_artifact_id": 12541092689,
+      "places_acceptance": "passed"
+    },
+    "android12": {
+      "status": "passed",
+      "run_id": 40045220239,
+      "evidence_artifact_id": 12541207353
+    },
+    "android12_launcher_capture": {
+      "status": "passed",
+      "run_id": 40046208335,
+      "evidence_artifact_id": 12541437594,
+      "launch_method": "launcher_icon",
+      "system_animations_enabled": true,
+      "visual_review": "AY visible on initial system splash; solid pink without frame"
+    }
+  },
+  "purescript_bundle_reused_from": 40005145677,
+  "purescript_sources_unchanged": true,
+  "apk_icon_unchanged": true,
+  "server_changed": false,
+  "limitations": [
+    "Compact-width 116dp branch has not been tested on a separate device",
+    "Startup timing depends on system animations and device performance"
+  ],
+  "compiler_diagnostic": {
+    "run_id": 40043513972,
+    "module": "Flow",
+    "stop_reason": "no_compiler_output",
+    "peak_rss_kib": 11181636,
+    "resolution": "PureScript edit reverted; native branding adapter preserves validated bundle"
+  }
+}

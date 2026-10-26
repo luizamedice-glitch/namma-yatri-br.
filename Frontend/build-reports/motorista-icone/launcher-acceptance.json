@@ -1,0 +1,6 @@
+{
+  "launcher_icon_present": true,
+  "launch_from_icon": true,
+  "startup_no_fatal_exception": true,
+  "scope": "icon and startup only; no new ride-flow test"
+}

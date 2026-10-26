@@ -1,0 +1,23 @@
+{
+  "acceptance": "passed",
+  "cases": [
+    {
+      "case": "first_cold_controls",
+      "passed": true,
+      "same_pid": true
+    },
+    {
+      "case": "warm_resume",
+      "passed": true,
+      "same_pid": true
+    },
+    {
+      "case": "cold_process_restore_controls_and_all_states",
+      "passed": true,
+      "restarts_during_states": 0
+    }
+  ],
+  "backend": "isolated_postgresql",
+  "driver_actor": "real_authenticated_http",
+  "safe_native_diagnostic_export": true
+}

@@ -1,0 +1,198 @@
+name: BR - Motorista GPS em segundo plano
+on:
+  workflow_dispatch:
+    inputs:
+      verify_driver_icon:
+        description: Conferir novos icones no APK e capturar launcher antes do aceite operacional
+        type: boolean
+        default: false
+      bundle_apk_run_id:
+        description: APK aprovado cujo bundle identico sera reutilizado para ajuste apenas nativo
+        type: string
+        default: ''
+      build_only:
+        description: Apenas gerar APK; executar aceites separadamente com o mesmo arquivo
+        type: boolean
+        default: false
+      apk_run_id:
+        description: Reutilizar APK deste workflow sem nova compilacao
+        type: string
+        default: ''
+      api_level:
+        type: choice
+        options: ['36', '29']
+        default: '36'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build:
+    if: ${{ !inputs.apk_run_id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      YATRI_DRIVER_TEST_BUILD: 'true'
+      NODE_OPTIONS: '--openssl-legacy-provider --max-old-space-size=6144'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18.20.8'
+      - run: node --test Frontend/scripts/test-driver-operations.mjs Frontend/scripts/test-pilot-trip.mjs
+      - name: Comparar todas as fontes com compilacao aprovada
+        if: ${{ !inputs.bundle_apk_run_id }}
+        run: |
+          git fetch origin 5900d9a2ab5315767b0a6e8606131ec2454825a5
+          git diff --exit-code FETCH_HEAD HEAD -- Frontend/ui-driver Frontend/ui-common Frontend/packages.dhall ':!Frontend/ui-driver/src/Development/Driver.js' ':!Frontend/ui-common/src/Development/TripMapRuntime.js' ':!Frontend/ui-common/src/Development/TripMap.mjs'
+      - uses: actions/cache/restore@v4
+        if: ${{ !inputs.bundle_apk_run_id }}
+        id: cache
+        with:
+          path: |
+            Frontend/ui-driver/.spago
+            Frontend/ui-driver/output
+            ~/.cache/dhall
+          key: ride-v2-motorista-${{ runner.os }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-40143012209-1
+          fail-on-cache-miss: true
+      - name: Atualizar somente FFI e bundle mantendo o PureScript compilado
+        if: ${{ !inputs.bundle_apk_run_id }}
+        working-directory: Frontend/ui-driver
+        run: |
+          test -s output/Development.Driver/index.js
+          cp src/Development/Driver.js output/Development.Driver/foreign.js
+          npm install --legacy-peer-deps
+          npm run bundle:android
+          node --check dist/android/index_bundle.js
+      - name: Validar reaproveitamento estrito do bundle para ajuste nativo
+        if: inputs.bundle_apk_run_id
+        uses: actions/github-script@v7
+        env:
+          SOURCE_RUN: ${{ inputs.bundle_apk_run_id }}
+        with:
+          script: |
+            const id=Number(process.env.SOURCE_RUN);
+            if(!Number.isSafeInteger(id)||id<=0)throw Error('Run invalido');
+            const {data:run}=await github.rest.actions.getWorkflowRun({...context.repo,run_id:id});
+            if(run.path!=='.github/workflows/br-driver-background.yml')throw Error('Workflow de origem invalido');
+            const {data}=await github.rest.actions.listJobsForWorkflowRun({...context.repo,run_id:id});
+            if(!data.jobs.some(j=>j.name==='build'&&j.conclusion==='success'))throw Error('Build de origem nao aprovado');
+            await exec.exec('git',['fetch','origin',run.head_sha]);
+            await exec.exec('git',['diff','--exit-code',run.head_sha,'HEAD','--','Frontend/ui-driver','Frontend/ui-common','Frontend/packages.dhall']);
+      - uses: actions/download-artifact@v4
+        if: inputs.bundle_apk_run_id
+        with:
+          name: ride-motorista-apk
+          path: bundle-source-apk
+          run-id: ${{ inputs.bundle_apk_run_id }}
+          github-token: ${{ github.token }}
+      - name: Extrair bundle identico sem npm ou PureScript
+        if: inputs.bundle_apk_run_id
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          files=list(Path('bundle-source-apk').glob('*.apk'));assert len(files)==1
+          target=Path('Frontend/ui-driver/dist/android/index_bundle.js');target.parent.mkdir(parents=True,exist_ok=True)
+          with ZipFile(files[0]) as apk:target.write_bytes(apk.read('assets/juspay/index_bundle.js'))
+          PY
+          node --check Frontend/ui-driver/dist/android/index_bundle.js
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+          log-accepted-android-sdk-licenses: false
+      - working-directory: Frontend
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.Google_Maps_API_Key }}
+        run: |
+          cp ui-driver/dist/android/index_bundle.js android-native/app/src/driver/nammaYatriPartner/assets/juspay/index_bundle.js
+          bash driverJuspayAssets.sh nammaYatriPartner
+          cp android-native/local-temp.properties android-native/local.properties
+          cd android-native
+          bash gradlew :app:assembleNyDriverProdDebug -PbrTestMode=true -PbrRidePilot=true --no-daemon --max-workers=2 --stacktrace
+      - name: Conferir pixels dos icones e preservacao dos assets aprovados
+        if: inputs.verify_driver_icon
+        run: |
+          test -n '${{ inputs.bundle_apk_run_id }}'
+          python3 -m pip install Pillow==11.3.0
+          python3 Frontend/scripts/verify-driver-icon-apk.py
+      - uses: actions/upload-artifact@v4
+        if: inputs.verify_driver_icon
+        with:
+          name: driver-icon-apk-integrity
+          path: driver-icon-evidence/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ride-motorista-apk
+          path: Frontend/android-native/app/build/outputs/apk/nyDriverProd/debug/*.apk
+          if-no-files-found: error
+  background:
+    needs: build
+    if: ${{ always() && !cancelled() && !inputs.build_only && (needs.build.result == 'success' || inputs.apk_run_id) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: yatri_test
+          POSTGRES_PASSWORD: fixture-only
+          POSTGRES_DB: driver_background
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U yatri_test" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://yatri_test:fixture-only@127.0.0.1:5432/driver_background
+      PASSENGER_FOREGROUND_SESSIONS: ${{ github.workspace }}/../background-sessions.json
+      VERIFY_DRIVER_ICON: ${{ inputs.verify_driver_icon }}
+      DRIVER_APK_SOURCE_RUN: ${{ inputs.apk_run_id || github.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: ride-motorista-apk
+          path: driver-apk
+          run-id: ${{ inputs.apk_run_id || github.run_id }}
+          github-token: ${{ github.token }}
+      - run: npm ci --prefix brasil/backend
+      - name: API e PostgreSQL isolados, sem corridas no Lightsail
+        run: |
+          node Frontend/scripts/serve-passenger-foreground.mjs > "$RUNNER_TEMP/api.log" 2>&1 &
+          echo "PASSENGER_TEST_API_PID=$!" >> "$GITHUB_ENV"
+          for attempt in $(seq 1 30); do
+            test -s "$PASSENGER_FOREGROUND_SESSIONS" && break
+            sleep 1
+          done
+          test -s "$PASSENGER_FOREGROUND_SESSIONS"
+      - name: Preparar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ inputs.api_level || '36' }}
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          ram-size: 4096M
+          script: |
+            adb install -g driver-apk/*.apk
+            if [ "$VERIFY_DRIVER_ICON" = true ]; then python3 Frontend/scripts/test-driver-icon.py; fi
+            python3 Frontend/scripts/test-driver-background.py
+      - uses: actions/upload-artifact@v4
+        if: always() && inputs.verify_driver_icon
+        with:
+          name: driver-icon-launcher-evidence
+          path: driver-icon-evidence/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: driver-background-evidence
+          path: driver-background-evidence/
+          if-no-files-found: warn

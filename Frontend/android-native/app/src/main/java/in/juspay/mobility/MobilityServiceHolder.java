@@ -89,6 +89,10 @@ public class MobilityServiceHolder {
                 initiatePayload.put("requestId", UUID.randomUUID());
                 initiatePayload.put("service", getService());
                 initiatePayload.put("betaAssets", false);
+                if (BuildConfig.BR_TEST_MODE) {
+                    initiatePayload.put("use_local_assets", true);
+                    initiatePayload.put("attempt_recovery", false);
+                }
                 getInnerPayload(payload, "initiate", context);
                 initiatePayload.put(PaymentConstants.PAYLOAD, payload);
             } catch (JSONException e) {

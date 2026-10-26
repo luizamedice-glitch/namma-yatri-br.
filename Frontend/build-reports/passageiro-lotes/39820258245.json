@@ -1,0 +1,42 @@
+{
+  "run_id": 39820258245,
+  "commit": "9dde1ada547f69e1e284c2c848093b970c1da651",
+  "artifact_id": 12445420144,
+  "planned_batches": 55,
+  "successful_batches": 36,
+  "compiler_invocations_seconds": 359.67,
+  "successful_invocations_seconds": 37.57,
+  "failed_run": {
+    "step": 37,
+    "exit_code": 125,
+    "seconds": 322.1,
+    "timed_out": false,
+    "stop_reason": "no_compiler_output",
+    "peak_sampled_rss_kib": 10859976,
+    "signal": null,
+    "before": {
+      "memory.max": null,
+      "memory.current": null,
+      "memory.peak": null,
+      "memory.events": null
+    },
+    "after": {
+      "memory.max": null,
+      "memory.current": null,
+      "memory.peak": null,
+      "memory.events": null
+    }
+  },
+  "failed_targets": [
+    "Screens.HomeScreen.Controller"
+  ],
+  "failed_closure_modules": 698,
+  "last_compiler_output": "[1 of 1] Compiling Screens.HomeScreen.Controller",
+  "apk_produced": false,
+  "cache_saved": true,
+  "controlled_guard_tests": [
+    "no_compiler_output: exit125 in 3.12s",
+    "unexpected_recompile: exit125 in 1.11s",
+    "rss_limit: exit125 in 1.11s"
+  ]
+}

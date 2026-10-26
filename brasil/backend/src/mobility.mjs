@@ -14,6 +14,7 @@ const rideSelect = `SELECT r.id, r.passenger_id, r.driver_id, r.status, r.versio
  LEFT JOIN drivers dl ON dl.user_id=r.driver_id`;
 
 export function mobilityService(pool, maps, { inviteCode, radiusMeters = 5000, allowDevelopmentAccounts = false } = {}) {
+  const navigationCache = new Map();
   const role = (u, value) => requireThat(u.role === value, 403, 'Perfil sem permissão');
   async function event(db, userId, kind, payload = {}) {
     await db.query('INSERT INTO events(user_id,kind,payload) VALUES($1,$2,$3)', [userId, kind, payload]);
@@ -165,6 +166,7 @@ export function mobilityService(pool, maps, { inviteCode, radiusMeters = 5000, a
         const r = await db.query('SELECT * FROM rides WHERE id=$1 FOR UPDATE', [id]);
         requireThat(r.rowCount, 404, 'Corrida não encontrada');
         const status = transition(r.rows[0], user, action);
+        if(status===r.rows[0].status)return {id,status};
         const updated = await db.query('UPDATE rides SET status=$2,version=version+1,updated_at=now() WHERE id=$1 RETURNING *', [id, status]);
         await notifyRide(db, updated.rows[0]); await dispatch(db); return { id, status };
       });
@@ -174,12 +176,34 @@ export function mobilityService(pool, maps, { inviteCode, radiusMeters = 5000, a
       const r = await pool.query(rideSelect + ' WHERE r.id=$1 AND (r.passenger_id=$2 OR r.driver_id=$2)', [id, user.id]);
       requireThat(r.rowCount, 404, 'Corrida não encontrada'); return r.rows[0];
     },
+    async navigation(user, id) {
+      // Always re-authorize against persisted assignment before using cached Google data.
+      const ride = await this.ride(user, id);
+      if (!['accepted','arrived'].includes(ride.status)) return {route:ride.route,leg:'trip'};
+      requireThat(ride.driver_lat !== null && ride.driver_lng !== null &&
+        Date.now()-Date.parse(ride.driver_location_at)<60000,409,'Localização do motorista desatualizada');
+      const distance=Math.hypot((ride.driver_lat-ride.origin.lat)*111000,
+        (ride.driver_lng-ride.origin.lng)*111000*Math.cos(ride.origin.lat*Math.PI/180));
+      if(distance<25)return {leg:'pickup',route:{distanceMeters:0,durationSeconds:0,encodedPolyline:''}};
+      const previous=navigationCache.get(id);
+      if (previous && previous.until>Date.now()) return previous.promise;
+      if(navigationCache.size>=128)navigationCache.delete(navigationCache.keys().next().value);
+      const entry={until:Date.now()+30000};
+      entry.promise=maps.route({lat:ride.driver_lat,lng:ride.driver_lng},ride.origin)
+        .then(route=>({route,leg:'pickup'})).catch(error=>{
+          if(navigationCache.get(id)===entry)navigationCache.delete(id);
+          throw error;
+        });
+      navigationCache.set(id,entry);
+      return entry.promise;
+    },
     async snapshot(user) {
       const rides = await pool.query(rideSelect + ` WHERE (r.passenger_id=$1 OR r.driver_id=$1) AND r.status IN ('searching','accepted','arrived','in_progress') ORDER BY r.created_at DESC`, [user.id]);
-      let offers = [], available = false;
+      let offers = [], available = false, online = false;
       if (user.role === 'driver') {
-        const d = await pool.query(`SELECT available AND location_at>now()-interval '60 seconds' AS available FROM drivers WHERE user_id=$1`, [user.id]);
+        const d = await pool.query(`SELECT available AS online, available AND location_at>now()-interval '60 seconds' AS available FROM drivers WHERE user_id=$1`, [user.id]);
         available = Boolean(d.rows[0]?.available);
+        online = Boolean(d.rows[0]?.online);
         if (available && !rides.rowCount) {
           const o = await pool.query(rideSelect + ` JOIN offers o ON o.ride_id=r.id
             WHERE o.driver_id=$1 AND NOT o.rejected AND r.status='searching' AND r.created_at>now()-interval '10 minutes'
@@ -192,7 +216,7 @@ export function mobilityService(pool, maps, { inviteCode, radiusMeters = 5000, a
           offers = o.rows;
         }
       }
-      return { user: { id: user.id, name: user.name, role: user.role }, available, rides: rides.rows, offers };
+      return { user: { id: user.id, name: user.name, role: user.role }, available, online, rides: rides.rows, offers };
     },
     async history(user) {
       return (await pool.query(rideSelect + ' WHERE r.passenger_id=$1 OR r.driver_id=$1 ORDER BY r.created_at DESC LIMIT 100', [user.id])).rows;

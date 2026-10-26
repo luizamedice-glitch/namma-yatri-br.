@@ -1,0 +1,110 @@
+name: BR - Abertura do passageiro original
+
+on:
+  workflow_call:
+    inputs:
+      capture_only:
+        type: boolean
+        default: false
+      api_level:
+        type: number
+        default: 29
+      require_places:
+        type: boolean
+        default: false
+      run_id:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      capture_only:
+        description: 'Só captura visual pelo ícone (usar APK já validado)'
+        type: boolean
+        default: false
+      api_level:
+        description: 'Versão Android: API 29 = Android 10; API 31 = Android 12'
+        type: choice
+        options: ['29', '31']
+        default: '29'
+      require_places:
+        description: 'Exigir pesquisa real e seleção de origem/destino'
+        type: boolean
+        default: false
+      run_id:
+        description: 'Run bem-sucedido de br-purescript-memory.yml que publicou o APK'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  abertura-original:
+    env:
+      YATRI_REQUIRE_PLACES: ${{ inputs.require_places && 'true' || 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Selecionar APK compilado com os mesmos fontes
+        id: source
+        uses: actions/github-script@v7
+        env:
+          REQUESTED_RUN_ID: ${{ inputs.run_id }}
+        with:
+          script: |
+            const id = Number(process.env.REQUESTED_RUN_ID);
+            if (!Number.isSafeInteger(id) || id <= 0) throw new Error('run_id invalido');
+            const {data: run} = await github.rest.actions.getWorkflowRun({...context.repo, run_id: id});
+            if (run.path !== '.github/workflows/br-purescript-memory.yml') {
+              throw new Error('Origem deve ser o workflow original');
+            }
+            const {data: jobs} = await github.rest.actions.listJobsForWorkflowRun({...context.repo, run_id: id});
+            if (!jobs.jobs.some(job => job.name === 'android-passageiro-original' && job.conclusion === 'success')) {
+              throw new Error('O job que publicou o APK ainda nao concluiu com sucesso');
+            }
+            core.setOutput('run_id', String(id));
+            core.setOutput('sha', run.head_sha);
+            core.info(`APK do run ${id}, fontes ${run.head_sha}`);
+      - name: Impedir teste de APK com fontes diferentes
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          git cat-file -e "$SOURCE_SHA^{commit}" || git fetch origin "$SOURCE_SHA"
+          git diff --exit-code "$SOURCE_SHA" HEAD -- Frontend/ui-customer Frontend/ui-common Frontend/packages.dhall Frontend/android-native
+      - uses: actions/download-artifact@v4
+        with:
+          name: yatri-brasil-passageiro-original-apk
+          path: original-apk
+          run-id: ${{ steps.source.outputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Instalar ferramenta de diagnostico CDP
+        run: |
+          python3 -m venv "$RUNNER_TEMP/yatri-cdp"
+          "$RUNNER_TEMP/yatri-cdp/bin/pip" install websocket-client==1.8.0
+          echo "CDP_PYTHON=$RUNNER_TEMP/yatri-cdp/bin/python" >> "$GITHUB_ENV"
+      - name: Habilitar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Validar HomeScreen original offline e online sem autenticacao
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ inputs.api_level || 29 }}
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: ${{ !inputs.capture_only }}
+          script: bash ${{ inputs.capture_only && 'Frontend/scripts/capture-passenger-branding-only.sh' || 'Frontend/scripts/test-original-passenger.sh' }}
+      - name: Publicar capturas e diagnostico de abertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yatri-passageiro-original-abertura
+          path: android-original-evidence/
+          if-no-files-found: warn
+          retention-days: 14

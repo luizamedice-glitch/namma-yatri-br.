@@ -27,9 +27,9 @@ initData = {
     data: {
       mobileNumber: ""
     , countryObj: {
-        countryCode : "+91",
-        countryName : "India",
-        countryShortCode : "IN"
+        countryCode : "+55",
+        countryName : "Brasil",
+        countryShortCode : "BR"
       }
     , tokenId : ""
     , attempts : 0

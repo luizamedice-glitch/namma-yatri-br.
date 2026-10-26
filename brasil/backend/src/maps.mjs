@@ -1,5 +1,6 @@
+import {geoapifyGeocoding} from './geocoding.mjs';
 import { ApiError, requireThat, position, text, fare } from './domain.mjs';
-export function mapsService({ key, baseFareCents = 500, perKmCents = 200, fetchImpl = fetch }) {
+export function mapsService({ key, geoapifyKey, baseFareCents = 500, perKmCents = 200, fetchImpl = fetch }) {
   async function google(url, payload, mask) {
     requireThat(key, 503, 'GOOGLE_MAPS_SERVER_KEY não configurada');
     let response;
@@ -17,6 +18,7 @@ export function mapsService({ key, baseFareCents = 500, perKmCents = 200, fetchI
     }
   }
   return {
+    reverse:geoapifyGeocoding({key:geoapifyKey,fetchImpl}).reverse,
     async autocomplete(input, location) {
       text(input, 'Busca', 3, 150);
       const payload = { input, languageCode: 'pt-BR', regionCode: 'BR', includedRegionCodes: ['br'] };

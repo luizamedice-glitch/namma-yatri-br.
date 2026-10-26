@@ -51,7 +51,10 @@ public class MobilityServices extends HyperServices {
                         "    window.prevTimeStamp = Date.now();\n" +
                         "    window.isDev = " + BuildConfig.flavor.equals("dev") + ";" +
                         "    window.assetDownloadDuration = Date.now();\n" +
-                        "    let jsFile = JBridge.loadFileInDUI('v1-assets_downloader.jsa'); // update index_bundle.js to share apk\n" +
+                        // Start the SDK runtime first: it creates real JOS contexts for
+                        // the consumer iframe. The BR iframe loads the local bundle.
+                        "    let jsFile = JBridge.loadFileInDUI('" +
+                        (BuildConfig.BR_TEST_MODE ? "v1-boot_loader.jsa" : "v1-assets_downloader.jsa") + "');\n" +
                         "    window.assetDownloadDurationEnd = Date.now();\n" +
                         "    let newScript = document.createElement('script');\n" +
                         "    newScript.type = 'text/javascript';\n" +

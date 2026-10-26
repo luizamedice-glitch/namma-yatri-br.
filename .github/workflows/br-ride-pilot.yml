@@ -1,0 +1,272 @@
+name: BR - Chamada passageiro motorista
+on:
+  workflow_call:
+    inputs:
+      runtime_cache_run_id:
+        type: string
+        default: ''
+      passenger_bundle_run_id:
+        type: string
+        default: ''
+      apk_run_id:
+        type: string
+        default: ''
+permissions:
+  contents: read
+  actions: read
+jobs:
+  compile:
+    if: ${{ !inputs.apk_run_id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(inputs.passenger_bundle_run_id && '["motorista"]' || '["passageiro","motorista"]') }}
+    env:
+      RUNTIME_CACHE_RUN: ${{ inputs.runtime_cache_run_id }}
+      APP: ${{ matrix.app }}
+      DIR: ${{ matrix.app == 'passageiro' && 'ui-customer' || 'ui-driver' }}
+      GHCRTS: '-N1 -M512m'
+      NODE_OPTIONS: '--openssl-legacy-provider --max-old-space-size=6144'
+      YATRI_DRIVER_TEST_BUILD: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18.20.8'
+      - run: node --test Frontend/scripts/test-driver-operations.mjs Frontend/scripts/test-pilot-trip.mjs
+      - name: Validar compilacao de referencia e limitar diferenca ao runtime de mapas
+        if: inputs.runtime_cache_run_id
+        uses: actions/github-script@v7
+        env:
+          SOURCE_RUN: ${{ inputs.runtime_cache_run_id }}
+        with:
+          script: |
+            const id=Number(process.env.SOURCE_RUN);
+            if(!Number.isSafeInteger(id)||id<=0)throw Error('Run invalido');
+            const {data:run}=await github.rest.actions.getWorkflowRun({...context.repo,run_id:id});
+            if(run.path!=='.github/workflows/br-driver-original.yml')throw Error('Origem invalida');
+            const {data}=await github.rest.actions.listJobsForWorkflowRun({...context.repo,run_id:id});
+            for(const app of ['passageiro','motorista'])if(!data.jobs.some(j=>j.name==='ride-pair / compile ('+app+')'&&j.conclusion==='success'))throw Error('Compilacao nao aprovada');
+            await exec.exec('git',['fetch','origin',run.head_sha]);
+            await exec.exec('git',['diff','--exit-code',run.head_sha,'HEAD','--',
+              'Frontend/ui-customer','Frontend/ui-driver','Frontend/ui-common','Frontend/packages.dhall',
+              ':!Frontend/ui-common/src/Development/TripMapRuntime.js']);
+            const fs=require('fs');fs.mkdirSync('purescript-diagnostics',{recursive:true});
+            fs.writeFileSync('purescript-diagnostics/runtime-reuse.json',JSON.stringify({sourceRun:id,sourceSha:run.head_sha,app:process.env.APP,pureScriptAndForeignFilesIdentical:true,compilerExecuted:false}));
+      - if: ${{ !inputs.runtime_cache_run_id }}
+        run: npm install --global purescript@0.15.14 spago@0.21.0
+      - uses: actions/cache/restore@v4
+        id: cache
+        with:
+          path: |
+            Frontend/${{ env.DIR }}/.spago
+            Frontend/${{ env.DIR }}/output
+            ~/.cache/dhall
+          key: ride-v2-${{ matrix.app }}-${{ runner.os }}-${{ hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ${{ inputs.runtime_cache_run_id && format('ride-v2-{0}-{1}-{2}-{3}-', matrix.app, runner.os, hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall'), inputs.runtime_cache_run_id) || format('ride-v2-{0}-{1}-{2}-', matrix.app, runner.os, hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall')) }}
+            ${{ matrix.app == 'passageiro' && format('purs-0.15.14-v2-{0}-passageiro-{1}-40062877489-', runner.os, hashFiles('Frontend/packages.dhall', 'Frontend/**/spago.dhall')) || format('purs-driver-original-v1-{0}-{1}-', runner.os, hashFiles('Frontend/packages.dhall', 'Frontend/ui-driver/spago.dhall')) }}
+      - name: Exigir cache quente
+        env:
+          MATCHED: ${{ steps.cache.outputs.cache-matched-key }}
+        run: |
+          test -n "$MATCHED"
+          if [[ -n "$RUNTIME_CACHE_RUN" ]]; then [[ "$MATCHED" == *-"$RUNTIME_CACHE_RUN"-* ]]; fi
+          test -s "Frontend/$DIR/output/Screens.HomeScreen.View/index.js"
+      - working-directory: Frontend/${{ env.DIR }}
+        run: |
+          npm install --legacy-peer-deps
+          if [[ -z "$RUNTIME_CACHE_RUN" ]]; then spago -j 2 install; fi
+      - name: Compilar somente a dependencia transitiva da entrada original
+        if: ${{ !inputs.runtime_cache_run_id }}
+        run: |
+          if [[ "$APP" == motorista ]]; then TARGET=Development.Driver; else TARGET=Main; fi
+          python3 Frontend/scripts/diagnose-purescript.py --app "$APP" --compiler-version 0.15.14 --mode staged --target-module "$TARGET" --batch-size 25 --heap 10g --timeout-seconds 600 --stall-seconds 300 --rss-limit-mib 12288 --label ride
+      - working-directory: Frontend/${{ env.DIR }}
+        run: |
+          npm run bundle:android
+          node --check dist/android/index_bundle.js
+      - uses: actions/cache/save@v4
+        if: always() && steps.cache.outcome == 'success' && !inputs.runtime_cache_run_id
+        with:
+          path: |
+            Frontend/${{ env.DIR }}/.spago
+            Frontend/${{ env.DIR }}/output
+            ~/.cache/dhall
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ride-${{ matrix.app }}-diagnostico
+          path: purescript-diagnostics/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ride-${{ matrix.app }}-bundle
+          path: Frontend/${{ env.DIR }}/dist/android/
+          if-no-files-found: error
+  android:
+    needs: compile
+    if: ${{ !inputs.apk_run_id && needs.compile.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar o bundle passageiro reaproveitado por fontes e workflow
+        if: ${{ inputs.passenger_bundle_run_id }}
+        uses: actions/github-script@v7
+        env:
+          SOURCE_RUN: ${{ inputs.passenger_bundle_run_id }}
+        with:
+          script: |
+            const id=Number(process.env.SOURCE_RUN);
+            if(!Number.isSafeInteger(id)||id<=0)throw Error('Run invalido');
+            const {data:run}=await github.rest.actions.getWorkflowRun({...context.repo,run_id:id});
+            if(run.path!=='.github/workflows/br-driver-original.yml'||run.conclusion!=='success')throw Error('Origem nao aprovada');
+            const {data}=await github.rest.actions.listJobsForWorkflowRun({...context.repo,run_id:id});
+            if(!data.jobs.some(j=>j.name==='ride-pair / compile (passageiro)'&&j.conclusion==='success'))throw Error('Compilacao passageiro nao aprovada');
+            await exec.exec('git',['fetch','origin',run.head_sha]);
+            await exec.exec('git',['diff','--exit-code',run.head_sha,'HEAD','--',
+              'Frontend/ui-customer','Frontend/ui-common','Frontend/packages.dhall',
+              'Frontend/ui-driver/src/Development/OperationsClient.mjs','Frontend/ui-driver/src/Development/NativeTransport.mjs']);
+      - uses: actions/download-artifact@v4
+        with:
+          name: ride-passageiro-bundle
+          path: Frontend/ui-customer/dist/android
+          run-id: ${{ inputs.passenger_bundle_run_id || github.run_id }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: ride-motorista-bundle
+          path: Frontend/ui-driver/dist/android
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0'
+          log-accepted-android-sdk-licenses: false
+      - working-directory: Frontend
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.Google_Maps_API_Key }}
+          YATRI_BACKEND_URL: https://52-67-246-31.sslip.io
+          YATRI_MAPS_TEST_MODE: 'true'
+        run: |
+          cp ui-customer/dist/android/index_bundle.js android-native/app/src/user/nammaYatri/assets/juspay/index_bundle.js
+          cp ui-driver/dist/android/index_bundle.js android-native/app/src/driver/nammaYatriPartner/assets/juspay/index_bundle.js
+          bash userJuspayAssets.sh nammaYatri
+          bash driverJuspayAssets.sh nammaYatriPartner
+          cp android-native/local-temp.properties android-native/local.properties
+          cd android-native
+          bash gradlew :app:assembleNyUserProdDebug :app:assembleNyDriverProdDebug -PbrTestMode=true -PbrRidePilot=true --no-daemon --max-workers=2 --stacktrace
+      - name: Conferir os dois bundles nos APKs
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          import shutil,json
+          out=Path('ride-apks');out.mkdir()
+          for role,variant,app in [('passageiro','nyUserProd','ui-customer'),('motorista','nyDriverProd','ui-driver')]:
+            files=list(Path('Frontend/android-native/app/build/outputs/apk',variant,'debug').glob('*.apk'))
+            assert len(files)==1
+            with ZipFile(files[0]) as apk:
+              assert apk.read('assets/juspay/index_bundle.js')==Path('Frontend',app,'dist/android/index_bundle.js').read_bytes()
+              if role=='passageiro':
+                config=json.loads(apk.read('assets/juspay/yatri_places_config.json'))
+                assert config['mapsTestMode'] and not config.get('passengerCredential')
+            shutil.copy(files[0],out/('alce-yatri-'+role+'-teste.apk'))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ride-passageiro-apk
+          path: ride-apks/alce-yatri-passageiro-teste.apk
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ride-motorista-apk
+          path: ride-apks/alce-yatri-motorista-teste.apk
+          if-no-files-found: error
+  emulator:
+    concurrency:
+      group: br-ride-pilot-remote-e2e
+      cancel-in-progress: false
+    needs: android
+    if: ${{ always() && !cancelled() && (needs.android.result == 'success' || inputs.apk_run_id) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar origem e fontes dos APKs reutilizados
+        if: ${{ inputs.apk_run_id }}
+        uses: actions/github-script@v7
+        env:
+          SOURCE_RUN: ${{ inputs.apk_run_id }}
+        with:
+          script: |
+            const id=Number(process.env.SOURCE_RUN);
+            if(!Number.isSafeInteger(id)||id<=0)throw Error('Run invalido');
+            const {data:run}=await github.rest.actions.getWorkflowRun({...context.repo,run_id:id});
+            if(run.path!=='.github/workflows/br-driver-original.yml')throw Error('Origem invalida');
+            const {data}=await github.rest.actions.listJobsForWorkflowRun({...context.repo,run_id:id});
+            if(!data.jobs.some(j=>j.name==='ride-pair / android'&&j.conclusion==='success'))throw Error('APKs nao aprovados');
+            await exec.exec('git',['fetch','origin',run.head_sha]);
+            await exec.exec('git',['diff','--exit-code',run.head_sha,'HEAD','--','Frontend/android-native','Frontend/ui-customer','Frontend/ui-driver','Frontend/ui-common','Frontend/packages.dhall']);
+      - uses: actions/download-artifact@v4
+        with:
+          name: ride-passageiro-apk
+          path: ride-apks
+          run-id: ${{ inputs.apk_run_id || github.run_id }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: ride-motorista-apk
+          path: ride-apks
+          run-id: ${{ inputs.apk_run_id || github.run_id }}
+          github-token: ${{ github.token }}
+      - name: Preparar duas ativacoes privadas sem expor codigos
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+          YATRI_DRIVER_OPERATION: activate
+        run: |
+          umask 077
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out "$RUNNER_TEMP/ride-delivery.key" 2>/dev/null
+          openssl pkey -in "$RUNNER_TEMP/ride-delivery.key" -pubout -out "$RUNNER_TEMP/ride-delivery.pub"
+          export YATRI_DRIVER_PUBLIC_FILE="$RUNNER_TEMP/ride-delivery.pub"
+          for profile in driver passenger; do
+            export YATRI_PILOT_ROLE="$profile"
+            bash brasil/backend/ops/driver-ssh-operation.sh
+            base64 -d "$RUNNER_TEMP/driver-activation.enc" > "$RUNNER_TEMP/activation.bin"
+            openssl pkeyutl -decrypt -inkey "$RUNNER_TEMP/ride-delivery.key" -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -in "$RUNNER_TEMP/activation.bin" -out "$RUNNER_TEMP/ride-$profile.json"
+          done
+          echo "RIDE_DRIVER_ACTIVATION=$RUNNER_TEMP/ride-driver.json" >> "$GITHUB_ENV"
+          echo "RIDE_PASSENGER_ACTIVATION=$RUNNER_TEMP/ride-passenger.json" >> "$GITHUB_ENV"
+      - name: Preparar ferramentas de aceite visual e leitura da WebView
+        run: |
+          python3 -m venv "$RUNNER_TEMP/ride-python"
+          "$RUNNER_TEMP/ride-python/bin/pip" install pillow websocket-client==1.8.0
+          echo "RIDE_PYTHON=$RUNNER_TEMP/ride-python/bin/python" >> "$GITHUB_ENV"
+      - name: Habilitar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          ram-size: 4096M
+          script: |
+            adb install -g ride-apks/alce-yatri-passageiro-teste.apk
+            adb install -g ride-apks/alce-yatri-motorista-teste.apk
+            "$RIDE_PYTHON" Frontend/scripts/test-ride-pair.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ride-pair-aceite-android
+          path: ride-pair-evidence/
+          if-no-files-found: warn

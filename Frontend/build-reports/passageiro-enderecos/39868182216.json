@@ -1,0 +1,83 @@
+{
+  "branch": "codex/issue-1-purescript-memory",
+  "codeCommit": "76a6a0dd26c6e81c2cfca34e127e096b10d84b9d",
+  "pureScriptSourceCommit": "478901e0b2a0dfe9e11d967bba351c661a3455fa",
+  "pureScriptRun": 39866367286,
+  "androidRun": 39868182216,
+  "compiler": {
+    "version": "0.15.14",
+    "mode": "dependency-closure batches",
+    "batchSize": 25,
+    "calls": 55,
+    "seconds": 374.62,
+    "peakRssKiB": 8346884,
+    "recompiledModules": [
+      "Development.Places",
+      "Development.Passenger",
+      "Main"
+    ],
+    "cacheRun": 39835346434,
+    "guardedFinalCacheCheckSeconds": 41.33,
+    "guardedFinalCacheCheckPeakRssKiB": 8031576,
+    "unexpectedRecompilations": 0
+  },
+  "webpack": {
+    "seconds": 267.61,
+    "peakRssKiB": 4720936
+  },
+  "androidBuildSeconds": 197.35,
+  "contractTests": {
+    "passed": 11,
+    "fixtures": true,
+    "isRealGoogleAcceptance": false
+  },
+  "realProvider": {
+    "status": "not_configured",
+    "requiredSecret": "GOOGLE_MAPS_SERVER_KEY"
+  },
+  "buildConfigurationPresent": {
+    "GOOGLE_MAPS_API_KEY": true,
+    "YATRI_BACKEND_URL": false,
+    "YATRI_PASSENGER_DEV_KEY": false
+  },
+  "apk": {
+    "artifactId": 12465491616,
+    "sizeBytes": 128341644,
+    "sha256": "2c1a87930e10ebc40e41886126bd58326540a7a6445aeaf57a1c558fb48283f0",
+    "package": "in.juspay.nammayatri.debug",
+    "signerSha1": "2f967fce00a53b274b40af0bbdc0ee6b4f507dc0",
+    "signerSha256": "93c03048ee33c74f57350bb8f978c6ba87714bb0359b696950c09f0f7a7f16b6"
+  },
+  "identityImages": {
+    "mainImagesPixelEqual": 3,
+    "launcherDensitiesPixelEqual": 5
+  },
+  "androidUiTest": {
+    "status": "passed",
+    "emulator": "Android 29 google_apis x86_64 Pixel 2",
+    "evidenceArtifactId": 12465587491,
+    "checks": [
+      "HomeScreen sem token/OTP offline e online",
+      "digitação completa destino Avenida Paulista, Sao Paulo",
+      "digitação completa origem Praca da Se, Sao Paulo",
+      "retorno à HomeScreen após erros de configuração",
+      "processo vivo; zero FATAL EXCEPTION",
+      "marca original fornecida preservada; tiles Maps visíveis"
+    ],
+    "realPlacesAcceptance": "not_validated",
+    "firebaseLegacyWarning": "Firebase-Installations API_KEY_INVALID não bloqueante"
+  },
+  "realAddressAcceptance": {
+    "status": "not_validated",
+    "reason": "No Yatri backend URL or passenger development credential configured; server Places secret unavailable."
+  },
+  "unchanged": [
+    "original HomeScreen view/controller/components",
+    "SearchLocationModel original views",
+    "backend source",
+    "driver source",
+    "dependency manifests",
+    "approved branding images",
+    "production authentication"
+  ]
+}

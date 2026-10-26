@@ -442,6 +442,10 @@ config =
   , stroke: "1,#E5E7EB"
   }
   , countryCodeConfig : [
+      { countryName : "Brasil"
+      , countryCode : "+55"
+      , countryShortCode : "BR"
+      },
       {
         countryName : "India" 
       , countryCode  : "+91" 

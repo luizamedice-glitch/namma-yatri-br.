@@ -1,0 +1,15 @@
+{
+  "run_id": 39832410686,
+  "result": "guard interrupted cold recompilation after changing shared foreign source",
+  "modules_announced": 336,
+  "last_target": "Screens.HomeScreen.Controller",
+  "seconds": 314.7,
+  "exit_code": 125,
+  "reason": "no_compiler_output",
+  "peak_sampled_rss_kib": 10859396,
+  "ghc_total_elapsed_seconds": 313.91,
+  "ghc_gc_elapsed_seconds": 249.828,
+  "ghc_productivity_percent": 20.4,
+  "artifact_id": 12450850245,
+  "resolution": "restore original foreign source; move BR presentation adapter to Android Webpack module resolution"
+}

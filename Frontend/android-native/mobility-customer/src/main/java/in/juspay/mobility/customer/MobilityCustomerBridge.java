@@ -9,6 +9,20 @@
 
 package in.juspay.mobility.customer;
 
+import android.app.Activity;
+import android.content.pm.ApplicationInfo;
+import android.location.Address;
+import android.location.Geocoder;
+import java.util.Locale;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.RoundCap;
+import com.google.android.gms.maps.model.JointType;
+import android.os.Handler;
+import android.os.Looper;
+import java.lang.ref.WeakReference;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
@@ -60,8 +74,228 @@ import in.juspay.hyper.core.JuspayLogger;
 import in.juspay.mobility.common.MapRemoteConfig;
 import in.juspay.mobility.common.MobilityCommonBridge;
 import android.view.accessibility.AccessibilityManager;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 
 public class MobilityCustomerBridge extends MobilityCommonBridge {
+    // Foreground cadence only. Never contains a URL, token, or operational response.
+    private final Handler yatriClockHandler = new Handler(Looper.getMainLooper());
+    private volatile PassengerClock yatriPassengerClock;
+    private volatile int yatriClockTicks, yatriClockDispatches;
+    private volatile boolean yatriClockResumed, yatriClockFocused;
+    private static volatile WeakReference<MobilityCustomerBridge> yatriDiagnosticBridge = new WeakReference<>(null);
+    private volatile String yatriRuntimeDiagnostics = "{}";
+    private volatile long yatriRuntimeRecordedAt;
+    private static volatile String yatriLastExport = "{}";
+
+    @JavascriptInterface
+    public void recordYatriPassengerDiagnostics(String value) {
+        if (!yatriPassengerClockEnabled() || value == null || value.length() > 4096) return;
+        try {
+            JSONObject input = new JSONObject(value), safe = new JSONObject();
+            for (String field : new String[]{"ticks","reads","errors","nativeTicks","callbackReceived","callbackFailed","callbackClock","callbackOther"})
+                safe.put(field, Math.max(0, Math.min(1000000, input.optLong(field))));
+            for (String field : new String[]{"polling","actionBusy","backEnabled","registryMapFlag"}) safe.put(field,input.optBoolean(field));
+            String phase=input.optString("phase");
+            if (phase.matches("idle|quoted|requesting|searching|accepted|arrived|in_progress|completed|cancelled|error")) safe.put("phase",phase);
+            String registry=input.optString("registryType");
+            if (registry.matches("object|Map|unknown")) safe.put("registryType",registry);
+            String screen=input.optString("screen");
+            if (screen.matches("HomeScreen|BrBooking|BrWallet|BrProfile")) safe.put("screen",screen);
+            String error=input.optString("callbackLastError");
+            if (error.matches("[A-Za-z]{1,32}")) safe.put("callbackLastError",error);
+            yatriRuntimeDiagnostics=safe.toString();yatriRuntimeRecordedAt=android.os.SystemClock.elapsedRealtime();
+        } catch (JSONException ignored) { }
+    }
+
+    @JavascriptInterface
+    public String getYatriPassengerRuntimeDiagnostics() {
+        if (!yatriPassengerClockEnabled()) return "{}";
+        try {
+            return new JSONObject().put("revision",2).put("runtime",new JSONObject(yatriRuntimeDiagnostics))
+                .put("sinceJsMs",yatriRuntimeRecordedAt==0?-1:android.os.SystemClock.elapsedRealtime()-yatriRuntimeRecordedAt)
+                .put("nativeClock",new JSONObject(getYatriPassengerClockDiagnostics())).toString();
+        } catch (JSONException ignored) { return "{}"; }
+    }
+
+    @JavascriptInterface
+    public String getLastYatriPassengerDiagnosticExport() {
+        return yatriPassengerClockEnabled()?yatriLastExport:"{}";
+    }
+
+    private static void collectYatriVisibleControls(android.view.View view, JSONArray result) throws JSONException {
+        if (!view.isShown()) return;
+        if (view instanceof android.widget.TextView) {
+            String text=((android.widget.TextView)view).getText().toString();
+            if (text.matches("Procurando motorista|Motorista a caminho|Motorista no embarque|Viagem em andamento|Viagem concluída|Viagem cancelada|Voltar ao início|Cancelar viagem|Acompanhar viagem|Solicitar viagem"))
+                result.put(new JSONObject().put("text",text).put("enabled",view.isEnabled()).put("clickable",view.isClickable()));
+        }
+        if (view instanceof android.view.ViewGroup) {
+            android.view.ViewGroup group=(android.view.ViewGroup)view;
+            for(int i=0;i<group.getChildCount();i++)collectYatriVisibleControls(group.getChildAt(i),result);
+        }
+    }
+
+    // Operator-triggered diagnostics only. No token, URL, address, user/ride ID or vehicle data.
+    public static void copyYatriPassengerDiagnostics(Context context) {
+        try {
+            MobilityCustomerBridge bridge=yatriDiagnosticBridge.get();
+            JSONObject report=bridge==null?new JSONObject().put("runtimeNotStarted",true):new JSONObject(bridge.getYatriPassengerRuntimeDiagnostics());
+            report.put("revision",2).put("androidApi",Build.VERSION.SDK_INT)
+                .put("device",Build.MANUFACTURER+" "+Build.MODEL);
+            if (context instanceof Activity) {
+                JSONArray controls=new JSONArray();collectYatriVisibleControls(((Activity)context).getWindow().getDecorView(),controls);
+                report.put("visibleControls",controls);
+            }
+            yatriLastExport=report.toString();
+            try(java.io.FileOutputStream file=context.openFileOutput("yatri-passenger-diagnostic.json",Context.MODE_PRIVATE)) {
+                file.write(yatriLastExport.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            }
+            android.content.ClipboardManager clipboard=(android.content.ClipboardManager)context.getSystemService(Context.CLIPBOARD_SERVICE);
+            if(clipboard!=null)clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Yatri diagnóstico",yatriLastExport));
+            android.widget.Toast.makeText(context,"Diagnóstico Yatri copiado. Cole na conversa de suporte.",android.widget.Toast.LENGTH_LONG).show();
+        } catch (Exception ignored) {
+            android.widget.Toast.makeText(context,"Não foi possível copiar o diagnóstico.",android.widget.Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    private boolean yatriPassengerMapsEnabled() {
+        try {
+            Context context = bridgeComponents.getContext();
+            int resource = context.getResources().getIdentifier("yatri_br_ride_pilot", "bool", context.getPackageName());
+            return "in.juspay.nammayatri.debug".equals(context.getPackageName()) &&
+                (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0 &&
+                resource != 0 && context.getResources().getBoolean(resource);
+        } catch (Exception ignored) { return false; }
+    }
+
+    private volatile String yatriGeocodingState = "idle";
+    @JavascriptInterface
+    public String getYatriGeocodingDiagnostics() {
+        return yatriPassengerMapsEnabled()?"{\"state\":"+JSONObject.quote(yatriGeocodingState)+"}":"{}";
+    }
+    private static final AtomicBoolean yatriGeocodingBusy = new AtomicBoolean(false);
+    private static final ExecutorService yatriGeocodingExecutor = Executors.newSingleThreadExecutor(task -> {
+        Thread thread = new Thread(task, "yatri-geocoding");thread.setDaemon(true);return thread;
+    });
+
+    // Real Android geocoder, off both UI and JavascriptInterface threads. No address logging.
+    @JavascriptInterface
+    public boolean reverseGeocodeYatri(double lat, double lng, String callback) {
+        if (!yatriPassengerMapsEnabled() || !Double.isFinite(lat) || !Double.isFinite(lng) ||
+            Math.abs(lat)>90 || Math.abs(lng)>180 || (lat==0 && lng==0) || callback==null ||
+            callback.isEmpty() || callback.length()>256) return false;
+        if (!Geocoder.isPresent()) {yatriGeocodingState="no_provider";return false;}
+        if (!yatriGeocodingBusy.compareAndSet(false,true)) {yatriGeocodingState="busy";return false;}
+        yatriGeocodingState="loading";
+        final Context context = bridgeComponents.getContext().getApplicationContext();
+        yatriGeocodingExecutor.execute(() -> {
+            String address = "";String state="empty";
+            try {
+                List<Address> addresses = new Geocoder(context, new Locale("pt", "BR")).getFromLocation(lat,lng,1);
+                if (addresses!=null && !addresses.isEmpty()) {
+                    String line=addresses.get(0).getAddressLine(0);
+                    if(line!=null && line.trim().length()>=3 && line.length()<=1000) address=line.trim();
+                }
+            } catch (Exception ignored) { state="provider_error"; }
+            finally { yatriGeocodingBusy.set(false); }
+            yatriGeocodingState=address.isEmpty()?state:"resolved";
+            final String result = address;
+            ExecutorManager.runOnMainThread(() -> {
+                if (!yatriPassengerMapsEnabled()) return;
+                bridgeComponents.getJsCallback().addJsToWebView("window.callUICallback(" + JSONObject.quote(callback) + "," +
+                    JSONObject.quote(result.isEmpty()?"unavailable":"ok") + "," + JSONObject.quote(result) + ");");
+            });
+        });
+        return true;
+    }
+
+    @Override
+    public PolylineDataPoints setRouteCustomTheme(PolylineOptions options, int color, String style, int width,
+            JSONObject config, GoogleMap map, Boolean overlay, String key, String mapKey) {
+        if (yatriPassengerMapsEnabled() && "BR_PASSENGER_ROUTE".equals(key)) {
+            options.startCap(new RoundCap()).endCap(new RoundCap()).jointType(JointType.ROUND).zIndex(5);
+        }
+        return super.setRouteCustomTheme(options,color,style,width,config,map,overlay,key,mapKey);
+    }
+
+    private boolean yatriPassengerClockEnabled() {
+        try {
+            Context context = bridgeComponents.getContext();
+            if (!"in.juspay.nammayatri.debug".equals(context.getPackageName()) ||
+                (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) == 0) return false;
+            int resource = context.getResources().getIdentifier("yatri_br_ride_pilot", "bool", context.getPackageName());
+            return resource != 0 && context.getResources().getBoolean(resource) &&
+                context.getSharedPreferences("godel", Context.MODE_PRIVATE)
+                    .getString("YATRI_PASSENGER_SESSION", "").matches("[a-f0-9]{64}");
+        } catch (Exception ignored) { return false; }
+    }
+
+    @JavascriptInterface
+    public boolean startYatriPassengerClock(String callback) {
+        if (!yatriPassengerClockEnabled() || callback == null || callback.isEmpty() || callback.length() > 256) return false;
+        yatriDiagnosticBridge = new WeakReference<>(this);
+        ExecutorManager.runOnMainThread(() -> {
+            if (yatriPassengerClock != null) yatriClockHandler.removeCallbacks(yatriPassengerClock);
+            yatriClockTicks = 0; yatriClockDispatches = 0;
+            yatriPassengerClock = new PassengerClock(this, callback);
+            yatriClockHandler.postDelayed(yatriPassengerClock, 3000);
+        });
+        return true;
+    }
+
+    @JavascriptInterface
+    public void stopYatriPassengerClock(String callback) {
+        ExecutorManager.runOnMainThread(() -> {
+            if (yatriPassengerClock != null && yatriPassengerClock.callback.equals(callback)) {
+                yatriClockHandler.removeCallbacks(yatriPassengerClock);
+                yatriPassengerClock = null;
+            }
+        });
+    }
+
+    @JavascriptInterface
+    public String getYatriPassengerClockDiagnostics() {
+        if (!yatriPassengerClockEnabled()) return "{}";
+        try {
+            return new JSONObject().put("scheduled", yatriPassengerClock != null)
+                .put("ticks", yatriClockTicks).put("dispatches", yatriClockDispatches)
+                .put("resumed", yatriClockResumed).put("windowFocused", yatriClockFocused).toString();
+        } catch (JSONException ignored) { return "{}"; }
+    }
+
+    private static final class PassengerClock implements Runnable {
+        private final WeakReference<MobilityCustomerBridge> reference;
+        private final String callback;
+        PassengerClock(MobilityCustomerBridge bridge, String callback) {
+            this.reference = new WeakReference<>(bridge); this.callback = callback;
+        }
+        @Override public void run() {
+            MobilityCustomerBridge bridge = reference.get();
+            if (bridge == null || bridge.yatriPassengerClock != this) return;
+            Activity activity = bridge.bridgeComponents.getActivity();
+            if (activity == null || activity.isFinishing() || activity.isDestroyed() || !bridge.yatriPassengerClockEnabled()) {
+                bridge.yatriPassengerClock = null; return;
+            }
+            bridge.yatriClockTicks++;
+            bridge.yatriClockFocused = activity.hasWindowFocus();
+            bridge.yatriClockResumed = activity instanceof LifecycleOwner &&
+                ((LifecycleOwner) activity).getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.RESUMED);
+            if (bridge.yatriClockResumed && bridge.bridgeComponents.getJsCallback() != null) {
+                String id = JSONObject.quote(callback);
+                // Use the SDK's callback entry point, which routes into the consumer
+                // iframe. Arbitrary window globals belong to the SDK host context.
+                String script = "window.callUICallback(" + id + ", 'YATRI_PASSENGER_TICK');";
+                try {
+                    bridge.bridgeComponents.getJsCallback().addJsToWebView(script);
+                    bridge.yatriClockDispatches++;
+                } catch (RuntimeException ignored) { /* Retry while the Activity is resumed. */ }
+            }
+            bridge.yatriClockHandler.postDelayed(this, 3000);
+        }
+    }
+
 
     @Override
     public void reset() {

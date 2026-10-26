@@ -1,0 +1,1 @@
+Frontend original inicializado, splash encerrada e controles Android presentes.

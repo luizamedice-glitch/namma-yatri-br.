@@ -1,0 +1,31 @@
+{
+  "run_id": 39791852321,
+  "source_sha": "725cd2fa712e01d289a4ed14865581fd329e5657",
+  "compiler": "0.15.14",
+  "heap": "10g",
+  "graph_modules": 1193,
+  "attempt": "incremental full graph before development-home closure",
+  "result": {
+    "step": 1,
+    "exit_code": 124,
+    "seconds": 1810.26,
+    "timed_out": true,
+    "signal": null,
+    "before": {
+      "memory.max": null,
+      "memory.current": null,
+      "memory.peak": null,
+      "memory.events": null
+    },
+    "after": {
+      "memory.max": null,
+      "memory.current": null,
+      "memory.peak": null,
+      "memory.events": null
+    }
+  },
+  "last_module_reported": "Screens.HomeScreen.Controller",
+  "progress": "500 of 529 pending modules",
+  "sampled_peak_rss_kib": 14073572,
+  "note": "Timeout by diagnostic script. GNU time RSS is only parent after interruption and is not reported as compiler memory."
+}

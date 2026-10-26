@@ -1,0 +1,13 @@
+
+> atlas-ui-customer@3.0.118 compile:purs
+> spago build --purs-args '--censor-warnings'
+
+           Src   Lib   All
+Warnings   0     0     0  
+Errors     0     0     0  
+[info] Build succeeded.
+[warn] None of your project files import modules from some projects that are in the direct dependencies of your project.
+These dependencies are unused. To fix this warning, remove the following packages from the list of dependencies in your config:
+- js-uri
+- lite-decode
+- unfoldable

@@ -1,0 +1,56 @@
+Extracted last 20 module progress lines and final GHC statistics. Full raw log: CI artifact 12395184363.
+
+[1170 of 1189] Compiling Screens.TripDetailsScreen.Handler
+[1171 of 1189] Compiling Screens.NammaSafetyFlow.SafetySettingsScreen.View
+[1172 of 1189] Compiling Screens.RideSelectionScreen.View
+[1173 of 1189] Compiling Screens.MyRidesScreen.Handler
+[1174 of 1189] Compiling Screens.RideSummaryScreen.Handler
+[1175 of 1189] Compiling Screens.FollowRideScreen.View
+[1176 of 1189] Compiling Screens.SelectFaqScreen.Handler
+[1177 of 1189] Compiling Screens.RideBookingFlow.RiderRideCompletedCard.Handler
+[1178 of 1189] Compiling Screens.HomeScreen.Controller
+[1179 of 1189] Compiling Screens.FaqScreen.Handler
+[1180 of 1189] Compiling Screens.HelpAndSupportScreen.Handler
+[1181 of 1189] Compiling Screens.NammaSafetyFlow.SafetySettingsScreen.Handler
+[1182 of 1189] Compiling Screens.RideSelectionScreen.Handler
+[1183 of 1189] Compiling Screens.FollowRideScreen.Handler
+[1184 of 1189] Compiling Helpers.Storage.Flow.BaseApp
+[1185 of 1189] Compiling Screens.HomeScreen.View
+[1186 of 1189] Compiling Screens.HomeScreen.Handler
+[1187 of 1189] Compiling Screens.Handlers
+[1188 of 1189] Compiling Flow
+[1189 of 1189] Compiling Main
+
+
+
+
+1,821,456,689,496 bytes allocated in the heap
+ 420,365,555,648 bytes copied during GC
+   7,650,447,200 bytes maximum residency (165 sample(s))
+      32,825,504 bytes maximum slop
+           10409 MiB total memory in use (0 MB lost due to fragmentation)
+
+                                     Tot time (elapsed)  Avg pause  Max pause
+  Gen  0     432729 colls,     0 par   376.069s  376.695s     0.0009s    0.1482s
+  Gen  1       165 colls,     0 par   586.708s  586.745s     3.5560s    104.7718s
+
+  TASKS: 5 (1 bound, 4 peak workers (4 total), using -N1)
+
+  SPARKS: 1189 (0 converted, 0 overflowed, 0 dud, 69 GC'd, 1120 fizzled)
+
+  INIT    time    0.001s  (  0.001s elapsed)
+  MUT     time  625.727s  (622.358s elapsed)
+  GC      time  962.777s  (963.440s elapsed)
+  EXIT    time    0.004s  (  0.001s elapsed)
+  Total   time  1588.509s  (1585.800s elapsed)
+
+  Alloc rate    2,910,943,816 bytes per MUT second
+
+  Productivity  39.4% of total user, 39.2% of total elapsed
+
+[info] Build succeeded.
+[warn] None of your project files import modules from some projects that are in the direct dependencies of your project.
+These dependencies are unused. To fix this warning, remove the following packages from the list of dependencies in your config:
+- js-uri
+- lite-decode
+- unfoldable

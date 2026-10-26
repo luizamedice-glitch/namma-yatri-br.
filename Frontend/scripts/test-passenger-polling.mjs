@@ -1,0 +1,157 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {tripView} from '../ui-common/src/Development/PilotTrip.mjs';
+const tick=()=>new Promise(resolve=>setImmediate(resolve));
+async function harness(run){
+  const id='12345678-1234-4234-8234-123456789abc';
+  const ride={id,status:'searching',fare_cents:1234,origin:{address:'Origem do contrato'},destination:{address:'Destino do contrato'},route:{distanceMeters:1000}};
+  const quote={id:'quote',fareCents:1234,origin:ride.origin,destination:ride.destination,route:ride.route};
+  const prefs={YATRI_PASSENGER_SESSION:'a'.repeat(64)};
+  let poll,active=false,offline=false,reads=0;
+  const phases=[],values=[],errors=[];
+  const api={snapshot:async()=>{reads++;if(offline)throw Error('Conexão interrompida');return {rides:active&&!['cancelled','completed'].includes(ride.status)?[{...ride}]:[]};},
+    navigation:async()=>({route:ride.route,leg:'pickup'}),ride:async()=>({...ride}),quote:async()=>({...quote}),requestRide:async()=>{active=true;return {id};},rideAction:async()=>{ride.status='cancelled';}};
+  globalThis.passengerHarness={createOperationsClient:()=>api,createNativeFetch:()=>{},callbackMapper:{map:x=>x},tripView,updateTripMap:()=>{},releaseTripMap:()=>{}};
+  const events=new Map();
+  globalThis.window={onResumeListeners:[],addEventListener:(name,callback)=>events.set(name,callback),removeEventListener:(name,callback)=>{if(events.get(name)===callback)events.delete(name);},__OS:'ANDROID',__YATRI_BR_DEVELOPMENT__:true,JBridge:{getDeviceInfo:()=>JSON.stringify({package_name:'in.juspay.nammayatri.debug'}),
+    getFromSharedPrefs:key=>prefs[key]||'',setInSharedPrefs:(key,value)=>{prefs[key]=value;}}};
+  const interval=globalThis.setInterval,clear=globalThis.clearInterval;
+  globalThis.setInterval=fn=>{poll=fn;return 1;};globalThis.clearInterval=()=>{};
+  const source=(await readFile(new URL('../ui-customer/src/Development/Rides.js',import.meta.url),'utf8')).replace(/^import .*;$/gm,'');
+  const ffi=await import('data:text/javascript;base64,'+Buffer.from('const {createOperationsClient,createNativeFetch,callbackMapper,tripView,updateTripMap,releaseTripMap}=globalThis.passengerHarness;'+source).toString('base64')+'#'+Math.random());
+  const subscribe=()=>ffi.subscribe({})({})(trip=>()=>{phases.push(trip.phase);values.push(trip);})(e=>()=>errors.push(e))();
+  let cleanup=subscribe();
+  try{await tick();await run({ffi,api,ride,prefs,phases,values,errors,poll:()=>poll(),subscribe:()=>{cleanup();cleanup=subscribe();},offline:v=>{offline=v;},reads:()=>reads,events,close:()=>cleanup()});}
+  finally{cleanup();assert.equal(window.onResumeListeners.length,0);assert.equal(events.size,0);globalThis.setInterval=interval;globalThis.clearInterval=clear;delete globalThis.window;delete globalThis.passengerHarness;}
+}
+test('passenger polling follows every backend state without resubscribe, including completion and reconnection',()=>harness(async h=>{
+  assert.equal(h.phases.at(-1),'quoted');h.ffi.request();await tick();assert.equal(h.phases.at(-1),'searching');
+  for(const phase of ['accepted','arrived','in_progress','completed']){
+    if(phase==='arrived'){
+      h.offline(true);await h.poll();assert.equal(h.phases.at(-1),'accepted');assert.match(h.errors.at(-1),/interrompida/);h.offline(false);
+    }
+    h.ride.status=phase;await h.poll();assert.equal(h.phases.at(-1),phase);
+  }
+  assert.equal(h.prefs.YATRI_PASSENGER_ACTIVE_RIDE,h.ride.id);
+  h.subscribe();await tick();assert.equal(h.phases.at(-1),'completed');
+}));
+test('request click does not dispatch a synchronous reentrant event into PrestoDOM',()=>harness(async h=>{
+  const count=h.phases.length;h.ffi.request();
+  assert.equal(h.phases.length,count,'The click reducer must commit before receiving another action');
+  await tick();assert.equal(h.phases.at(-1),'searching');
+}));
+test('a snapshot started before cancellation cannot restore the searching screen',()=>harness(async h=>{
+  h.ffi.request();await tick();
+  let resolve;
+  h.api.snapshot=()=>new Promise(r=>{resolve=r;});
+  const pending=h.poll();
+  h.api.snapshot=async()=>({rides:[]});
+  h.ffi.cancel();await tick();assert.equal(h.phases.at(-1),'cancelled');
+  resolve({rides:[{...h.ride,status:'searching'}]});await pending;
+  assert.equal(h.phases.at(-1),'cancelled');
+}));
+test('failed initial quote is retried after connectivity returns without recreating the screen',()=>harness(async h=>{
+  h.api.quote=async()=>{throw Error('Conexão interrompida');};
+  h.subscribe();await tick();assert.match(h.errors.at(-1),/interrompida/);
+  const before=h.phases.length;
+  h.api.quote=async()=>({id:'new-quote',fareCents:1000,origin:h.ride.origin,destination:h.ride.destination,route:h.ride.route});
+  await h.poll();assert.ok(h.phases.length>before,'Recovered quote must reach the existing listener');assert.equal(h.phases.at(-1),'quoted');
+}));
+
+test('unchanged snapshots do not rerender and online/resume refresh immediately with one listener',()=>harness(async h=>{
+  h.ffi.request();await tick();const count=h.phases.length;
+  await h.poll();assert.equal(h.phases.length,count);
+  h.offline(true);await h.poll();h.offline(false);h.ride.status='accepted';
+  assert.equal(window.onResumeListeners.length,1);
+  window.onResumeListeners[0]();await tick();assert.equal(h.phases.at(-1),'accepted');
+  h.ride.status='arrived';h.events.get('online')();await tick();assert.equal(h.phases.at(-1),'arrived');
+  h.subscribe();await tick();assert.equal(window.onResumeListeners.length,1);assert.equal(h.events.size,1);
+}));
+
+test('a confirmed request receipt remains recoverable when the passenger leaves before the response',()=>harness(async h=>{
+  let resolve;
+  h.api.requestRide=()=>new Promise(r=>{resolve=r;});
+  h.ffi.request();await tick();h.close();
+  resolve({id:h.ride.id});await tick();
+  assert.equal(h.prefs.YATRI_PASSENGER_ACTIVE_RIDE,h.ride.id);
+}));
+test('a late request receipt cannot overwrite a newer trip or cross a renewed session',async()=>{
+  for(const changed of ['ride','session'])await harness(async h=>{
+    let resolve;h.api.requestRide=()=>new Promise(r=>{resolve=r;});
+    h.ffi.request();await tick();h.close();
+    if(changed==='ride')h.prefs.YATRI_PASSENGER_ACTIVE_RIDE='87654321-1234-4234-8234-123456789abc';
+    else h.prefs.YATRI_PASSENGER_SESSION='b'.repeat(64);
+    const before=h.prefs.YATRI_PASSENGER_ACTIVE_RIDE;
+    resolve({id:h.ride.id});await tick();assert.equal(h.prefs.YATRI_PASSENGER_ACTIVE_RIDE,before);
+  });
+});
+
+test('status updates continue while pickup navigation never replies; obsolete route cannot restore an old phase',()=>harness(async h=>{
+  h.ffi.request();await tick();
+  let resolve;
+  h.api.navigation=()=>new Promise(r=>{resolve=r;});
+  h.ride.status='accepted';await h.poll();await tick();assert.equal(h.phases.at(-1),'accepted');
+  h.ride.status='arrived';await h.poll();assert.equal(h.phases.at(-1),'arrived');
+  h.ride.status='in_progress';await h.poll();assert.equal(h.phases.at(-1),'in_progress');
+  h.ride.status='completed';await h.poll();assert.equal(h.phases.at(-1),'completed');
+  resolve({route:{encodedPolyline:'old-route'}});await tick();assert.equal(h.phases.at(-1),'completed');
+}));
+test('native foreground clock updates all states without a WebView interval and stops with its subscription',()=>harness(async h=>{
+  let nativeTick,stopped;
+  window.JBridge.startYatriPassengerClock=callback=>{nativeTick=callback;return true;};
+  window.JBridge.stopYatriPassengerClock=callback=>{stopped=callback;};
+  h.subscribe();await tick();h.ffi.request();await tick();
+  for(const phase of ['accepted','arrived','in_progress','completed']){
+    h.ride.status=phase;window.__YATRI_PASSENGER_CLOCK_CALLBACKS__[nativeTick]();await tick();assert.equal(h.phases.at(-1),phase);
+  }
+  assert.equal(window.__YATRI_PASSENGER_POLL__.clock,'native');
+  assert.equal(window.__YATRI_PASSENGER_POLL__.nativeTicks,4,'Native scheduling alone is not proof of delivery to the consumer');
+  h.close();assert.equal(stopped,nativeTick);assert.equal(Object.keys(window.__YATRI_PASSENGER_CLOCK_CALLBACKS__).length,0);
+}));
+test('a lost read callback cannot hold the polling lock forever or replace a recovered state',()=>harness(async h=>{
+  h.ffi.request();await tick();
+  let resolve;
+  h.api.snapshot=()=>new Promise(r=>{resolve=r;});
+  const pending=h.poll();
+  const now=Date.now;
+  try{
+    Date.now=()=>now()+26000;
+    h.ride.status='arrived';h.api.snapshot=async()=>({rides:[{...h.ride}]});
+    await h.poll();assert.equal(h.phases.at(-1),'arrived');
+    assert.equal(window.__YATRI_PASSENGER_POLL__.stalledReadsRecovered,1);
+    resolve({rides:[{...h.ride,status:'accepted'}]});await pending;
+    assert.equal(h.phases.at(-1),'arrived');assert.equal(window.__YATRI_PASSENGER_POLL__.polling,false);
+  }finally{Date.now=now;}
+}));
+
+test('an outage shows a persistent status but reports the same error only once until recovery',()=>harness(async h=>{
+  h.ffi.request();await tick();h.offline(true);
+  await h.poll();await h.poll();await h.poll();
+  assert.equal(h.errors.length,1);
+  assert.match(h.values.at(-1).tracking,/conexão/);
+  h.offline(false);await h.poll();assert.equal(h.values.at(-1).tracking,'');
+  h.offline(true);await h.poll();assert.equal(h.errors.length,2);
+}));
+test('a recovered quote clears the connection warning without creating another quote',()=>harness(async h=>{
+  h.offline(true);await h.poll();assert.match(h.values.at(-1).tracking,/conexão/);
+  h.api.quote=async()=>{throw Error('Must reuse confirmed quote');};
+  h.offline(false);await h.poll();
+  assert.equal(h.values.at(-1).phase,'quoted');assert.equal(h.values.at(-1).tracking,'');
+}));
+test('an ambiguous request stays pending until snapshot confirms it instead of allowing another request',()=>harness(async h=>{
+  let calls=0;
+  h.api.requestRide=async()=>{calls++;throw Error('Resposta perdida após envio');};
+  h.ffi.request();await tick();assert.equal(h.phases.at(-1),'requesting');
+  h.ffi.request();await tick();assert.equal(calls,1);
+  h.api.snapshot=async()=>({rides:[{...h.ride}]});await h.poll();
+  assert.equal(h.phases.at(-1),'searching');assert.equal(h.prefs.YATRI_PASSENGER_ACTIVE_RIDE,h.ride.id);
+}));
+test('an ambiguous request with no persisted ride can be retried only after a successful snapshot',()=>harness(async h=>{
+  let calls=0;h.api.requestRide=async()=>{calls++;throw Error('Envio interrompido');};
+  h.ffi.request();await tick();h.offline(true);await h.poll();
+  h.ffi.request();await tick();assert.equal(calls,1);assert.equal(h.phases.at(-1),'requesting');
+  h.offline(false);await h.poll();assert.equal(h.phases.at(-1),'quoted');
+  h.ffi.request();await tick();assert.equal(calls,2);
+}));
