@@ -12,11 +12,23 @@ def nodes():
     return list(ET.fromstring(data).iter('node'))
 size=adb('shell','wm','size').decode()
 w,h=map(int,re.findall(r'(\d+)x(\d+)',size)[-1])
-adb('shell','input','keyevent','KEYCODE_HOME');time.sleep(3)
-adb('shell','input','swipe',str(w//2),str(h*9//10),str(w//2),str(h//5),'500');time.sleep(3)
-items=nodes()
-icon=next((n for n in items if 'Alce' in (n.get('text','')+' '+n.get('content-desc',''))),None)
-assert icon is not None,'Driver icon not found in launcher drawer'
+# Launcher indexing/first boot can outlast the APK installation command.
+# Retry the actual Home -> drawer gesture within a fixed bound, retaining evidence.
+adb('shell','settings','put','secure','location_mode','3')
+icon=None
+for attempt in range(12):
+    adb('shell','am','start','-W','-a','android.intent.action.MAIN','-c','android.intent.category.HOME')
+    time.sleep(2)
+    adb('shell','input','swipe',str(w//2),str(h*9//10),str(w//2),str(h//5),'500')
+    time.sleep(2)
+    screenshot('launcher-attempt-'+str(attempt+1))
+    try:
+        items=nodes()
+    except (subprocess.SubprocessError,ET.ParseError):
+        continue
+    icon=next((n for n in items if 'Alce' in (n.get('text','')+' '+n.get('content-desc',''))),None)
+    if icon is not None:break
+assert icon is not None,'Driver icon not found in launcher drawer after bounded retries'
 screenshot('launcher-driver')
 x1,y1,x2,y2=map(int,re.findall(r'\d+',icon.get('bounds','')))
 adb('shell','input','tap',str((x1+x2)//2),str((y1+y2)//2));time.sleep(12)
