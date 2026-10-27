@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/issue-1-purescript-memory]
+    branches: [codex/alce-isolated-runtime]
     paths: ['.github/workflows/br-lightsail-ssh.yml']
 
 permissions: {}
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/issue-1-purescript-memory'
+    if: github.ref == 'refs/heads/codex/alce-isolated-runtime'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
@@ -104,6 +104,11 @@ jobs:
             "$AWS_USER@$AWS_HOST" 'bash -s' <<'REMOTE'
           set -euo pipefail
           whoami
+          free -m
+          df -h /opt/yatri-brasil
+          sudo -n docker image inspect yatri-driver-pilot:8d24ad18edebe754341e7839261122b70a440777 --format 'PILOT_WORKDIR={{.Config.WorkingDir}}'
+          sudo -n docker ps --format '{{.Names}} {{.Image}} {{.Ports}}'
+          sudo -n test ! -e /opt/alce-lab && echo ALCE_DIRECTORY_AVAILABLE || true
           hostname
           sudo -n git -C /opt/yatri-brasil/projeto rev-parse HEAD
           cd /opt/yatri-brasil
