@@ -1,4 +1,4 @@
-name: Alce - Verificar recuperação após aceite
+name: Alce - Corrigir persistência e tempo de chegada
 
 on:
   workflow_dispatch:
