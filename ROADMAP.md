@@ -1,5 +1,14 @@
 # Yatri Brasil — roadmap técnico
 
+## Piloto Alce isolado — revisão operacional de 27/10/2026
+
+Integração autorizada do mesmo motor com banco separado. Fluxo confirmado pelo
+proprietário; contratos e recuperação de pendências reforçados, backup diário
+cifrado e restauração externa isolada testados. Nenhum APK novo. Próximos aceites:
+ações novas no aparelho, Doze/rede/GPS, identidade/notificações definitivas,
+histórico/ganhos e carga. Automatizar cópia externa na branch padrão e alertas;
+o timer local de backup já está ativo. Ver PROJECT_STATUS.md e PR #11.
+
 ## Marco atual — queda de banco e backup, 25/10/2026
 
 Queda/retorno real de PostgreSQL isolado e restauração de dump real do Lightsail

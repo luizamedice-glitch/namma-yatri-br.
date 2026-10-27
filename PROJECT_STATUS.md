@@ -1,5 +1,43 @@
 # Yatri Brasil — situação do projeto
 
+## Revisão operacional Alce e proteção de dados — 27/10/2026
+
+Proprietário confirmou fluxo operacional. Revisão das classes Android, Flutter,
+motor e logs reais encontrou recálculo com nome de ID divergente, finalização
+aninhada não interpretada, motivos de cancelamento ausentes e pendências 501.
+Adaptador privado corrigido, preservando autorização, preço e domínio persistido.
+Recibos/telemetria das finalizações agora são gravados em events antes do ACK;
+reenvios retomam a gravação sem duplicar a conclusão. Sem novo APK ou schema.
+Polling de IDs deixa de escrever/consumir sequência quando o ID já existe;
+conflitos de corrida ativa retornam 409. Deploys somente leitura por padrão.
+
+Deploy 40551599172 aprovado às 17:33 UTC, release `be32c51431ac6e60`:
+HTTPS autenticado, grafia nativa da navegação e detalhes/retomada aprovados com
+corrida concluída persistida, sem nova solicitação, GPS ou mudança de estado.
+A ausência de corrida ativa torna ETA/registro de chegada não aplicáveis no run.
+Caddy habilita somente o prefixo de motivos adicional; logs compat rotacionados
+em três arquivos de 10 MB. Serviços Namma anteriores preservados.
+
+48 testes do adaptador/PostgreSQL, 23 do motor (incluindo processo interrompido e
+resposta perdida), cinco testes ARM64 do Passageiro e ART Motorista 40551381883
+aprovados. Adicionalmente quatro testes Python das operações e um de criptografia.
+Testes nativos usam classes/fixtures originais; não representam toda a UI física.
+
+Backup Alce próprio instalado usando o motor de manutenção/cifra Namma, sem
+alterar os timers ou banco Namma. Cópia diária às 03:30 UTC, sete cópias retidas
+em /opt/alce-lab/backups; monitor a cada cinco minutos cobre saúde, disco,
+backup recente, teste de restauração semanal e prazo vigente do piloto. Primeira
+cópia externa cifrada e restauração real em PostgreSQL descartável sem rede
+aprovadas; nada restaurado no banco ativo. Run final 40551334174, operações
+`b70abb866301adfb`, artefato cifrado 12755920755 (sete dias). Não há dump aberto
+nem chave privada no servidor/artefato. A cópia externa recorrente ainda depende
+de agendar o workflow novo na branch padrão; somente o backup local é automático.
+Alertas externos não configurados. Prazo do piloto não foi prolongado.
+
+Próximos aceites: ações novas no celular, tela bloqueada/perda de rede/GPS,
+autenticação e notificações definitivas, histórico/ganhos/avaliações e carga.
+Relatório privado: integracao/compat/REVISAO-OPERACIONAL-2026-10-27.md.
+
 ## Sincronização de chegada e início no Passageiro — 27/10/2026
 
 O proprietário confirmou recuperação dos dois apps, solicitação, aceite e
