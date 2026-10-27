@@ -1,5 +1,13 @@
 # Yatri Brasil — roadmap técnico
 
+## Proximidade Alce — 27/10/2026
+
+Consulta autenticada de motoristas online/recentes integrada ao PostgreSQL;
+Passageiro Lab 8 mantém assinatura/dados do Lab 7 e usa carro AlceYatri enviado.
+Motorista Lab 5 preservado. Próximo aceite: carrinho e deslocamento real no mapa,
+saída ao ficar offline e GPS em segundo plano, mantendo a janela e allowlist.
+Firebase/push, pagamentos e validação de longa duração permanecem pendentes.
+
 ## Continuidade do piloto Alce — 27/10/2026
 
 Histórico/ganhos integrados por perfil; Passageiro Lab 7 tolera ETA ausente e

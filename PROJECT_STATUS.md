@@ -1,5 +1,27 @@
 # Yatri Brasil — situação do projeto
 
+## Motoristas próximos e Passageiro Lab 8 — 27/10/2026
+
+Continuação a partir de codex/alce-continuity / a8b2a48e6d, após fetch de todas
+as branches. Motorista Lab 5 e melhorias anteriores preservados. Nova fachada
+privada traduz /taxi/proximos com sessão passageiro para a mesma tabela drivers:
+allowlist, online, livre, GPS <60 s e até 5 km. Nenhuma segunda fonte de posição,
+mutação de GPS/estado, migração, usuário novo ou chamada ao fornecedor.
+
+Configuração/personalização original seleciona marcador direcional ('2').
+Passageiro Lab 8 preserva sessão/correções do Lab 7 e sua assinatura, substitui
+35 recursos de carro pela arte enviada e torna opcional somente o token de
+mensagens na consulta. Autorização continua pela sessão própria. Transporte
+original consulta a cada 10 s; não é streaming nem Firebase push.
+
+53 testes Node/PostgreSQL descartável, sete ARM64 e assinatura/alinhamento
+aprovados. Deploy 40601973871, fonte f329447274, release 6c5837eb474a4655,
+23:25 UTC: nearbyReadOnlyVerified, sessão HTTPS exigida, corridas/serviços Namma
+preservados, sessões técnicas revogadas. Testes remotos somente leitura; não
+comprovam renderização Flutter ou GPS/Doze no aparelho. Instalador em release
+privada passageiro-lab-8 no repositório dos APKs; atualizar Lab 7 sem desinstalar.
+O projeto Firebase próprio continua dependendo do proprietário.
+
 ## Continuidade, histórico e atualizações preservadas — 27/10/2026
 
 Após o dono informar novas melhorias, refs remotas foram atualizadas: preservado
