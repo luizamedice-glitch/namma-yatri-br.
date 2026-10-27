@@ -1,10 +1,10 @@
-name: Alce - Reconhecer versão nativa A28L7 do Passageiro
+name: Alce - Motoristas próximos e marcadores direcionais
 
 on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-continuity]
+    branches: [codex/alce-live-cars]
     paths: ['.github/workflows/alce-isolated-verify.yml']
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-continuity'
+    if: github.ref == 'refs/heads/codex/alce-live-cars'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
