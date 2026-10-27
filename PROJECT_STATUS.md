@@ -1,5 +1,47 @@
 # Yatri Brasil — situação do projeto
 
+## Continuidade, histórico e atualizações preservadas — 27/10/2026
+
+Após o dono informar novas melhorias, refs remotas foram atualizadas: preservado
+Motorista Lab 5 (privado 9fed8f2), com identidade/abertura, MSN, Online e ondas.
+Não foi refeito ou reassinado. Nova branch Alce parte dessa base. No público,
+base alce-driver-branding-access / 747d208192 preserva a ativação anterior do
+Motorista. O incremento não revoga sessões nem altera corridas.
+
+Histórico por perfil, mês/paginação e ganhos por motorista agora são ligados ao
+PostgreSQL/motor existente; soma em centavos e dias America/Sao_Paulo, somente
+concluídas para ganhos. Mensagem distingue total bruto de saldo de saque. Dados
+de outro motorista são excluídos. Passageiro Lab 7 negocia ETA nullable via
+literal nativo A28L7 (AppEnv não deriva a versão do manifesto). Sem ETA, omite a
+linha de minutos e mantém a corrida; não mascara erro de banco/autorização.
+
+Deploy final 40596848352 aprovado às 22:43 UTC, release 691c1e97de3c5d04:
+HTTPS historyAndEarningsReadVerified=true, consultas somente leitura, sessões
+técnicas revogadas e serviços anteriores preservados. 53 testes Node/PostgreSQL,
+cinco testes ARM64 novos e ART Motorista Lab 5 40596236075 aprovados. Não são
+prova de UI completa ou Doze no celular.
+
+Cópia externa recorrente já ativada na main pela PR #12, merge 58999822ab:
+somente um workflow, código operador pinado em 671376737cf6ad7aa13453fdb497d6922dfa57c0.
+Cópia às 03:50 UTC e saúde a cada 15 minutos. Teste de backup/restauração 40553831038,
+main manual 40554144617 e cron observado 40587258462 aprovados. Primeiro backup
+diário seguinte ainda futuro nesse registro. Timer local Alce anterior mantido.
+
+Nova assinatura do Passageiro autorizada pelo dono, pois a chave Lab 6 não foi
+encontrada. Lab 7 exige reinstalação apenas do Passageiro e nova entrada; histórico
+no servidor permanece. Chave atual tem backup cifrado no repositório privado.
+Instalador 59.329.551 bytes baixado integralmente e SHA-256 conferido, publicação
+privada 40596956236. Entrega HTTPS com nota privada de entrada de uso único em
+40597392493, com MIME/tamanho/Range e validade verificados; sem código no Git/logs.
+Motorista Lab 5 não deve ser desinstalado para esta entrega.
+
+Firebase próprio ainda não existe (confirmado pelo proprietário). Dependência
+concreta: criar projeto na própria conta e fornecer somente ID. Não habilitado
+login aberto, onboarding novo ou push sem provedor. Instruções e certificados
+atuais no documento privado integracao/compat/firebase/CONFIGURACAO-PROPRIA.md.
+Teste de tela bloqueada solicitado ao dono, resultado físico ainda pendente.
+Relatório privado: integracao/compat/CONTINUIDADE-HISTORICO-2026-10-27.md.
+
 ## Revisão operacional Alce e proteção de dados — 27/10/2026
 
 Proprietário confirmou fluxo operacional. Revisão das classes Android, Flutter,

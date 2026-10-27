@@ -1,5 +1,13 @@
 # Yatri Brasil — roadmap técnico
 
+## Continuidade do piloto Alce — 27/10/2026
+
+Histórico/ganhos integrados por perfil; Passageiro Lab 7 tolera ETA ausente e
+preserva a corrida, mantendo o Motorista Lab 5. Backup externo recorrente já
+ativo na main por PR #12. Pendências: confirmação física da reinstalação e
+segundo plano/rede, projeto Firebase próprio para identidade/push, histórico
+de avaliações e escala. Não ampliar o piloto ou inventar confirmações de pagamento.
+
 ## Piloto Alce isolado — revisão operacional de 27/10/2026
 
 Integração autorizada do mesmo motor com banco separado. Fluxo confirmado pelo
