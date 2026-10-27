@@ -1,4 +1,4 @@
-name: Alce - Reavaliar falha visual após aceite
+name: Alce - Verificar sincronização de chegada e início
 
 on:
   workflow_dispatch:
@@ -92,7 +92,7 @@ jobs:
           ssh-keygen -y -P '' -f "$ssh_dir/key"
           python3 - "$ssh_dir/key" "$ssh_dir/known_hosts" "$host_check" <<'PYCODE'
           import os,sys,subprocess,json,collections
-          args=['ssh','-i',sys.argv[1],'-o','IdentitiesOnly=yes','-o','BatchMode=yes','-o','ConnectTimeout=15','-o','StrictHostKeyChecking='+sys.argv[3],'-o','UserKnownHostsFile='+sys.argv[2],os.environ['AWS_USER']+'@'+os.environ['AWS_HOST'],'sudo -n docker logs --since 30m alce-lab-compat']
+          args=['ssh','-i',sys.argv[1],'-o','IdentitiesOnly=yes','-o','BatchMode=yes','-o','ConnectTimeout=15','-o','StrictHostKeyChecking='+sys.argv[3],'-o','UserKnownHostsFile='+sys.argv[2],os.environ['AWS_USER']+'@'+os.environ['AWS_HOST'],'sudo -n docker logs --since 4h alce-lab-compat']
           r=subprocess.run(args,capture_output=True,text=True,timeout=40)
           assert r.returncode==0
           counts=collections.Counter();offer_counts=collections.Counter()
