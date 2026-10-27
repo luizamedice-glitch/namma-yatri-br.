@@ -24,7 +24,7 @@ def main(payload,server_source):
     for item in data['files']:
         name=item['name']
         if name not in ['AlceYatri-Passageiro-Lab-1.apk','AlceYatri-Motorista-Lab-1.apk',
-                        'AlceYatri-Passageiro-Lab-2.apk','AlceYatri-Motorista-Lab-2.apk']:raise RuntimeError()
+                        'AlceYatri-Passageiro-Lab-2.apk','AlceYatri-Motorista-Lab-2.apk','AlceYatri-Passageiro-Lab-7.apk']:raise RuntimeError()
         if not item['url'].startswith('https://raw.githubusercontent.com/luizamedice-glitch/alce-yatri-rea-analysis/'):raise RuntimeError()
         target=version/name;digest=hashlib.sha256();size=0
         with urlopen(item['url'],timeout=45) as source,target.open('wb') as dest:

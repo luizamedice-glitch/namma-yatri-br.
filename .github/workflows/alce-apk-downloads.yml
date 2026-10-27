@@ -1,10 +1,10 @@
-name: Alce - Entrega privada de APKs
+name: Alce - Download privado Passageiro Lab 7
 
 on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-isolated-runtime]
+    branches: [codex/alce-continuity]
     paths: ['.github/workflows/alce-apk-downloads.yml', 'brasil/backend/ops/alce/download-payload.sealed.json']
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-isolated-runtime'
+    if: github.ref == 'refs/heads/codex/alce-continuity'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
