@@ -540,3 +540,7 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 ## Alce isolado — contrato de endereços, 27/10/2026
 
 Branch codex/alce-address-search: Places details e Geoapify agora preservam componentes reais de endereço no retorno do motor. O adaptador traduz os formatos para os parsers Android. Dois módulos de mapas são montados somente no contêiner alce-lab-compat; imagem, contêineres e banco da operação Namma anterior permanecem intactos. Bundle cifrado contém as revisões testadas. Nove testes de mapas/geocoding passaram. Relatório e APK privados na branch codex/passenger-address-search de alce-yatri-rea-analysis.
+
+## Preço do passageiro Alce — 27/10/2026
+
+O proprietário confirmou a busca no Lab 5. A estimativa retornava HTTP 200, mas a fachada enviava objeto em estimativa_pagamentos.D, incompatível com parseMapList do APK. A correção envia D como lista e preserva tarifa, cotação e ID do motor existente. Workflow 40523454713 passou com preço coerente, solicitação e conclusão persistida. Fontes privadas e 22 testes Node na branch codex/passenger-fare-compat de alce-yatri-rea-analysis. Sem novo APK; aceite visual do preço no aparelho ainda pendente.

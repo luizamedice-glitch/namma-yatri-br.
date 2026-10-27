@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-address-followup]
+    branches: [codex/alce-fare-compat]
     paths: ['.github/workflows/alce-address-diagnostics.yml']
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-address-followup'
+    if: github.ref == 'refs/heads/codex/alce-fare-compat'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
@@ -98,6 +98,6 @@ jobs:
             try:d=json.loads(line)
             except Exception:continue
             path=d.get('path','').split('?')[0]
-            if any(t in path for t in ['geocode','autocomplete','places','geo/','genero','Genero','gender','alterar','cadastro','login']):counts[(d.get('method'),path,d.get('status'),json.dumps(d.get('credentialState',{}),sort_keys=True))]+=1
+            if any(t in path for t in ['geocode','autocomplete','places','geo/','genero','Genero','gender','alterar','cadastro','login','estimativ','dadosPara','dadospara']):counts[(d.get('method'),path,d.get('status'),json.dumps(d.get('credentialState',{}),sort_keys=True))]+=1
           print('SANITIZED_ADDRESS_COUNTS='+json.dumps([{'method':m,'path':p,'status':s,'credentialState':json.loads(c),'count':n}for(m,p,s,c),n in counts.items()]))
           PYCODE
