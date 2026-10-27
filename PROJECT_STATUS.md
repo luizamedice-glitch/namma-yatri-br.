@@ -1,5 +1,24 @@
 # Yatri Brasil — situação do projeto
 
+## Sincronização de chegada e início no Passageiro — 27/10/2026
+
+O proprietário confirmou recuperação dos dois apps, solicitação, aceite e
+finalização. Chegada e início ainda não atualizavam o Passageiro. Diagnóstico
+somente leitura 40546661062 confirmou registros HTTP 200, acompanhamento ativo e
+corrida `in_progress` no motor isolado. O cliente Flutter exige nome String não
+nullable no objeto de registro, ausente nas duas etapas. O adaptador privado
+agora inclui o nome sem alterar os códigos originais de status/evento.
+
+39 testes locais com PostgreSQL descartável e cinco testes de instruções ARM64
+originais do Passageiro Lab 6 aprovados. A emulação verifica a checagem de tipo e
+o mapeamento arrived/inProgress/finalização; não é execução da UI completa.
+Nenhum novo APK. Deploy 40547064971 aprovado às 17:05 UTC, release
+`de1c3e221ef88eff`: HTTPS confirmou `passengerRegistrationVerified=true` na
+corrida em andamento, com corrida/serviços preservados e apenas sessões técnicas
+revogadas. ETA de embarque não se aplica nesse estado; chegada validada no ciclo
+local isolado. Confirmação visual da última correção no celular ainda pendente. Relatório privado:
+`integracao/compat/SINCRONIZACAO-ETAPAS-2026-10-27.md`.
+
 ## Complemento pós-aceite: Boolean e ETA obrigatórios — 27/10/2026
 
 Após o proprietário informar comportamento inalterado, diagnóstico 40541169356
