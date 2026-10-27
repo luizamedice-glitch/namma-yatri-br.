@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-request-compat]
+    branches: [codex/alce-driver-offers]
     paths: ['.github/workflows/alce-address-diagnostics.yml']
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-request-compat'
+    if: github.ref == 'refs/heads/codex/alce-driver-offers'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
@@ -100,7 +100,7 @@ jobs:
             path=d.get('path','').split('?')[0]
             if path:counts[(d.get('method'),path,d.get('status'),json.dumps(d.get('credentialState',{}),sort_keys=True))]+=1
           print('SANITIZED_ADDRESS_COUNTS='+json.dumps([{'method':m,'path':p,'status':s,'credentialState':json.loads(c),'count':n}for(m,p,s,c),n in counts.items()]))
-          probe="""import {connectDatabase} from '/app/src/db.mjs'; const db=await connectDatabase(process.env.DATABASE_URL); try { const name=await db.query('SELECT current_database() AS name'); if(name.rows[0].name!=='alce_lab')throw Error('wrong_database'); const result=await db.query("SELECT status,count(*)::int AS count,max(created_at) AS latest FROM rides GROUP BY status"); console.log(JSON.stringify({rideStatusCounts:result.rows})); } finally {await db.end();}"""
+          probe='import {connectDatabase} from \'/app/src/db.mjs\'; const db=await connectDatabase(process.env.DATABASE_URL); try { const name=await db.query(\'SELECT current_database() AS name\'); if(name.rows[0].name!==\'alce_lab\')throw Error(\'wrong_database\'); const rides=await db.query("SELECT r.status,count(*)::int AS count,max(r.created_at) AS latest,count(o.ride_id)::int AS offers FROM rides r LEFT JOIN offers o ON o.ride_id=r.id GROUP BY r.status"); const drivers=await db.query("SELECT available,lat IS NOT NULL AND lng IS NOT NULL AS gps_present,round(extract(epoch FROM now()-location_at))::int AS gps_age_seconds,(SELECT count(*)::int FROM rides r WHERE r.driver_id=d.user_id AND r.status IN (\'accepted\',\'arrived\',\'in_progress\')) AS busy_rides,(SELECT count(*)::int FROM offers o JOIN rides r ON r.id=o.ride_id WHERE o.driver_id=d.user_id AND NOT o.rejected AND r.status=\'searching\') AS searching_offers FROM drivers d"); console.log(JSON.stringify({rideStatusCounts:rides.rows,drivers:drivers.rows})); } finally {await db.end();}'
           import shlex
           args[-1]="sudo -n docker exec alce-lab-compat node --input-type=module -e "+shlex.quote(probe)
           r=subprocess.run(args,capture_output=True,text=True,timeout=40)
