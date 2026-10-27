@@ -1,4 +1,4 @@
-name: Alce - Download privado Passageiro Lab 7
+name: Alce - Instalador e entrada privados do Passageiro Lab 7
 
 on:
   workflow_dispatch:

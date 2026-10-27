@@ -34,6 +34,15 @@ def main(payload,server_source):
                 dest.write(chunk);digest.update(chunk)
         if size!=item['size'] or digest.hexdigest()!=item['sha256']:raise RuntimeError()
         target.chmod(0o644);metadata['files'][name]={'size':size,'sha256':item['sha256']}
+    # Optional owner-only activation note travels inside the encrypted payload,
+    # never through Git or CI logs, and shares the same expiring capability.
+    if data.get('privateText'):
+        item=data['privateText']
+        if item['name']!='Entrada-Passageiro-Lab-7.txt':raise RuntimeError()
+        raw=item['body'].encode('utf-8')
+        if not 1<=len(raw)<=2048:raise RuntimeError()
+        target=version/item['name'];target.write_bytes(raw);target.chmod(0o644)
+        metadata['files'][item['name']]={'size':len(raw),'sha256':hashlib.sha256(raw).hexdigest()}
     # Root directory is not served directly. Only the exact capability route is accepted.
     meta=version/'metadata.json';meta.write_text(json.dumps(metadata));meta.chmod(0o640)
     shutil.chown(meta,user='root',group='nogroup')
@@ -84,9 +93,9 @@ WantedBy=multi-user.target
             url='https://'+HOST+'/lab-apks/'+data['token']+'/'+name
             with urlopen(Request(url,method='HEAD'),timeout=15) as r:
                 assert r.status==200 and int(r.headers['Content-Length'])==info['size']
-                assert r.headers['Content-Type']=='application/vnd.android.package-archive'
+                assert r.headers['Content-Type']==('text/plain; charset=utf-8' if name.endswith('.txt') else 'application/vnd.android.package-archive')
             with urlopen(Request(url,headers={'Range':'bytes=0-1023'}),timeout=15) as r:
-                assert r.status==206 and len(r.read())==1024
+                assert r.status==206 and len(r.read())==min(1024,info['size'])
         for port in [8080,8082,8083,8084]:assert status(f'http://127.0.0.1:{port}/health')==200
         print(json.dumps({'privateApkDelivery':True,'contentLengthVerified':True,'rangeResumeVerified':True,'existingServicesHealthy':True,'expiresAt':data['expiresAt']}))
     except Exception:
