@@ -1,4 +1,4 @@
-name: Alce - Implantacao isolada loopback
+name: Alce - Verificar sessoes isoladas
 
 on:
   workflow_dispatch:
@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Implantar somente banco e piloto Alce isolados
+      - name: Verificar perfis sessoes e revogar credenciais temporarias
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
@@ -88,16 +88,5 @@ jobs:
             touch "$ssh_dir/known_hosts"
           fi
           unset AWS_SSH_KNOWN_HOSTS
-          openssl pkeyutl -decrypt -inkey "$ssh_dir/key" -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -in brasil/backend/ops/alce/driver-profile.sealed -out "$ssh_dir/profile.json"
           args=(-i "$ssh_dir/key" -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=15 -o "StrictHostKeyChecking=$host_check" -o "UserKnownHostsFile=$ssh_dir/known_hosts")
-          target="$AWS_USER@$AWS_HOST"
-          remote_dir=$(ssh "${args[@]}" "$target" 'mktemp -d /tmp/alce-isolated.XXXXXX')
-          [[ "$remote_dir" =~ ^/tmp/alce-isolated\.[a-zA-Z0-9]+$ ]]
-          scp "${args[@]}" brasil/backend/ops/alce/deploy-isolated.sh "$target:$remote_dir/deploy.sh"
-          scp "${args[@]}" "$ssh_dir/profile.json" "$target:$remote_dir/profile.json"
-          set +e
-          ssh "${args[@]}" "$target" "sudo -n bash '$remote_dir/deploy.sh' '$remote_dir/profile.json'"
-          result=$?
-          ssh "${args[@]}" "$target" "rm -rf -- '$remote_dir'"
-          set -e
-          exit "$result"
+          ssh "${args[@]}" "$AWS_USER@$AWS_HOST" 'bash -s' < brasil/backend/ops/alce/verify-isolated.sh
