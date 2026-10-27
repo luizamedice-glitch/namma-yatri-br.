@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-destination-module]
+    branches: [codex/alce-address-search]
     paths: ['.github/workflows/alce-isolated-verify.yml']
 
 permissions:
@@ -16,14 +16,14 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-destination-module'
+    if: github.ref == 'refs/heads/codex/alce-address-search'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Habilitar seleção de destino e validar ciclo HTTPS
+      - name: Corrigir contrato de endereços e preservar componentes reais de endereço e validar GPS e Places via HTTPS
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}

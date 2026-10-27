@@ -28,9 +28,10 @@ export function mapsService({ key, geoapifyKey, baseFareCents = 500, perKmCents 
     },
     async details(placeId) {
       requireThat(typeof placeId === 'string' && /^[\w:-]{3,255}$/.test(placeId), 400, 'placeId inválido');
-      const data = await google('https://places.googleapis.com/v1/places/' + encodeURIComponent(placeId) + '?languageCode=pt-BR', null, 'id,formattedAddress,location');
+      const data = await google('https://places.googleapis.com/v1/places/' + encodeURIComponent(placeId) + '?languageCode=pt-BR', null, 'id,formattedAddress,location,addressComponents');
       requireThat(data.location, 404, 'Endereço sem coordenadas');
-      return { placeId: data.id, address: data.formattedAddress, location: { lat: data.location.latitude, lng: data.location.longitude } };
+      return { placeId: data.id, address: data.formattedAddress, location: { lat: data.location.latitude, lng: data.location.longitude },
+        addressComponents:(data.addressComponents||[]).map(c=>({long_name:c.longText,short_name:c.shortText||c.longText,types:c.types||[]})) }; 
     },
     async route(origin, destination) {
       const waypoint = p => { const v = position(p); return { location: { latLng: { latitude: v.lat, longitude: v.lng } } }; };
