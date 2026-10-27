@@ -1,14 +1,13 @@
-name: Alce - Verificar sessoes isoladas
+name: BR - Teste SSH Lightsail
 
 on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-isolated-runtime]
+    branches: [codex/issue-1-purescript-memory]
     paths: ['.github/workflows/br-lightsail-ssh.yml']
 
-permissions:
-  contents: read
+permissions: {}
 
 concurrency:
   group: lightsail-ssh-test
@@ -16,14 +15,11 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-isolated-runtime'
+    if: github.ref == 'refs/heads/codex/issue-1-purescript-memory'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - name: Verificar perfis sessoes e revogar credenciais temporarias
+      - name: Confirmar acesso e inspecionar backend sem alterar o servidor
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
@@ -88,5 +84,54 @@ jobs:
             touch "$ssh_dir/known_hosts"
           fi
           unset AWS_SSH_KNOWN_HOSTS
-          args=(-i "$ssh_dir/key" -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=15 -o "StrictHostKeyChecking=$host_check" -o "UserKnownHostsFile=$ssh_dir/known_hosts")
-          ssh "${args[@]}" "$AWS_USER@$AWS_HOST" 'bash -s' < brasil/backend/ops/alce/verify-isolated.sh
+          timeout 45s ssh -F /dev/null -T -p 22 \
+            -i "$ssh_dir/key" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o IdentityAgent=none \
+            -o PreferredAuthentications=publickey \
+            -o PasswordAuthentication=no \
+            -o KbdInteractiveAuthentication=no \
+            -o ForwardAgent=no \
+            -o ClearAllForwardings=yes \
+            -o ConnectTimeout=15 \
+            -o ConnectionAttempts=1 \
+            -o ServerAliveInterval=10 \
+            -o ServerAliveCountMax=2 \
+            -o "StrictHostKeyChecking=$host_check" \
+            -o "UserKnownHostsFile=$ssh_dir/known_hosts" \
+            -o GlobalKnownHostsFile=/dev/null \
+            "$AWS_USER@$AWS_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          whoami
+          hostname
+          sudo -n git -C /opt/yatri-brasil/projeto rev-parse HEAD
+          cd /opt/yatri-brasil
+          sudo -n docker compose -f compose.yaml ps --format json
+          sudo -n systemctl is-active caddy
+          curl --fail --silent --show-error --max-time 10 http://127.0.0.1:8080/health
+          printf '\n'
+          # Somente estados booleanos; nenhum valor sensível sai do contêiner.
+          sudo -n docker compose -f compose.yaml exec -T api node --input-type=module </dev/null -e '
+            console.log(JSON.stringify({
+              googleMapsConfigured: Boolean(process.env.GOOGLE_MAPS_SERVER_KEY),
+              automaticDevelopmentAccounts: process.env.YATRI_DEVELOPMENT_MODE === "true",
+              inviteConfigured: Boolean(process.env.TEST_INVITE_CODE),
+              databaseConfigured: Boolean(process.env.DATABASE_URL)
+            }));
+          '
+          sudo -n docker compose -f compose.yaml exec -T api node --input-type=module </dev/null -e '
+            import pg from "pg";
+            const pool=new pg.Pool({connectionString:process.env.DATABASE_URL});
+            try {
+              const r=await pool.query(`SELECT
+                EXISTS(SELECT 1 FROM users WHERE id=$1 AND role=\x27driver\x27 AND name=\x27Giselo\x27) AS driver_exists,
+                EXISTS(SELECT 1 FROM vehicles WHERE driver_id=$1) AS vehicle_exists,
+                (SELECT count(*)::int FROM rides WHERE status IN (\x27searching\x27,\x27accepted\x27,\x27arrived\x27,\x27in_progress\x27)) AS active_rides`,["b1a51100-0000-4000-8000-000000000002"]);
+              console.log(JSON.stringify({driverReadiness:r.rows[0],vehicleEnvironmentConfigured:
+                ["YATRI_DRIVER_PLATE","YATRI_DRIVER_MODEL","YATRI_DRIVER_COLOR"].every(k=>Boolean(process.env[k]))}));
+              console.log(JSON.stringify({migrations:(await pool.query("SELECT name FROM migrations ORDER BY name")).rows.map(r=>r.name)}));
+            } finally {await pool.end();}
+          '
+          REMOTE
+          echo 'SSH e inspeção de leitura concluídos; nenhum serviço ou secret remoto alterado.' >> "$GITHUB_STEP_SUMMARY"

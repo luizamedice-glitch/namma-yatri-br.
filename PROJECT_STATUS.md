@@ -1,5 +1,12 @@
 # Yatri Brasil — situação do projeto
 
+## Motor reaproveitado em implantação Alce isolada — 27/10/2026
+
+Por decisão explícita do proprietário, foi criado um runtime separado em `/opt/alce-lab`, com PostgreSQL/volume/rede próprios e API somente em `127.0.0.1:8083`. Reutiliza a imagem do motor `8d24ad18edebe754341e7839261122b70a440777`, sem alterar o banco, contêineres, prazo ou Caddy Namma. Implantação `40425101194` e verificação `40425291181` aprovadas: perfis próprios, sessão dos dois papéis, ativação de uso único e revogação das sessões de teste confirmadas. Janela independente até 02/11/2026 00:14:41 UTC. A chave de mapas estava configurada; não houve consulta real a provedor neste aceite.
+
+Os APKs Gaudium/Alce ainda não estão conectados: a fronteira HTTP legada e os bootstraps permanecem pendentes no repositório privado Alce. O piloto Namma anterior não compartilha contas/corridas com esse runtime. Não confundir este provisionamento com aceite Android ou corrida entre aplicativos. O workflow SSH original foi preservado; a verificação isolada está em `alce-isolated-verify.yml`.
+
+
 ## Ícone exclusivo do motorista — 26/10/2026
 
 - IMPLEMENTADO: arte oficial vinho com inscrição Driver nas cinco densidades,
