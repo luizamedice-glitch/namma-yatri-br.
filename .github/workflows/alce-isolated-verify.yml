@@ -1,10 +1,10 @@
-name: Alce - Robustez operacional e verificação sem dados pessoais
+name: Alce - Reconhecer versão nativa A28L7 do Passageiro
 
 on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-post-accept]
+    branches: [codex/alce-continuity]
     paths: ['.github/workflows/alce-isolated-verify.yml']
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-post-accept'
+    if: github.ref == 'refs/heads/codex/alce-continuity'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:

@@ -59,7 +59,7 @@ def main(bundle):
     env=(ROOT/'private/api.env').read_text()+runtime.read_text()+'\nALCE_ISOLATED_MODE=true\nALCE_LEGACY_PORT=8084\n'
     runtime.write_text(env);runtime.chmod(0o600)
     # Server modules expect source beside one another in /app/alce-compat.
-    for name in ['server.mjs','http.mjs','models.mjs','ids.mjs','model-defaults.json','receipts.mjs','maps.mjs','geocoding.mjs']:
+    for name in ['server.mjs','http.mjs','models.mjs','ids.mjs','model-defaults.json','receipts.mjs','reporting.mjs','maps.mjs','geocoding.mjs']:
         if not (release/name).is_file():raise RuntimeError('BUNDLE_INCOMPLETE')
     candidate_file=ROOT/'private/Caddyfile.compat-candidate';candidate_file.write_text(candidate);candidate_file.chmod(0o600)
     run(['caddy','validate','--config',str(candidate_file),'--adapter','caddyfile'])

@@ -30,7 +30,7 @@ def handler(root,metadata,clock=time.time):
                     self.send_header('Content-Length','0');self.end_headers();return
                 start=int(match[1]);end=min(size-1,int(match[2])) if match[2] else size-1;status=206
             self.send_response(status)
-            self.send_header('Content-Type','application/vnd.android.package-archive')
+            self.send_header('Content-Type','text/plain; charset=utf-8' if name.endswith('.txt') else 'application/vnd.android.package-archive')
             self.send_header('Content-Disposition',f'attachment; filename="{name}"')
             self.send_header('Content-Length',str(end-start+1));self.send_header('Accept-Ranges','bytes')
             self.send_header('ETag','"'+info['sha256']+'"');self.send_header('Cache-Control','private, no-store')
