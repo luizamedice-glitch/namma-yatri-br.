@@ -1,10 +1,10 @@
-name: Alce - Diagnóstico sanitizado de endereços
+name: Alce - Diagnóstico sanitizado após aceite
 
 on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-driver-offers]
+    branches: [codex/alce-post-accept]
     paths: ['.github/workflows/alce-address-diagnostics.yml']
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-driver-offers'
+    if: github.ref == 'refs/heads/codex/alce-post-accept'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
