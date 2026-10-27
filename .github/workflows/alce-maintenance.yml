@@ -1,4 +1,4 @@
-name: Alce - Backup cifrado e restauração isolada
+name: Alce - Backup, restauração e monitoramento do piloto
 on:
   workflow_dispatch:
   push:

@@ -43,6 +43,11 @@ def monitor():
         with urlopen('http://127.0.0.1:8084/health',timeout=4)as response:
             checks['compat']=json.load(response).get('response',{}).get('status')=='ok'
     except Exception:checks['compat']=False
+    try:
+        lines=(ROOT/'private/api.env').read_text().splitlines()
+        until=next(line.split('=',1)[1]for line in lines if line.startswith('YATRI_DRIVER_PILOT_UNTIL='))
+        checks['pilotWindow']=datetime.fromisoformat(until.replace('Z','+00:00'))>datetime.now(timezone.utc)
+    except Exception:checks['pilotWindow']=False
     report={'observedAt':datetime.now(timezone.utc).isoformat(),'healthy':all(checks.values()),'checks':checks}
     engine.atomic(engine.STATE/'health.json',report);return report
 
