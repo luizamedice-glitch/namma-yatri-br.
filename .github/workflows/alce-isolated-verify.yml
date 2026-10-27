@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Corrigir contrato de endereços e validar GPS e Places via HTTPS
+      - name: Corrigir contrato de endereços e preservar componentes reais de endereço e validar GPS e Places via HTTPS
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}

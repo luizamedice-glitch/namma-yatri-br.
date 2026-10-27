@@ -23,7 +23,10 @@ export function geoapifyGeocoding({key,fetchImpl=fetch,now=Date.now,dailyLimit=5
         requireThat(typeof result.formatted==='string'&&result.formatted.trim().length>=3&&result.formatted.length<=1000,502,'Resposta de endereço inválida');
         requireThat(Number.isFinite(result.lat)&&Number.isFinite(result.lon)&&Math.abs(result.lat)<=90&&Math.abs(result.lon)<=180,502,'Coordenadas inválidas no serviço de endereços');
         const resolved={lat:result.lat,lng:result.lon};
-        const value={address:result.formatted.trim(),location:resolved,provider:'geoapify',
+        const addressComponents=[['housenumber','street_number'],['street','route'],['suburb','sublocality_level_1'],['city','locality'],['county','administrative_area_level_2'],['state','administrative_area_level_1'],['postcode','postal_code'],['country','country']]
+          .filter(([field])=>typeof result[field]==='string' && result[field].trim())
+          .map(([field,type])=>({long_name:result[field],short_name:field==='state'?(result.state_code||result[field]):field==='country'?(result.country_code||result[field]).toUpperCase():result[field],types:[type]}));
+        const value={address:result.formatted.trim(),location:resolved,provider:'geoapify',addressComponents,
           attribution:{provider:'Geoapify',url:'https://www.geoapify.com/',data:'© OpenStreetMap contributors',dataUrl:'https://www.openstreetmap.org/copyright'}};
         cache.set(id,{value,until:now()+600000});if(cache.size>256)cache.delete(cache.keys().next().value);
         return value;

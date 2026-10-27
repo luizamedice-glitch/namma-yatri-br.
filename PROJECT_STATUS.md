@@ -536,3 +536,7 @@ Auditoria e decisões em `Frontend/PASSAGEIRO-ENDERECOS-BR.md`. Usuário confirm
 - Quatro regressões reproduzidas em testes antes da correção: aviso repetido por poll, aviso de conexão preso na cotação recuperada, solicitação com resposta perdida voltando prematuramente à cotação e segundo clique permitido antes da reconciliação.
 - Implementação em validação: status persistente com toast deduplicado até recuperação; cotação existente limpa o aviso após snapshot válido; envio incerto aguarda snapshot antes de liberar nova tentativa. Voltar ao início permanece disponível durante a confirmação, sem cancelar implicitamente uma corrida. Não há reenvio automático de POST.
 - Resultado posterior: 32 testes Node e aceites Android 16/10 aprovados, conforme resumo atual e relatório de reconexão. Compilação incremental medida em 16,25 s.
+
+## Alce isolado — contrato de endereços, 27/10/2026
+
+Branch codex/alce-address-search: Places details e Geoapify agora preservam componentes reais de endereço no retorno do motor. O adaptador traduz os formatos para os parsers Android. Dois módulos de mapas são montados somente no contêiner alce-lab-compat; imagem, contêineres e banco da operação Namma anterior permanecem intactos. Bundle cifrado contém as revisões testadas. Nove testes de mapas/geocoding passaram. Relatório e APK privados na branch codex/passenger-address-search de alce-yatri-rea-analysis.
