@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Corrigir contrato de oferta sem alterar corrida ou GPS do aparelho
+      - name: Validar evento da oferta e janela de aceite de 60 segundos
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
