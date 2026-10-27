@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Preparar download HTTPS privado e temporário
+      - name: Preparar download HTTPS privado em serviço restrito
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}

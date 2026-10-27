@@ -44,7 +44,8 @@ After=network.target
 [Service]
 User=nobody
 Group=nogroup
-ExecStart=/usr/bin/python3 {ROOT}/server.py {version}
+BindReadOnlyPaths={ROOT}:/run/alce-apk-downloads
+ExecStart=/usr/bin/python3 /run/alce-apk-downloads/server.py /run/alce-apk-downloads/{version.name}
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict
