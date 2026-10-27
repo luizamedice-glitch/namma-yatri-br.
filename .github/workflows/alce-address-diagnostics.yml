@@ -98,6 +98,6 @@ jobs:
             try:d=json.loads(line)
             except Exception:continue
             path=d.get('path','').split('?')[0]
-            if any(t in path for t in ['geocode','autocomplete','places','geo/','genero','Genero','gender','alterar','cadastro','login']):counts[(d.get('method'),path,d.get('status'))]+=1
-          print('SANITIZED_ADDRESS_COUNTS='+json.dumps([{'method':m,'path':p,'status':s,'count':n}for(m,p,s),n in counts.items()]))
+            if any(t in path for t in ['geocode','autocomplete','places','geo/','genero','Genero','gender','alterar','cadastro','login']):counts[(d.get('method'),path,d.get('status'),json.dumps(d.get('credentialState',{}),sort_keys=True))]+=1
+          print('SANITIZED_ADDRESS_COUNTS='+json.dumps([{'method':m,'path':p,'status':s,'credentialState':json.loads(c),'count':n}for(m,p,s,c),n in counts.items()]))
           PYCODE
