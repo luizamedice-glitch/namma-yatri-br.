@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-address-search]
+    branches: [codex/alce-address-followup]
     paths: ['.github/workflows/alce-isolated-verify.yml']
 
 permissions:
@@ -16,14 +16,14 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-address-search'
+    if: github.ref == 'refs/heads/codex/alce-address-followup'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Corrigir contrato de endereços e preservar componentes reais de endereço e validar GPS e Places via HTTPS
+      - name: Verificar contrato e diagnóstico sem conteúdo de credenciais
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
