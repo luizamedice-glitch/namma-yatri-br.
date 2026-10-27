@@ -1,4 +1,4 @@
-name: Alce - Sincronizar chegada e início no passageiro
+name: Alce - Robustez operacional, navegação e finalização
 
 on:
   workflow_dispatch:
@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Aplicar contrato de chegada e início e verificar estado real sem alterar corrida
+      - name: Aplicar contratos operacionais e verificar por HTTPS sem criar corridas
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}

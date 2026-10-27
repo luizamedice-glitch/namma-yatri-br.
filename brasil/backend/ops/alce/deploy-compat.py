@@ -23,7 +23,7 @@ def config(original):
     block='''
     # BEGIN ALCE LEGACY COMPAT
     @alceLegacy {
-        path /api/* /taxista/* /taxi/* /solicitacao/* /solicitacao20/* /solicitacao30/* /configuracao /configuracao/* /passageiro/* /lab/* /geo/* /places/* /maps/api/*
+        path /api/* /motivoCancelamento/* /taxista/* /taxi/* /solicitacao/* /solicitacao20/* /solicitacao30/* /configuracao /configuracao/* /passageiro/* /lab/* /geo/* /places/* /maps/api/*
     }
     handle @alceLegacy {
         reverse_proxy 127.0.0.1:8084
@@ -59,7 +59,7 @@ def main(bundle):
     env=(ROOT/'private/api.env').read_text()+runtime.read_text()+'\nALCE_ISOLATED_MODE=true\nALCE_LEGACY_PORT=8084\n'
     runtime.write_text(env);runtime.chmod(0o600)
     # Server modules expect source beside one another in /app/alce-compat.
-    for name in ['server.mjs','http.mjs','models.mjs','ids.mjs','model-defaults.json','maps.mjs','geocoding.mjs']:
+    for name in ['server.mjs','http.mjs','models.mjs','ids.mjs','model-defaults.json','receipts.mjs','maps.mjs','geocoding.mjs']:
         if not (release/name).is_file():raise RuntimeError('BUNDLE_INCOMPLETE')
     candidate_file=ROOT/'private/Caddyfile.compat-candidate';candidate_file.write_text(candidate);candidate_file.chmod(0o600)
     run(['caddy','validate','--config',str(candidate_file),'--adapter','caddyfile'])
@@ -70,7 +70,8 @@ def main(bundle):
         if previous:
             run(['docker','stop','alce-lab-compat']);run(['docker','rename','alce-lab-compat','alce-lab-compat-before'])
         run(['docker','run','-d','--name','alce-lab-compat','--restart','unless-stopped','--network','alce-lab',
-             '--memory','256m','--cpus','0.5','--env-file',str(runtime),'-p','127.0.0.1:8084:8084',
+             '--memory','256m','--cpus','0.5','--log-driver','json-file',
+             '--log-opt','max-size=10m','--log-opt','max-file=3','--env-file',str(runtime),'-p','127.0.0.1:8084:8084',
              '-v',str(release)+':/app/alce-compat:ro',
              '-v',str(release/'maps.mjs')+':/app/src/maps.mjs:ro',
              '-v',str(release/'geocoding.mjs')+':/app/src/geocoding.mjs:ro','--entrypoint','node',IMAGE,'/app/alce-compat/server.mjs'])
