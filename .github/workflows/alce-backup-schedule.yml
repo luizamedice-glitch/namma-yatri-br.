@@ -1,0 +1,45 @@
+name: Alce - Cópia externa diária e saúde
+on:
+  schedule:
+    - cron: '50 3 * * *'
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+    inputs:
+      operation:
+        type: choice
+        options: [status, backup]
+        default: status
+  push:
+    branches: [codex/alce-backup-schedule]
+    paths: ['.github/workflows/alce-backup-schedule.yml']
+permissions:
+  contents: read
+concurrency:
+  group: lightsail-ssh-test
+  cancel-in-progress: false
+jobs:
+  maintenance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Reviewed operator implementation. Never execute an untrusted PR head
+          # with the host SSH credential, or reinstall an application on cron.
+          ref: 671376737cf6ad7aa13453fdb497d6922dfa57c0
+          persist-credentials: false
+      - name: Exportar cópia cifrada ou consultar saúde sem mudar corridas
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          AWS_HOST: ${{ secrets.AWS_HOST || '52.67.246.31' }}
+          AWS_USER: ${{ secrets.AWS_USER || 'ubuntu' }}
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+          ALCE_MAINTENANCE_OPERATION: ${{ github.event_name == 'push' && 'backup' || github.event.schedule == '50 3 * * *' && 'backup' || inputs.operation || 'status' }}
+        run: bash brasil/backend/ops/alce/export-maintenance.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: alce-encrypted-backup-and-health
+          path: ${{ runner.temp }}/alce-maintenance-artifacts/
+          retention-days: 7
+          if-no-files-found: error
