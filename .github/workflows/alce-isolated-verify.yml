@@ -1,4 +1,4 @@
-name: Alce - Compatibilidade e ciclo HTTPS real
+name: Alce - Verificar recuperação após aceite
 
 on:
   workflow_dispatch:
