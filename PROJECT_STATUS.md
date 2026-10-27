@@ -1,5 +1,25 @@
 # Yatri Brasil — situação do projeto
 
+## Fachada HTTPS Alce isolada — 27/10/2026, aceite 40431153663
+
+Implantada fachada de compatibilidade somente no runtime Alce, reutilizando a
+imagem operacional imutável e o PostgreSQL separado. Caddy encaminha rotas
+legadas ao loopback 8084; rotas e dados Namma permanecem protegidos. Workflow
+[40431153663](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40431153663)
+aprovado: sessões próprias/ativação única, Google Places/Details/Routes reais,
+cotação, pedido, oferta, aceite, chegada, início e conclusão por HTTPS, confirmada
+no PostgreSQL. Coordenadas explicitamente sintéticas. Sessões técnicas revogadas,
+motorista offline e GPS técnico limpo após o aceite; serviços existentes saudáveis.
+
+Fontes/artefatos proprietários ficam no repositório privado REA; aqui somente
+operações próprias e bundle cifrado autenticado. `/opt/alce-lab/ativar` é comando
+manual do proprietário para emitir códigos, não executado pelo CI nem exposto
+por HTTP. Janela Alce até 02/11/2026 00:14:41 UTC, sem alteração do prazo Namma.
+Dois APKs Gaudium personalizados de laboratório compilados no REA; **execução
+física desses bytes, parsers nativos, GPS/segundo plano/push e recuperação ainda
+pendentes**. Este aceite HTTP não comprova operação das telas Android. Os registros
+abaixo sobre ausência de rotas Alce são anteriores a esta implantação.
+
 ## Motor reaproveitado em implantação Alce isolada — 27/10/2026
 
 Por decisão explícita do proprietário, foi criado um runtime separado em `/opt/alce-lab`, com PostgreSQL/volume/rede próprios e API somente em `127.0.0.1:8083`. Reutiliza a imagem do motor `8d24ad18edebe754341e7839261122b70a440777`, sem alterar o banco, contêineres, prazo ou Caddy Namma. Implantação `40425101194` e verificação `40425291181` aprovadas: perfis próprios, sessão dos dois papéis, ativação de uso único e revogação das sessões de teste confirmadas. Janela independente até 02/11/2026 00:14:41 UTC. A chave de mapas estava configurada; não houve consulta real a provedor neste aceite.
