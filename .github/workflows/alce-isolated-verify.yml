@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-fare-compat]
+    branches: [codex/alce-driver-offers]
     paths: ['.github/workflows/alce-isolated-verify.yml']
 
 permissions:
@@ -16,14 +16,14 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-fare-compat'
+    if: github.ref == 'refs/heads/codex/alce-driver-offers'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Corrigir lista de preços e validar cotação e corrida HTTPS
+      - name: Validar evento da oferta e janela de aceite de 60 segundos
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
