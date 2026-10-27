@@ -1,5 +1,22 @@
 # Yatri Brasil — situação do projeto
 
+## Recuperação pós-aceite Alce isolado — 27/10/2026
+
+Diagnóstico 40535689073 confirmou corrida aceita persistida e consultas de perfil
+do condutor/recálculo sem implementação. DTO do Motorista também não fornecia
+objetos e inteiros acessados diretamente pelo APK original. Corrigido o contrato
+no adaptador privado, com DTO próprio de detalhes/retomada, perfil autorizado do
+condutor e navegação pelo motor existente. Sem novo APK ou alteração do despacho.
+
+Deploy [40538259780](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40538259780)
+aprovado, release `2133c448b2b26a89`: detalhes e retomada por HTTPS com a corrida
+aceita atual. Sessões técnicas revogadas; corrida, GPS, disponibilidade e sessões
+dos aparelhos preservados; Namma anterior saudável e separado. 37 testes locais
+e comparação Android dos modelos originais aprovados no repositório privado
+(40537014400), reproduzindo NullPointerException antigo. Tela física e confirmação
+visual do Passageiro ainda dependem do reteste no aparelho. O teste remoto não
+executou chegada/início/conclusão da corrida do proprietário.
+
 ## Oferta do motorista Alce isolado — 27/10/2026
 
 O pedido do Passageiro Lab 6 foi confirmado pelo proprietário, mas o motorista
