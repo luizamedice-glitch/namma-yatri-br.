@@ -1,5 +1,23 @@
 # Yatri Brasil — situação do projeto
 
+## Oferta do motorista Alce isolado — 27/10/2026
+
+O pedido do Passageiro Lab 6 foi confirmado pelo proprietário, mas o motorista
+não via ofertas. Diagnósticos 40529081066/40529469493 confirmaram motorista online,
+GPS recente, oferta persistida e snapshot elegível. O adaptador enviava histórico
+de oferta vazio, incompatível com o acesso direto ao primeiro evento no APK.
+
+Implantações 40531898252 e 40532355561 preenchem o contrato com o evento real
+persistido do destinatário autenticado e janela local de aceite de 60 segundos.
+30 testes Node passaram no repositório privado; não há novo APK. O motor de
+despacho, proximidade, prazo de dez minutos e autenticação foram preservados.
+A verificação remota com motorista online/corrida ativa não altera localização,
+disponibilidade, sessão do aparelho ou corrida. O último deploy observou uma
+oferta viva e confirmou essa preservação. Namma anterior e seu banco intactos.
+
+Aceite físico da lista/alerta/aceite ainda pendente; não confundir estado do
+servidor ou testes de modelos Android com corrida física ponta a ponta.
+
 ## Alce isolado — correção de bootstrap e prefixo API, 27/10/2026
 
 Correção remota aplicada somente ao adaptador Alce: `tempo_inatividade_taxista_alerta`
