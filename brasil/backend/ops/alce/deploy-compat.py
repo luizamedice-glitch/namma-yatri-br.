@@ -23,7 +23,7 @@ def config(original):
     block='''
     # BEGIN ALCE LEGACY COMPAT
     @alceLegacy {
-        path /taxista/* /taxi/* /solicitacao/* /solicitacao20/* /solicitacao30/* /configuracao /configuracao/* /passageiro/* /lab/* /geo/* /places/* /maps/api/*
+        path /api/* /taxista/* /taxi/* /solicitacao/* /solicitacao20/* /solicitacao30/* /configuracao /configuracao/* /passageiro/* /lab/* /geo/* /places/* /maps/api/*
     }
     handle @alceLegacy {
         reverse_proxy 127.0.0.1:8084
