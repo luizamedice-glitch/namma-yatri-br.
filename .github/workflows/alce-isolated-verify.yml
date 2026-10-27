@@ -1,4 +1,4 @@
-name: Alce - Robustez operacional, navegação e finalização
+name: Alce - Robustez operacional e verificação sem dados pessoais
 
 on:
   workflow_dispatch:
