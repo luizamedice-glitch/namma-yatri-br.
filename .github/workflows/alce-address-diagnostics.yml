@@ -100,4 +100,10 @@ jobs:
             path=d.get('path','').split('?')[0]
             if path:counts[(d.get('method'),path,d.get('status'),json.dumps(d.get('credentialState',{}),sort_keys=True))]+=1
           print('SANITIZED_ADDRESS_COUNTS='+json.dumps([{'method':m,'path':p,'status':s,'credentialState':json.loads(c),'count':n}for(m,p,s,c),n in counts.items()]))
+          probe="""import {connectDatabase} from '/app/src/db.mjs'; const db=await connectDatabase(process.env.DATABASE_URL); try { const name=await db.query('SELECT current_database() AS name'); if(name.rows[0].name!=='alce_lab')throw Error('wrong_database'); const result=await db.query("SELECT status,count(*)::int AS count,max(created_at) AS latest FROM rides GROUP BY status"); console.log(JSON.stringify({rideStatusCounts:result.rows})); } finally {await db.end();}"""
+          import shlex
+          args[-1]="sudo -n docker exec alce-lab-compat node --input-type=module -e "+shlex.quote(probe)
+          r=subprocess.run(args,capture_output=True,text=True,timeout=40)
+          assert r.returncode==0,'database read failed'
+          print(r.stdout)
           PYCODE
