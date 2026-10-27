@@ -1,5 +1,21 @@
 # Yatri Brasil — situação do projeto
 
+## Entrega privada do APK Passageiro — 27/10/2026
+
+Os links GitHub autenticados/temporários falharam no navegador do proprietário.
+Criado serviço de arquivos restrito ao loopback 8085, com usuário sem privilégios
+e diretório somente leitura, acessível pelo Caddy em `/lab-apks/*`. Exige capacidade
+aleatória de 256 bits no caminho e expira em 28/10/2026 01:38:32 UTC. Não há listagem,
+emissão pública de acessos ou APK proprietário no Git público; o link privado é
+entregue apenas ao proprietário. Payload de transferência cifrado com RSA/AES-GCM.
+
+Deploy [40433839531](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40433839531)
+aprovado; serviços 8080/8082/8083/8084 saudáveis e sem alteração de dados. Download
+HTTPS completo sem login GitHub conferido: 59.329.551 bytes, SHA-256 idêntico ao
+APK Lab 1, Content-Length, Content-Disposition e MIME Android corretos. Retomada
+206 verificada; testes locais cobriram GET/HEAD, intervalos, token inválido,
+traversal e expiração. Não houve reconstrução do APK ou novo aceite Android.
+
 ## Fachada HTTPS Alce isolada — 27/10/2026, aceite 40431153663
 
 Implantada fachada de compatibilidade somente no runtime Alce, reutilizando a
