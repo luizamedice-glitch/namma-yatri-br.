@@ -1,5 +1,23 @@
 # Yatri Brasil — situação do projeto
 
+## Complemento pós-aceite: Boolean e ETA obrigatórios — 27/10/2026
+
+Após o proprietário informar comportamento inalterado, diagnóstico 40541169356
+confirmou consultas 200 e a corrida aceita preservada. A análise adicional do
+cliente identificou Boolean ausentes na gravação original do Motorista e ETA
+nullable forçado a inteiro no cabeçalho Flutter. Corrigidos no adaptador privado:
+flags coerentes com o piloto e ETA real de `mobility.navigation` no polling aceito,
+mantendo a exigência de GPS recente e sem alterar o preço ou o estado da corrida.
+
+Deploy 40543246472 aprovado, release `0dbd73d4bdbf48d1`; HTTPS confirmou
+`pickupEtaVerified=true`, perfis/retomada, preservação da corrida e revogação das
+sessões técnicas. 38 testes locais no REA aprovados. Nenhum APK recompilado.
+O teste Android ampliado de persistência passou em 40544220347 no REA: executou
+o método original de atualização/gravação com preferências em memória e relógios
+fixture parados. Tentativas standalone anteriores estão documentadas; o teste
+qualificado não valida Activity completa ou GPS. Reteste físico após Forçar
+parada, sem limpar contas/dados, ainda necessário.
+
 ## Recuperação pós-aceite Alce isolado — 27/10/2026
 
 Diagnóstico 40535689073 confirmou corrida aceita persistida e consultas de perfil
