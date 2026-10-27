@@ -96,6 +96,9 @@ def main(bundle):
             raise
         if previous:run(['docker','rm','alce-lab-compat-before'])
         (ROOT/'compat/current-release').write_text(digest+'\n')
+        activation=ROOT/'ativar'
+        activation.write_text('#!/bin/sh\nset -eu\nexec docker exec alce-lab-compat node /app/alce-compat/activate.mjs\n')
+        activation.chmod(0o700)
         print(json.dumps({'compatHealthy':True,'httpsSessionRequired':True,'bootstrapAvailable':True,'nammaServicesPreserved':True,'release':digest}))
     except Exception:
         if changed:CADDY.write_text(before);run(['systemctl','reload','caddy'])
