@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-isolated-runtime]
+    branches: [codex/alce-startup-config]
     paths: ['.github/workflows/alce-isolated-verify.yml']
 
 permissions:
@@ -16,14 +16,14 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-isolated-runtime'
+    if: github.ref == 'refs/heads/codex/alce-startup-config'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Corrigir caminhos dos clientes e validar ciclo HTTPS
+      - name: Corrigir bootstrap e prefixo API dos clientes e validar ciclo HTTPS
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}

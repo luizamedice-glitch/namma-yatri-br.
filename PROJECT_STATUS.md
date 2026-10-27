@@ -1,5 +1,23 @@
 # Yatri Brasil — situação do projeto
 
+## Alce isolado — correção de bootstrap e prefixo API, 27/10/2026
+
+Correção remota aplicada somente ao adaptador Alce: `tempo_inatividade_taxista_alerta`
+passa de string vazia para `"0"`, pois o APK motorista executa Integer.valueOf no
+callback de configuração antes de exibir ativação. O crash estava comprovado no
+log Android 16 `40436196165` do repositório privado. O cliente Flutter também usa
+prefixo `/api`: Caddy encaminha `/api/*` ao adaptador Alce, que normaliza o prefixo
+sem remover autenticação ou prazo. Bootstrap público conferido após implantação.
+
+Execuções `40438665498` e `40438768242` aprovadas no workflow de compatibilidade,
+com ciclo HTTPS real existente. Namma anterior e seu banco permanecem separados.
+Fontes legadas e regressões em `alce-yatri-rea-analysis`, branch
+`codex/fix-integrated-startup`: 11 testes Node e três Python aprovados. Passageiro
+Lab 2 contém a correção DNS do commit anterior `e9a51bc`; Lab 1 permanece com o
+hostname incorreto. Aceite Android do motorista registrado separadamente no
+relatório privado. Não se alega aceite do APK passageiro ou teste físico.
+
+
 ## Entrega privada do APK Passageiro — 27/10/2026
 
 Os links GitHub autenticados/temporários falharam no navegador do proprietário.
