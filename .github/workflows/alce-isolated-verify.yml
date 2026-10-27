@@ -1,4 +1,4 @@
-name: Alce - Verificar sessoes isoladas
+name: Alce - Implantar compatibilidade HTTPS
 
 on:
   workflow_dispatch:
@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Verificar perfis sessoes e revogar credenciais temporarias
+      - name: Implantar fachada Alce autenticada com rollback
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
@@ -88,5 +88,17 @@ jobs:
             touch "$ssh_dir/known_hosts"
           fi
           unset AWS_SSH_KNOWN_HOSTS
+          python3 -m pip install --quiet cryptography==46.0.3
+          python3 brasil/backend/ops/alce/decrypt-bundle.py "$ssh_dir/key" brasil/backend/ops/alce/compat-bundle.sealed.json "$ssh_dir/compat.tar.gz"
           args=(-i "$ssh_dir/key" -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=15 -o "StrictHostKeyChecking=$host_check" -o "UserKnownHostsFile=$ssh_dir/known_hosts")
-          ssh "${args[@]}" "$AWS_USER@$AWS_HOST" 'bash -s' < brasil/backend/ops/alce/verify-isolated.sh
+          target="$AWS_USER@$AWS_HOST"
+          remote_dir=$(ssh "${args[@]}" "$target" 'mktemp -d /tmp/alce-compat.XXXXXX')
+          [[ "$remote_dir" =~ ^/tmp/alce-compat\.[a-zA-Z0-9]+$ ]]
+          scp "${args[@]}" brasil/backend/ops/alce/deploy-compat.py "$target:$remote_dir/deploy.py"
+          scp "${args[@]}" "$ssh_dir/compat.tar.gz" "$target:$remote_dir/compat.tar.gz"
+          set +e
+          ssh "${args[@]}" "$target" "sudo -n python3 '$remote_dir/deploy.py' '$remote_dir/compat.tar.gz'"
+          result=$?
+          ssh "${args[@]}" "$target" "rm -rf -- '$remote_dir'"
+          set -e
+          exit "$result"
