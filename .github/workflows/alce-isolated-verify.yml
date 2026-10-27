@@ -1,4 +1,4 @@
-name: Alce - Corrigir persistência e tempo de chegada
+name: Alce - Sincronizar chegada e início no passageiro
 
 on:
   workflow_dispatch:
@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Validar evento da oferta e janela de aceite de 60 segundos
+      - name: Aplicar contrato de chegada e início e verificar estado real sem alterar corrida
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
