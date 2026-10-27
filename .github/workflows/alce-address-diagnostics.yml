@@ -1,10 +1,10 @@
-name: Alce - Diagnóstico sanitizado de endereços
+name: Alce - Revisão operacional e proteção de dados
 
 on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-driver-offers]
+    branches: [codex/alce-post-accept]
     paths: ['.github/workflows/alce-address-diagnostics.yml']
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-driver-offers'
+    if: github.ref == 'refs/heads/codex/alce-post-accept'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
@@ -88,9 +88,11 @@ jobs:
             touch "$ssh_dir/known_hosts"
           fi
           unset AWS_SSH_KNOWN_HOSTS
+          # Public transfer key only; the private key never leaves the runner.
+          ssh-keygen -y -P '' -f "$ssh_dir/key"
           python3 - "$ssh_dir/key" "$ssh_dir/known_hosts" "$host_check" <<'PYCODE'
           import os,sys,subprocess,json,collections
-          args=['ssh','-i',sys.argv[1],'-o','IdentitiesOnly=yes','-o','BatchMode=yes','-o','ConnectTimeout=15','-o','StrictHostKeyChecking='+sys.argv[3],'-o','UserKnownHostsFile='+sys.argv[2],os.environ['AWS_USER']+'@'+os.environ['AWS_HOST'],'sudo -n docker logs --since 24h alce-lab-compat']
+          args=['ssh','-i',sys.argv[1],'-o','IdentitiesOnly=yes','-o','BatchMode=yes','-o','ConnectTimeout=15','-o','StrictHostKeyChecking='+sys.argv[3],'-o','UserKnownHostsFile='+sys.argv[2],os.environ['AWS_USER']+'@'+os.environ['AWS_HOST'],'sudo -n docker logs --since 30m alce-lab-compat']
           r=subprocess.run(args,capture_output=True,text=True,timeout=40)
           assert r.returncode==0
           counts=collections.Counter();offer_counts=collections.Counter()
@@ -108,5 +110,11 @@ jobs:
           args[-1]="sudo -n docker exec alce-lab-compat node --input-type=module -e "+shlex.quote(probe)
           r=subprocess.run(args,capture_output=True,text=True,timeout=40)
           assert r.returncode==0,'database read failed'
+          print(r.stdout)
+          # Inspect only selected metadata; never emit Docker environment values.
+          ops="import json,pathlib,subprocess,shutil; root=pathlib.Path('/opt/alce-lab'); names=['alce-lab-compat','alce-lab-postgres','alce-lab-api']; containers=[]; [containers.append(json.loads(subprocess.check_output(['docker','inspect','--format','{{json .State}}',name],text=True))) for name in names]; print(json.dumps({'runtime':[{'name':name,'running':state['Running'],'oomKilled':state['OOMKilled']} for name,state in zip(names,containers)],'diskFreeMiB':shutil.disk_usage(root).free//1048576,'nammaBackupScript':pathlib.Path('/opt/yatri-brasil/operations/maintenance.py').is_file(),'nammaBackupPublicKey':pathlib.Path('/opt/yatri-brasil/secrets/backup-recipient.pem').is_file(),'alceBackupTimer':pathlib.Path('/etc/systemd/system/alce-backup.timer').exists(),'alceEncryptedBackups':len(list((root/'backups').glob('alce-db-*.ybk')))}))"
+          args[-1]='sudo -n python3 -c '+shlex.quote(ops)
+          r=subprocess.run(args,capture_output=True,text=True,timeout=40)
+          assert r.returncode==0,'operational read failed'
           print(r.stdout)
           PYCODE

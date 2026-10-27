@@ -1,10 +1,10 @@
-name: Alce - Compatibilidade e ciclo HTTPS real
+name: Alce - Robustez operacional e verificação sem dados pessoais
 
 on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-driver-offers]
+    branches: [codex/alce-post-accept]
     paths: ['.github/workflows/alce-isolated-verify.yml']
 
 permissions:
@@ -16,14 +16,14 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-driver-offers'
+    if: github.ref == 'refs/heads/codex/alce-post-accept'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Validar evento da oferta e janela de aceite de 60 segundos
+      - name: Aplicar contratos operacionais e verificar por HTTPS sem criar corridas
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}

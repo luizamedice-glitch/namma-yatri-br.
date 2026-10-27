@@ -1,5 +1,97 @@
 # Yatri Brasil — situação do projeto
 
+## Revisão operacional Alce e proteção de dados — 27/10/2026
+
+Proprietário confirmou fluxo operacional. Revisão das classes Android, Flutter,
+motor e logs reais encontrou recálculo com nome de ID divergente, finalização
+aninhada não interpretada, motivos de cancelamento ausentes e pendências 501.
+Adaptador privado corrigido, preservando autorização, preço e domínio persistido.
+Recibos/telemetria das finalizações agora são gravados em events antes do ACK;
+reenvios retomam a gravação sem duplicar a conclusão. Sem novo APK ou schema.
+Polling de IDs deixa de escrever/consumir sequência quando o ID já existe;
+conflitos de corrida ativa retornam 409. Deploys somente leitura por padrão.
+
+Deploy 40551599172 aprovado às 17:33 UTC, release `be32c51431ac6e60`:
+HTTPS autenticado, grafia nativa da navegação e detalhes/retomada aprovados com
+corrida concluída persistida, sem nova solicitação, GPS ou mudança de estado.
+A ausência de corrida ativa torna ETA/registro de chegada não aplicáveis no run.
+Caddy habilita somente o prefixo de motivos adicional; logs compat rotacionados
+em três arquivos de 10 MB. Serviços Namma anteriores preservados.
+
+48 testes do adaptador/PostgreSQL, 23 do motor (incluindo processo interrompido e
+resposta perdida), cinco testes ARM64 do Passageiro e ART Motorista 40551381883
+aprovados. Adicionalmente quatro testes Python das operações e um de criptografia.
+Testes nativos usam classes/fixtures originais; não representam toda a UI física.
+
+Backup Alce próprio instalado usando o motor de manutenção/cifra Namma, sem
+alterar os timers ou banco Namma. Cópia diária às 03:30 UTC, sete cópias retidas
+em /opt/alce-lab/backups; monitor a cada cinco minutos cobre saúde, disco,
+backup recente, teste de restauração semanal e prazo vigente do piloto. Primeira
+cópia externa cifrada e restauração real em PostgreSQL descartável sem rede
+aprovadas; nada restaurado no banco ativo. Run final 40551334174, operações
+`b70abb866301adfb`, artefato cifrado 12755920755 (sete dias). Não há dump aberto
+nem chave privada no servidor/artefato. A cópia externa recorrente ainda depende
+de agendar o workflow novo na branch padrão; somente o backup local é automático.
+Alertas externos não configurados. Prazo do piloto não foi prolongado.
+
+Próximos aceites: ações novas no celular, tela bloqueada/perda de rede/GPS,
+autenticação e notificações definitivas, histórico/ganhos/avaliações e carga.
+Relatório privado: integracao/compat/REVISAO-OPERACIONAL-2026-10-27.md.
+
+## Sincronização de chegada e início no Passageiro — 27/10/2026
+
+O proprietário confirmou recuperação dos dois apps, solicitação, aceite e
+finalização. Chegada e início ainda não atualizavam o Passageiro. Diagnóstico
+somente leitura 40546661062 confirmou registros HTTP 200, acompanhamento ativo e
+corrida `in_progress` no motor isolado. O cliente Flutter exige nome String não
+nullable no objeto de registro, ausente nas duas etapas. O adaptador privado
+agora inclui o nome sem alterar os códigos originais de status/evento.
+
+39 testes locais com PostgreSQL descartável e cinco testes de instruções ARM64
+originais do Passageiro Lab 6 aprovados. A emulação verifica a checagem de tipo e
+o mapeamento arrived/inProgress/finalização; não é execução da UI completa.
+Nenhum novo APK. Deploy 40547064971 aprovado às 17:05 UTC, release
+`de1c3e221ef88eff`: HTTPS confirmou `passengerRegistrationVerified=true` na
+corrida em andamento, com corrida/serviços preservados e apenas sessões técnicas
+revogadas. ETA de embarque não se aplica nesse estado; chegada validada no ciclo
+local isolado. Confirmação visual da última correção no celular ainda pendente. Relatório privado:
+`integracao/compat/SINCRONIZACAO-ETAPAS-2026-10-27.md`.
+
+## Complemento pós-aceite: Boolean e ETA obrigatórios — 27/10/2026
+
+Após o proprietário informar comportamento inalterado, diagnóstico 40541169356
+confirmou consultas 200 e a corrida aceita preservada. A análise adicional do
+cliente identificou Boolean ausentes na gravação original do Motorista e ETA
+nullable forçado a inteiro no cabeçalho Flutter. Corrigidos no adaptador privado:
+flags coerentes com o piloto e ETA real de `mobility.navigation` no polling aceito,
+mantendo a exigência de GPS recente e sem alterar o preço ou o estado da corrida.
+
+Deploy 40543246472 aprovado, release `0dbd73d4bdbf48d1`; HTTPS confirmou
+`pickupEtaVerified=true`, perfis/retomada, preservação da corrida e revogação das
+sessões técnicas. 38 testes locais no REA aprovados. Nenhum APK recompilado.
+O teste Android ampliado de persistência passou em 40544220347 no REA: executou
+o método original de atualização/gravação com preferências em memória e relógios
+fixture parados. Tentativas standalone anteriores estão documentadas; o teste
+qualificado não valida Activity completa ou GPS. Reteste físico após Forçar
+parada, sem limpar contas/dados, ainda necessário.
+
+## Recuperação pós-aceite Alce isolado — 27/10/2026
+
+Diagnóstico 40535689073 confirmou corrida aceita persistida e consultas de perfil
+do condutor/recálculo sem implementação. DTO do Motorista também não fornecia
+objetos e inteiros acessados diretamente pelo APK original. Corrigido o contrato
+no adaptador privado, com DTO próprio de detalhes/retomada, perfil autorizado do
+condutor e navegação pelo motor existente. Sem novo APK ou alteração do despacho.
+
+Deploy [40538259780](https://github.com/luizamedice-glitch/namma-yatri-br./actions/runs/40538259780)
+aprovado, release `2133c448b2b26a89`: detalhes e retomada por HTTPS com a corrida
+aceita atual. Sessões técnicas revogadas; corrida, GPS, disponibilidade e sessões
+dos aparelhos preservados; Namma anterior saudável e separado. 37 testes locais
+e comparação Android dos modelos originais aprovados no repositório privado
+(40537014400), reproduzindo NullPointerException antigo. Tela física e confirmação
+visual do Passageiro ainda dependem do reteste no aparelho. O teste remoto não
+executou chegada/início/conclusão da corrida do proprietário.
+
 ## Oferta do motorista Alce isolado — 27/10/2026
 
 O pedido do Passageiro Lab 6 foi confirmado pelo proprietário, mas o motorista
