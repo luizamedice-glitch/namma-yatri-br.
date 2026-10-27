@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Implantar fachada Alce e comando privado de ativação
+      - name: Corrigir caminhos dos clientes e validar ciclo HTTPS
         shell: bash
         env:
           AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
