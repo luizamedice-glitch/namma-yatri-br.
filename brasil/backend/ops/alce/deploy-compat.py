@@ -88,6 +88,12 @@ def main(bundle):
         if status('https://'+HOST+'/v1/auth/register','POST')!=403:raise RuntimeError('NAMMA_PROXY_CHANGED')
         for port in [8080,8082,8083]:
             if status('http://127.0.0.1:'+str(port)+'/health')!=200:raise RuntimeError('EXISTING_SERVICE_UNHEALTHY')
+        # Acceptance prints only booleans, never login bodies or session material.
+        try:
+            print(run(['docker','exec','alce-lab-compat','node','/app/alce-compat/verify-https.mjs']))
+        except subprocess.CalledProcessError as error:
+            print(error.stderr[-4000:],file=sys.stderr)
+            raise
         if previous:run(['docker','rm','alce-lab-compat-before'])
         (ROOT/'compat/current-release').write_text(digest+'\n')
         print(json.dumps({'compatHealthy':True,'httpsSessionRequired':True,'bootstrapAvailable':True,'nammaServicesPreserved':True,'release':digest}))

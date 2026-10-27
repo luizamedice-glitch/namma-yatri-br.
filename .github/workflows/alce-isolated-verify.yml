@@ -1,4 +1,4 @@
-name: Alce - Implantar compatibilidade HTTPS
+name: Alce - Compatibilidade e ciclo HTTPS real
 
 on:
   workflow_dispatch:
