@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-partner-features]
+    branches: [codex/alce-chat-banners]
     paths: ['.github/workflows/alce-features-inspect.yml']
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-partner-features'
+    if: github.ref == 'refs/heads/codex/alce-chat-banners'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
@@ -96,7 +96,7 @@ jobs:
           from cryptography.hazmat.primitives import serialization,hashes
           from cryptography.hazmat.primitives.asymmetric import padding
           from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-          public=serialization.load_pem_public_key('-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAqVSxnLaU1j9NUOY6eMTg\nSHmghm0x1gQvM0/BN3j/1eAlTJ+JSs0VrZ/4rwZun/UlU0+Gb9w/ZjSFdPJsF43M\nYOUUJZa2sTIVk9X8Xqt13AgTEulXJb/r5/YxerH2F/OKSY4dQqv+OojR/VGeTtBK\nJU+g68wIOqFUq3B+nJUhoaKc/9GQsHDuuJfK4sPgtHXtgcWlutePbxK3P5oWc79F\nMDLox/jnEpMEEkUsP9cLjmfxSgjo+eAUmbN6nduKFWwJHx/iotWGAYD/NK3nuRmw\nSkP3zCGN1eWnR7nGStZImlIdvKIxtYOI1BnjbkxKrQUdNzXXYZMoxKiACWCND+n6\ndvepoeWK8/F7w31CRvTN6kJR9/WX7uBIzOovAspEjVuV6QL8SQ9yOFy0dCKDqGhv\n9cBCSYnntf9cWpcRVP5cVGx8vDi0cQ/4ynvXu3YdX5BrkDy621Vit0UnScOYG5oa\nijE/6uKrKnOF2fN4AKojEx6HmXZ47zZXb3gQOCPyUuznAgMBAAE=\n-----END PUBLIC KEY-----\n'.encode())
+          public=serialization.load_pem_public_key('-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEA0ULNkKE/B8UMC+Xd3aEn\nZjeeecX0ADeNYM5nOldLmJph1gREvyWO3eIgKvCNHMyCRhvUFi22RIoruVW+gnF7\nS01I3KrRnRjqp7JPjG4hYIjBfDPS4Gd6YSOivfECkdA997i19y6lBRuv1rnkDps1\nV7t6Tvx+WFNy9YLMkgaidmdmdSPwc548jh1/RXmEemHnZ6XqQxwpu+a0MMZWAOGN\nkQrozhrt5JWTWyMELoDI6DE5+izgyc68DzKktF7vD/SMEmmC0wb3MjgFOicQp6lv\nfriaFn9/sJdC5jmGgorrW8Rx0ac44YmhLj+qsZW/G02HvRqdRDdfjSfDj94P1Ps2\nVfPf7D6Tb1FdJKRswhm7SqtFqEHO9ROZj4+oB9Hg0iH7XRPqPlyFbLGSgroNr/Y+\ni8O4im9D7uEre7g2eM1jzJ7qqqIHEjM+s2ji+secT9S36kmnAXiHvkx4Dnt0xtU6\nPwcFr9OmodtoNa6nuiIRH7SYEe29sRNUxt37zHykt5nrAgMBAAE=\n-----END PUBLIC KEY-----\n'.encode())
           a=['ssh','-i',sys.argv[1],'-o','IdentitiesOnly=yes','-o','BatchMode=yes','-o','ConnectTimeout=15','-o','StrictHostKeyChecking='+sys.argv[3],'-o','UserKnownHostsFile='+sys.argv[2],os.environ['AWS_USER']+'@'+os.environ['AWS_HOST'],'sudo -n python3 -']
           p=subprocess.run(a,input="import json,subprocess,base64,hashlib\nfrom pathlib import Path\nv=json.loads(subprocess.check_output(['docker','inspect','alce-lab-compat']))[0]\nr=Path(next(m['Source']for m in v['Mounts']if m['Destination']=='/app/alce-compat'))\nfiles={p.name:base64.b64encode(p.read_bytes()).decode()for p in r.iterdir()if p.is_file()and p.suffix in ['.mjs','.json']}\nenv=dict(x.split('=',1)for x in v['Config']['Env']if '='in x)\nprint(json.dumps({'files':files,'image':v['Config']['Image'],'release':r.name,'moduleHashes':{p.name:hashlib.sha256(p.read_bytes()).hexdigest()for p in r.glob('*.mjs')},'envNames':sorted(env),'pilotUntil':env.get('YATRI_DRIVER_PILOT_UNTIL'),'isolated':env.get('ALCE_ISOLATED_MODE')=='true'}))\n",text=True,capture_output=True,timeout=45)
           if p.returncode:sys.exit('Read-only runtime snapshot failed; no data printed')
