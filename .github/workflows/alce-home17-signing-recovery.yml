@@ -1,5 +1,8 @@
 name: Alce - Recuperar assinatura Home por backup cifrado
 on:
+  push:
+    branches: [codex/home17-signing-recovery]
+    paths: ['.github/workflows/alce-home17-signing-recovery.yml']
   workflow_dispatch:
     inputs:
       sealed:
@@ -9,6 +12,7 @@ permissions:
   contents: read
 jobs:
   recover:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
