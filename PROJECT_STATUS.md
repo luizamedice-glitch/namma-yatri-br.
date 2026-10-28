@@ -735,3 +735,18 @@ Cria backup cifrado com o mecanismo existente e mantém contêiner anterior para
 rollback. Caddy recebe somente /mensagem/* dentro do bloco Alce. Nenhum banco,
 serviço ou cadastro da operação Namma deve mudar. Aceite remoto é somente leitura.
 Estado: implementação e testes locais prontos; execução remota ainda a conferir.
+
+Aceite remoto concluído: 40765495540, release Alce255dd553a91aae13. Backup cifrado
+criado; ambiente/expiração e serviços Namma preservados. Campanhas PNG por HTTPS,
+chat exigindo sessão, tabelas novas e leitura de histórico/proximidade/pós-aceite
+aprovados. Sem criar corrida de teste no servidor, mover GPS ou revogar sessões
+existentes. Contrato de publicidade usa anuncio_id e acao=clique/exibicao reais
+do Flutter; rotas de mensagem sem implementação não recebem falso HTTP200.
+
+APKs Passageiro19 e Motorista6 na branch codex/partner-features-lab19 do Alce.
+Android40764976162 aprovado com classes reais e Binder/marcador/atividade de teste;
+normal/reduzido, posição/rumo, pausa/remoção, DTOs e polling do chat. Quarenta
+testes Node com PostgreSQL descartável e quatro ARM64 aprovados. Não é aceite
+físico da UI Flutter nem corrida/conversa entre dois aparelhos. Entrada Giselo
+emitida cifrada em40763097902 para a reinstalação com assinatura nova autorizada,
+sem mudar perfil/veículo ou revogar sessões. Nenhum código/credencial neste Git.
