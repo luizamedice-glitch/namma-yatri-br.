@@ -1,0 +1,97 @@
+name: Alce - Inspecionar módulos atuais para recursos complementares
+
+on:
+  workflow_dispatch:
+  # Permite a primeira execução sem alterar a branch padrão main.
+  push:
+    branches: [codex/alce-driver-chat-followup]
+    paths: ['.github/workflows/alce-chat-audit.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lightsail-ssh-test
+  cancel-in-progress: false
+
+jobs:
+  connection:
+    if: github.ref == 'refs/heads/codex/alce-driver-chat-followup'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Recuperar somente fontes em execução, com entrega cifrada
+        shell: bash
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          # Identificadores públicos já confirmados pelo proprietário.
+          AWS_HOST: ${{ secrets.AWS_HOST || '52.67.246.31' }}
+          AWS_USER: ${{ secrets.AWS_USER || 'ubuntu' }}
+          # Opcional: linha known_hosts conferida pelo proprietário fora desta conexão.
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          set +x
+          for name in AWS_SSH_KEY AWS_HOST AWS_USER; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Secret obrigatória ausente: $name"
+              exit 1
+            fi
+          done
+          if [[ ! "$AWS_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]] ||
+             [[ ! "$AWS_USER" =~ ^[a-zA-Z_][a-zA-Z0-9_-]*$ ]]; then
+            echo '::error::Formato de AWS_HOST ou AWS_USER inválido.'
+            exit 1
+          fi
+          umask 077
+          ssh_dir=$(mktemp -d "$RUNNER_TEMP/yatri-ssh.XXXXXX")
+          trap 'rm -rf -- "$ssh_dir"' EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+          # Copiar no celular pode adicionar texto do terminal e mudar as quebras.
+          # Normaliza apenas a formatação; não tenta adivinhar caracteres da chave.
+          python3 - "$ssh_dir/key" <<'PY'
+          import base64, os, re, sys
+          from pathlib import Path
+          text = os.environ['AWS_SSH_KEY'].replace('\\r\\n', '\n').replace('\\n', '\n')
+          pattern = r'-----BEGIN ((?:OPENSSH|RSA|EC) PRIVATE KEY)-----([\s\S]*?)-----END \1-----'
+          blocks = list(re.finditer(pattern, text))
+          if len(blocks) != 1:
+              sys.exit('::error::Cole exatamente um bloco de chave privada, incluindo BEGIN e END, no secret AWS_SSH_KEY.')
+          label, body = blocks[0].groups()
+          body = re.sub(r'\s+', '', body)
+          try:
+              decoded = base64.b64decode(body, validate=True)
+          except Exception:
+              sys.exit('::error::O bloco da chave contém caracteres inválidos ou está incompleto. Copie novamente o arquivo original.')
+          if not decoded:
+              sys.exit('::error::O bloco da chave está vazio.')
+          lines = '\n'.join(body[i:i+70] for i in range(0, len(body), 70))
+          Path(sys.argv[1]).write_text(f'-----BEGIN {label}-----\n{lines}\n-----END {label}-----\n')
+          PY
+          unset AWS_SSH_KEY
+          chmod 600 "$ssh_dir/key"
+          # Recusa chaves inválidas ou com senha, sem imprimir conteúdo nem pedir entrada.
+          if ! ssh-keygen -y -P '' -f "$ssh_dir/key" > /dev/null 2>&1; then
+            echo '::error::AWS_SSH_KEY deve conter uma chave privada SSH válida sem senha.'
+            exit 1
+          fi
+          host_check=accept-new
+          if [[ -n "$AWS_SSH_KNOWN_HOSTS" ]]; then
+            printf '%s\n' "$AWS_SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+            host_check=yes
+          else
+            echo '::notice::Primeira conexão: identidade do host aceita por TOFU. Configure AWS_SSH_KNOWN_HOSTS para verificação prévia.'
+            touch "$ssh_dir/known_hosts"
+          fi
+          unset AWS_SSH_KNOWN_HOSTS
+          python3 - "$ssh_dir/key" "$ssh_dir/known_hosts" "$host_check" <<'PYCODE'
+          import os,subprocess,sys
+          a=['ssh','-i',sys.argv[1],'-o','IdentitiesOnly=yes','-o','BatchMode=yes','-o','ConnectTimeout=15','-o','StrictHostKeyChecking='+sys.argv[3],'-o','UserKnownHostsFile='+sys.argv[2],os.environ['AWS_USER']+'@'+os.environ['AWS_HOST'],'sudo -n python3 -']
+          p=subprocess.run(a,input='import subprocess,sys\np=subprocess.run([\'docker\',\'exec\',\'-i\',\'alce-lab-compat\',\'node\',\'--input-type=module\',\'-\'],input="import {connectDatabase} from \'/app/src/db.mjs\';import {driverPilotId,passengerPilotId} from \'/app/src/driver-pilot.mjs\';import {randomBytes,createHash} from \'node:crypto\';const p=await connectDatabase(process.env.DATABASE_URL);const token=randomBytes(32).toString(\'hex\'),hash=createHash(\'sha256\').update(token).digest(\'hex\');let report={routeProvider:process.env.ALCE_ROUTE_PROVIDER||\'google\',checks:[]};try{for(const [role,id]of [[\'driver\',driverPilotId],[\'passenger\',passengerPilotId]]){await p.query(\'INSERT INTO sessions(token_hash,user_id,expires_at) VALUES($1,$2,now()+interval \'1 minute\') ON CONFLICT(token_hash) DO UPDATE SET user_id=excluded.user_id\',[hash,id]);for(const path of role===\'driver\'?[\'/mensagem/listaConversas\',\'/solicitacao/historico\']:[\'/endereco/lista\',\'/solicitacao/listaCondutoresFavoritos\',\'/avaliacao/obterPendentes\']){const r=await fetch(\'http://127.0.0.1:8084\'+path,{headers:{\'x-session-token\':token}});const b=await r.json();report.checks.push({role,path,status:r.status,list:Array.isArray(b.response)});}}const n=await p.query(\'SELECT u.role,count(*)::int AS total FROM alce_chat_messages m JOIN users u ON u.id=m.sender_id GROUP BY u.role\');report.persistedMessages=n.rows;console.log(JSON.stringify(report));}finally{await p.query(\'DELETE FROM sessions WHERE token_hash=$1\',[hash]);await p.end();}",capture_output=True,text=True,timeout=50)\nif p.returncode:sys.exit(\'READ_AUDIT_FAILED_NO_PRIVATE_OUTPUT\')\nprint(p.stdout)\n',text=True,capture_output=True,timeout=65)
+          if p.returncode:sys.exit('Read audit failed; no credentials printed')
+          print(p.stdout)
+          PYCODE
