@@ -1,4 +1,4 @@
-name: Alce - Conferir interação original de campanhas e preservar chat
+name: Alce - Verificar somente os contratos de mensagem implementados
 
 on:
   workflow_dispatch:
