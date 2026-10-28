@@ -1,12 +1,13 @@
 {
-  "release": "1a2294d4e84f3593",
+  "release": "7a09d197a23d9e62",
   "moduleHashes": {
     "activate.mjs": "df40c257ebbf4234ff47da79dab426d5a63ea38421144c2fe847426d5a879720",
+    "addresses.mjs": "4a9c90528fb632401ce4d68fada969df37ed52dc59fb7e0aa2d333aaeaedfb07",
     "banners.mjs": "65bcd0e769477381f6bab6c01ac7b8b300f93deb51b3005dc9aa572b5b73b656",
     "campaign-seeds.json": "95c4761b3940d88eb81dad2e35fad32c09612d2c1851bfb27190777ea80d1d64",
     "chat.mjs": "72b8030641f9e8000d3da00baf15b36a1e76df206d35a2bf21ddfd49d08fc019",
     "geocoding.mjs": "ae61dfb9854fb7599913fbeb6bacf24a617406740650681f67860459a18477bf",
-    "http.mjs": "c1192b1352fe7dd95052e14a5d9a4fce09145f7f7c3dc775979bff32b4cf5200",
+    "http.mjs": "09c6a80b7759d05f3d948f2b19090386275d9b8b7f4ab2e8ab9a737f1ab01805",
     "ids.mjs": "2613fd3f50bbb8f8eb3e0974efe51df37bfd8fc9dcd27283d61a167a7a75346c",
     "manage-banners.mjs": "b43f4b5609ec81594fd764552e087eaabcd60edf90442ab0956f31429f7e2787",
     "maps.mjs": "8529bb9f4ee3ce5645c1c4ba04118c5ea4761f8fd5310a3f0ee97bce95a408c7",
@@ -15,9 +16,9 @@
     "nearby.mjs": "328c3239836c0ec7e991c5ab5494578eba55aa3b4a883b5b10ecbfedf67e0d17",
     "receipts.mjs": "18ea05f5bc9a2bc4f664f66dd29b40b7bef527a8b9c1e091420621f2700ea583",
     "reporting.mjs": "01cc619d96c8d1184538a92959f89d7bd2212014f2430b91454d5ebc784bfa6b",
-    "server.mjs": "148e75d5e542a44456e7347da9ad8f4c1fa2027cc838b10079597bdfdd905a23",
-    "verify-features.mjs": "696eba764706c00c401c02196909f06893073ad819cd5ae6ae4d052f1398ca28",
+    "server.mjs": "3a3d21db50be103ec8a433018b0f026bd9b3efc7af8168be0f80aec5369ec7d8",
+    "verify-features.mjs": "39b7146cb83d2082610881301bc880f5d33788b0e96a3afef07a9c1bca3f3556",
     "verify-https.mjs": "769fe44b0b647c29b02860b6a8948fe7bec620a20b7b2d2d6f751e9346ec5a88"
   },
-  "bundleSha256": "7a09d197a23d9e628bb9b40e58dee7f19d91615a154271598e6913020bfee22d"
+  "bundleSha256": "9bcec2ef69b507fbcc44f52d0d476eda24dcb66cd10c2bfdaa2e6373922e0e37"
 }

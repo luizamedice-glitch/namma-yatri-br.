@@ -1,4 +1,4 @@
-name: Alce - Aplicar favoritos e histórico de destinos Alce
+name: Alce - Aplicar limite de seis favoritos Alce
 
 on:
   workflow_dispatch:
