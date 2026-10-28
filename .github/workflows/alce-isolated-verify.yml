@@ -1,4 +1,4 @@
-name: Alce - Verificar somente os contratos de mensagem implementados
+name: Alce - Aplicar favoritos e histórico de destinos Alce
 
 on:
   workflow_dispatch:
