@@ -1,17 +1,21 @@
 {
-  "release": "6c5837eb474a4655",
+  "release": "ab774a2d3b0f2c37",
   "moduleHashes": {
-    "reporting.mjs": "01cc619d96c8d1184538a92959f89d7bd2212014f2430b91454d5ebc784bfa6b",
-    "maps.mjs": "8529bb9f4ee3ce5645c1c4ba04118c5ea4761f8fd5310a3f0ee97bce95a408c7",
-    "server.mjs": "e19e06d12a87ac0225e6cc42ffb9b3ce2f7bb4369d144d478fee70e894271352",
-    "models.mjs": "770a51a10423ed2358e8799ace179a5443f0a28e5cc2decb3888a651d59d2ff5",
+    "server.mjs": "148e75d5e542a44456e7347da9ad8f4c1fa2027cc838b10079597bdfdd905a23",
+    "http.mjs": "413fa6a57c49d11092af8ee445f9ab425ca19fe347d27194776e5d840fda4f3b",
+    "models.mjs": "2438b42c44561af86f2555e2cac0271b68c70461ccaca4a75c4c1f93eee6ecd9",
     "ids.mjs": "2613fd3f50bbb8f8eb3e0974efe51df37bfd8fc9dcd27283d61a167a7a75346c",
-    "geocoding.mjs": "ae61dfb9854fb7599913fbeb6bacf24a617406740650681f67860459a18477bf",
-    "http.mjs": "390c021c8422dc36601a07fdbfd09d963b13f45683fc6cadf72cdf34d45dfe9f",
-    "nearby.mjs": "328c3239836c0ec7e991c5ab5494578eba55aa3b4a883b5b10ecbfedf67e0d17",
+    "receipts.mjs": "18ea05f5bc9a2bc4f664f66dd29b40b7bef527a8b9c1e091420621f2700ea583",
     "verify-https.mjs": "769fe44b0b647c29b02860b6a8948fe7bec620a20b7b2d2d6f751e9346ec5a88",
     "activate.mjs": "df40c257ebbf4234ff47da79dab426d5a63ea38421144c2fe847426d5a879720",
-    "receipts.mjs": "18ea05f5bc9a2bc4f664f66dd29b40b7bef527a8b9c1e091420621f2700ea583"
+    "reporting.mjs": "01cc619d96c8d1184538a92959f89d7bd2212014f2430b91454d5ebc784bfa6b",
+    "nearby.mjs": "328c3239836c0ec7e991c5ab5494578eba55aa3b4a883b5b10ecbfedf67e0d17",
+    "maps.mjs": "8529bb9f4ee3ce5645c1c4ba04118c5ea4761f8fd5310a3f0ee97bce95a408c7",
+    "geocoding.mjs": "ae61dfb9854fb7599913fbeb6bacf24a617406740650681f67860459a18477bf",
+    "chat.mjs": "b5644ba5d45fabc840bdb4c5bfa571ad358debb1fa035ac94bf524a0041ca0ee",
+    "banners.mjs": "65bcd0e769477381f6bab6c01ac7b8b300f93deb51b3005dc9aa572b5b73b656",
+    "manage-banners.mjs": "b43f4b5609ec81594fd764552e087eaabcd60edf90442ab0956f31429f7e2787",
+    "verify-features.mjs": "696eba764706c00c401c02196909f06893073ad819cd5ae6ae4d052f1398ca28"
   },
-  "bundleSha256": "ab774a2d3b0f2c3711997cd771e3859ee6c8616920373cbd0bfef2c6aa92c6fb"
+  "bundleSha256": "8b42f1c57419cb1d4bbe9b07ae4893ded898dd6f3f55311286b20c349f2825ae"
 }

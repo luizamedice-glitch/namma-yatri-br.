@@ -1,4 +1,4 @@
-name: Alce - Integrar chat e campanhas preservando o motor atual
+name: Alce - Conferir interação original de campanhas e preservar chat
 
 on:
   workflow_dispatch:

@@ -11,7 +11,8 @@ def health(port):
 
 def main(bundle,expected_file):
  if os.geteuid()!=0:raise RuntimeError('ROOT_REQUIRED')
- expected=json.loads(Path(expected_file).read_text());assert hashlib.sha256(Path(bundle).read_bytes()).hexdigest()==expected['bundleSha256'];meta=json.loads(run(['docker','inspect','alce-lab-compat']))[0]
+ global BACKUP
+ expected=json.loads(Path(expected_file).read_text());BACKUP='alce-lab-compat-before-'+expected['release'];assert hashlib.sha256(Path(bundle).read_bytes()).hexdigest()==expected['bundleSha256'];meta=json.loads(run(['docker','inspect','alce-lab-compat']))[0]
  env=dict(x.split('=',1)for x in meta['Config']['Env']if '='in x)
  if env.get('ALCE_ISOLATED_MODE')!='true' or not env.get('DATABASE_URL','').split('?',1)[0].endswith('/alce_lab'):raise RuntimeError('ISOLATED_ALCE_REQUIRED')
  current=Path(next(m['Source']for m in meta['Mounts']if m['Destination']=='/app/alce-compat'))
