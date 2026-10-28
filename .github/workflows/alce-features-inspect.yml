@@ -8,7 +8,7 @@ on:
     paths: ['.github/workflows/alce-features-inspect.yml']
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: lightsail-ssh-test
@@ -105,6 +105,23 @@ jobs:
           Path('runtime.sealed.json').write_text(json.dumps({k:base64.b64encode(x).decode()for k,x in b.items()}))
           print('READ_ONLY_CURRENT_MODULES_RECOVERED_ENCRYPTED')
           PYCODE
+      - name: Preservar snapshot cifrado para inspeção local
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import base64,json,os,subprocess
+          from pathlib import Path
+          endpoint='repos/'+os.environ['GH_REPO']+'/contents/brasil/backend/ops/alce/feature-runtime.sealed.json'
+          existing=subprocess.run(['gh','api',endpoint+'?ref=codex/alce-chat-banners'],capture_output=True,text=True)
+          body={'message':'Preserve encrypted isolated runtime inspection','branch':'codex/alce-chat-banners','content':base64.b64encode(Path('runtime.sealed.json').read_bytes()).decode()}
+          if existing.returncode==0:body['sha']=json.loads(existing.stdout)['sha']
+          Path('commit-snapshot.json').write_text(json.dumps(body))
+          r=subprocess.run(['gh','api','--method','PUT',endpoint,'--input','commit-snapshot.json'],capture_output=True,text=True)
+          if r.returncode:raise SystemExit('Encrypted snapshot publication failed')
+          print('ENCRYPTED_SOURCE_SNAPSHOT_AVAILABLE')
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: alce-features-runtime
