@@ -1,0 +1,46 @@
+name: Alce - Recuperar assinatura Home por backup cifrado
+on:
+  workflow_dispatch:
+    inputs:
+      sealed:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - run: python -m pip install --quiet cryptography
+      - name: Recriptografar somente o backup autorizado
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          SEALED: ${{ inputs.sealed }}
+        run: |
+          python - <<'PYCODE'
+          EXPECTED='2cf0e9d04c76fd76e87db6ee130084dcc4e3781e7e76ef29b5c2cf6a0d671c5e'
+          RECIPIENT='-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAwV0XFUNhIyBYFEbKXqw2\nqQQ16F9OwdGMBHE5PhZbrrgNYXo3fRxO84v8fBw98jMhh7mnzAPB7SsWWmw4A2Rg\nZ5t/R0aWHnAFVBfBqRMry9kAdxsaoRxn9LnSYkCEU9aPmjjIfPp+zkzcJlcAn6Cm\nNGo/6YkvvxchgaDyaZv6YIeogryFHJZekXsFwJD2YpnKscOxsKs96CUKGvedUA0p\nZ8oKoQFJhWonAdr9qvrdVhTyhOXExpWIxe7eqf98ACEqObIwgLU5Z9iD+vE5HBuA\nmBGfL40l6zKZgnR7SDgM4sIjx0n1qKmmaSO3NVjhrLekzeZ18Lu64q4xZa1BueAT\nvtb78azXEzoJakBv6jIrPJjaQqAuwbaw10REIWsaEVq66ndhMKujs02EWuc5SOZE\n46pk/4aCIUjCzqcJcNvOsvPqBoNBGdw5Xb81YnJZ9IvpHAZnUdHjZSCzDLLzCGRH\nFV5j7knadMs7mKEc+UiEir3/OW1vKr9pSysJ4JA8mTu/AgMBAAE=\n-----END PUBLIC KEY-----\n'
+          import base64,hashlib,json,os,sys
+          from pathlib import Path
+          from cryptography.hazmat.primitives import serialization,hashes
+          from cryptography.hazmat.primitives.asymmetric import padding
+          from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+          try:
+           data=os.environ['SEALED'];assert hashlib.sha256(data.encode()).hexdigest()==EXPECTED
+           keytext=os.environ['AWS_SSH_KEY'].replace('\\r\\n','\n').replace('\\n','\n').strip().encode()
+           key=(serialization.load_ssh_private_key if b'BEGIN OPENSSH' in keytext else serialization.load_pem_private_key)(keytext,password=None)
+           v={k:base64.b64decode(x)for k,x in json.loads(data).items()}
+           aes=key.decrypt(v['wrappedKey'],padding.OAEP(mgf=padding.MGF1(hashes.SHA256()),algorithm=hashes.SHA256(),label=None))
+           plain=AESGCM(aes).decrypt(v['nonce'],v['ciphertext'],b'alce-compat-v1')
+           public=serialization.load_pem_public_key(RECIPIENT.encode());secret=AESGCM.generate_key(bit_length=256);nonce=os.urandom(12)
+           out={'wrappedKey':public.encrypt(secret,padding.OAEP(mgf=padding.MGF1(hashes.SHA256()),algorithm=hashes.SHA256(),label=None)),'nonce':nonce,'ciphertext':AESGCM(secret).encrypt(nonce,plain,b'alce-home-signing-recovery-v1')}
+           Path('recovered.sealed.json').write_text(json.dumps({k:base64.b64encode(x).decode()for k,x in out.items()}))
+           print('SIGNING_BACKUP_REENCRYPTED_OK')
+          except Exception:sys.exit('Signing backup recovery failed; no plaintext exported')
+          PYCODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: home17-signing-sealed
+          path: recovered.sealed.json
+          retention-days: 1
