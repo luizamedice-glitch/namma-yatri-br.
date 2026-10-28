@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-chat-banners]
+    branches: [codex/alce-driver-chat-followup]
     paths: ['.github/workflows/alce-isolated-verify.yml']
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-chat-banners'
+    if: github.ref == 'refs/heads/codex/alce-driver-chat-followup'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
