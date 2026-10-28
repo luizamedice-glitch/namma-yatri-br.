@@ -718,3 +718,20 @@ Branch codex/alce-address-search: Places details e Geoapify agora preservam comp
 ## Preço do passageiro Alce — 27/10/2026
 
 O proprietário confirmou a busca no Lab 5. A estimativa retornava HTTP 200, mas a fachada enviava objeto em estimativa_pagamentos.D, incompatível com parseMapList do APK. A correção envia D como lista e preserva tarifa, cotação e ID do motor existente. Workflow 40523454713 passou com preço coerente, solicitação e conclusão persistida. Fontes privadas e 22 testes Node na branch codex/passenger-fare-compat de alce-yatri-rea-analysis. Sem novo APK; aceite visual do preço no aparelho ainda pendente.
+
+## Recursos complementares Alce — implantação autorizada, 28/10/2026
+
+O proprietário autorizou aplicar banners próprios, chat HTTP e carro suave no
+Alce. Firebase, pagamentos e agendamento continuam adiados. Snapshot cifrado
+40757268873 confirmou Alce isolado release6c5837eb474a4655; os módulos atuais de
+histórico, proximidade, mapas e sessão foram preservados no bundle. A revisão
+local do adaptador em alce-yatri-rea-analysis passou40 testes, incluindo banco
+PostgreSQL descartável e HTTP dos dois perfis. Não é aceite físico de chat/mapa.
+
+A implantação acrescenta somente alce_chat_messages e alce_campaigns ao banco
+Alce. Captura o ambiente real do contêiner para preservar chaves e expiração,
+compara hashes de todos os módulos antes de trocar e recusa fonte divergente.
+Cria backup cifrado com o mecanismo existente e mantém contêiner anterior para
+rollback. Caddy recebe somente /mensagem/* dentro do bloco Alce. Nenhum banco,
+serviço ou cadastro da operação Namma deve mudar. Aceite remoto é somente leitura.
+Estado: implementação e testes locais prontos; execução remota ainda a conferir.

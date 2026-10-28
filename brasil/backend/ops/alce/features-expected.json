@@ -1,0 +1,17 @@
+{
+  "release": "6c5837eb474a4655",
+  "moduleHashes": {
+    "reporting.mjs": "01cc619d96c8d1184538a92959f89d7bd2212014f2430b91454d5ebc784bfa6b",
+    "maps.mjs": "8529bb9f4ee3ce5645c1c4ba04118c5ea4761f8fd5310a3f0ee97bce95a408c7",
+    "server.mjs": "e19e06d12a87ac0225e6cc42ffb9b3ce2f7bb4369d144d478fee70e894271352",
+    "models.mjs": "770a51a10423ed2358e8799ace179a5443f0a28e5cc2decb3888a651d59d2ff5",
+    "ids.mjs": "2613fd3f50bbb8f8eb3e0974efe51df37bfd8fc9dcd27283d61a167a7a75346c",
+    "geocoding.mjs": "ae61dfb9854fb7599913fbeb6bacf24a617406740650681f67860459a18477bf",
+    "http.mjs": "390c021c8422dc36601a07fdbfd09d963b13f45683fc6cadf72cdf34d45dfe9f",
+    "nearby.mjs": "328c3239836c0ec7e991c5ab5494578eba55aa3b4a883b5b10ecbfedf67e0d17",
+    "verify-https.mjs": "769fe44b0b647c29b02860b6a8948fe7bec620a20b7b2d2d6f751e9346ec5a88",
+    "activate.mjs": "df40c257ebbf4234ff47da79dab426d5a63ea38421144c2fe847426d5a879720",
+    "receipts.mjs": "18ea05f5bc9a2bc4f664f66dd29b40b7bef527a8b9c1e091420621f2700ea583"
+  },
+  "bundleSha256": "ab774a2d3b0f2c3711997cd771e3859ee6c8616920373cbd0bfef2c6aa92c6fb"
+}

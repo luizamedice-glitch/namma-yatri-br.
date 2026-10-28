@@ -1,10 +1,10 @@
-name: Alce - Motoristas próximos e marcadores direcionais
+name: Alce - Integrar chat e campanhas preservando o motor atual
 
 on:
   workflow_dispatch:
   # Permite a primeira execução sem alterar a branch padrão main.
   push:
-    branches: [codex/alce-live-cars]
+    branches: [codex/alce-chat-banners]
     paths: ['.github/workflows/alce-isolated-verify.yml']
 
 permissions:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   connection:
-    if: github.ref == 'refs/heads/codex/alce-live-cars'
+    if: github.ref == 'refs/heads/codex/alce-chat-banners'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
@@ -89,15 +89,16 @@ jobs:
           fi
           unset AWS_SSH_KNOWN_HOSTS
           python3 -m pip install --quiet cryptography==46.0.3
-          python3 brasil/backend/ops/alce/decrypt-bundle.py "$ssh_dir/key" brasil/backend/ops/alce/compat-bundle.sealed.json "$ssh_dir/compat.tar.gz"
+          cp brasil/backend/ops/alce/features-code.tar.gz "$ssh_dir/compat.tar.gz"
           args=(-i "$ssh_dir/key" -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=15 -o "StrictHostKeyChecking=$host_check" -o "UserKnownHostsFile=$ssh_dir/known_hosts")
           target="$AWS_USER@$AWS_HOST"
           remote_dir=$(ssh "${args[@]}" "$target" 'mktemp -d /tmp/alce-compat.XXXXXX')
           [[ "$remote_dir" =~ ^/tmp/alce-compat\.[a-zA-Z0-9]+$ ]]
-          scp "${args[@]}" brasil/backend/ops/alce/deploy-compat.py "$target:$remote_dir/deploy.py"
+          scp "${args[@]}" brasil/backend/ops/alce/deploy-features.py "$target:$remote_dir/deploy.py"
           scp "${args[@]}" "$ssh_dir/compat.tar.gz" "$target:$remote_dir/compat.tar.gz"
+          scp "${args[@]}" brasil/backend/ops/alce/features-expected.json "$target:$remote_dir/expected.json"
           set +e
-          ssh "${args[@]}" "$target" "sudo -n python3 '$remote_dir/deploy.py' '$remote_dir/compat.tar.gz'"
+          ssh "${args[@]}" "$target" "sudo -n python3 '$remote_dir/deploy.py' '$remote_dir/compat.tar.gz' '$remote_dir/expected.json'"
           result=$?
           ssh "${args[@]}" "$target" "rm -rf -- '$remote_dir'"
           set -e
