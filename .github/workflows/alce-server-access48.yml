@@ -88,14 +88,16 @@ jobs:
             touch "$ssh_dir/known_hosts"
           fi
           unset AWS_SSH_KNOWN_HOSTS
-          node --test brasil/backend/ops/alce/address-recovery48/ride-addresses.test.mjs
-          python3 - "$ssh_dir/key" "$ssh_dir/known_hosts" "$host_check" <<'PYDEPLOY'
-          import pathlib,json,subprocess,sys,os
-          folder=pathlib.Path('brasil/backend/ops/alce/address-recovery48')
-          script=(folder/'deploy.py').read_text()
-          import shlex
-          args=['ssh','-i',sys.argv[1],'-o','IdentitiesOnly=yes','-o','BatchMode=yes','-o','ConnectTimeout=15','-o','StrictHostKeyChecking='+sys.argv[3],'-o','UserKnownHostsFile='+sys.argv[2],os.environ['AWS_USER']+'@'+os.environ['AWS_HOST'],'sudo -n python3 -c '+shlex.quote(script)]
-          result=subprocess.run(args,input=json.dumps({'helper':(folder/'ride-addresses.mjs').read_text()}),text=True,capture_output=True,timeout=100)
-          if result.returncode:sys.exit('DEPLOY_FAILED_OR_ROLLED_BACK: inspect restricted server status; no credentials logged')
-          print(result.stdout)
-          PYDEPLOY
+          ssh -i "$ssh_dir/key" -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=15 -o "StrictHostKeyChecking=$host_check" -o "UserKnownHostsFile=$ssh_dir/known_hosts" "$AWS_USER@$AWS_HOST" 'sudo -n python3 -' <<'PYREMOTE'
+          import subprocess,json,collections
+          text=subprocess.check_output(['docker','logs','--since','40m','alce-lab-compat'],text=True,stderr=subprocess.STDOUT)
+          counts=collections.Counter()
+          for line in text.splitlines():
+              try:d=json.loads(line)
+              except Exception:continue
+              p=d.get('path','').split('?')[0]
+              if p:counts[(p,d.get('status'))]+=1
+          print('REQUEST_COUNTS',json.dumps([{'path':p,'status':s,'count':n} for (p,s),n in counts.items()]))
+          state=json.loads(subprocess.check_output(['docker','inspect','alce-lab-compat'],text=True))[0]['State']
+          print('RUNTIME',json.dumps({'running':state['Running'],'restarts':state.get('Restarting',False),'oom':state['OOMKilled']}))
+          PYREMOTE
