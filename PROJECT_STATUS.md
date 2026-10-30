@@ -654,3 +654,15 @@ Branch codex/alce-address-search: Places details e Geoapify agora preservam comp
 ## Preço do passageiro Alce — 27/10/2026
 
 O proprietário confirmou a busca no Lab 5. A estimativa retornava HTTP 200, mas a fachada enviava objeto em estimativa_pagamentos.D, incompatível com parseMapList do APK. A correção envia D como lista e preserva tarifa, cotação e ID do motor existente. Workflow 40523454713 passou com preço coerente, solicitação e conclusão persistida. Fontes privadas e 22 testes Node na branch codex/passenger-fare-compat de alce-yatri-rea-analysis. Sem novo APK; aceite visual do preço no aparelho ainda pendente.
+
+
+## Recuperação da assinatura Alce Lab60 — 30/10/2026
+
+Runner41115815491 aprovado: backup cifrado histórico de assinatura Alce foi
+recriptografado somente ao destinatário público desta sessão. Certificado
+CEA129322E7BFBB6DF3B11C6995D343FC166404119106BD68E0FB121D0A92169
+conferido no executor; material privado permanece fora de Git/logs. Branch
+codex/lab60-signing-recovery altera apenas o destinatário do fluxo de recuperação
+existente e este registro. Não houve conexão SSH, deploy, alteração de secrets,
+banco, sessão ou janela de piloto Namma/Alce. O aceite deste run cobre recuperação
+cifrada de assinatura, não o funcionamento de um novo APK ou corrida física.
