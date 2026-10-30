@@ -54,3 +54,16 @@ Consolidar o piloto dos dois APKs. Motorista com serviço nativo de GPS/alertas 
 
 ## Servidor de desenvolvimento AWS
 Leia também `AWS-DESENVOLVIMENTO.md` antes de alterar integração remota, autenticação, rotas HTTP ou infraestrutura. A URL de testes atual é `https://52-67-246-31.sslip.io`, com mapas de teste e um piloto autenticado temporário; consulte nesse documento as rotas, evidências e expiração atuais, sem presumir liberação geral de endpoints. Documentação não concede acesso SSH e nunca se devem incluir credenciais no APK ou no Git.
+
+30/10/2026 — acesso e recuperação de endereços Alce via GitHub autorizados pelo
+proprietário. Branch codex/alce-address-recovery48, inspeção40987509401 confirmou
+SSH autenticado/release9bcec2ef69b507fb. Deploy40987673189 success,4testes helper,
+health200/auth401 após restart somentealce-lab-compat. Patch guardou SHA original
+09c6a80b7759d05f3d948f2b19090386275d9b8b7f4ab2e8ab9a737f1ab01805;
+SHAimplantado76ce2a4ea52d7a76d0fc5c22148d92fe7174ba02b5232fb2bd9be2431a482131.
+Backup /opt/alce-lab/private/address48-http-before.mjs; nenhuma mutação no banco,
+nenhuma migração nem atualização de serviços Namma. Novas cotações recuperam
+endereço enviado, seleção salva exata do próprio usuário ou reverse. Corridas
+antigas não backfilled; resultado físico ainda pendente. Código e rollback em
+brasil/backend/ops/alce/address-recovery48/deploy.py. Não reexecutar deploy sem
+revalidar hash; guardas impedem reaplicar sobre outra revisão.
