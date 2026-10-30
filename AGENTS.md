@@ -86,3 +86,8 @@ Workflow alce-search-session54 retorna a diagnóstico read-only após execução
 Aceite físico da retomada de busca ainda pendente; não declarar HTTP200 real
 para o token do telefone sem essa evidência. Sessão temporária continua sujeita
 à expiração; renovação definitiva não foi implementada.
+
+30/10 continuação Lab59: sessão piloto Passenger venceu15:02UTC durante validação.
+Run41077974801 renovou a mesma credencial até17:09:08.805UTC, sem ampliar janela
+piloto nem alterar contas/corridas. Workflow restituído read-only71561f6312.
+Mesma sessão preservada; nenhum código de acesso enviado ao Git/logs.
