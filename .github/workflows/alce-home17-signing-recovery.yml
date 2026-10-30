@@ -24,7 +24,7 @@ jobs:
         run: |
           python - <<'PYCODE'
           EXPECTED='2cf0e9d04c76fd76e87db6ee130084dcc4e3781e7e76ef29b5c2cf6a0d671c5e'
-          RECIPIENT='-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAwV0XFUNhIyBYFEbKXqw2\nqQQ16F9OwdGMBHE5PhZbrrgNYXo3fRxO84v8fBw98jMhh7mnzAPB7SsWWmw4A2Rg\nZ5t/R0aWHnAFVBfBqRMry9kAdxsaoRxn9LnSYkCEU9aPmjjIfPp+zkzcJlcAn6Cm\nNGo/6YkvvxchgaDyaZv6YIeogryFHJZekXsFwJD2YpnKscOxsKs96CUKGvedUA0p\nZ8oKoQFJhWonAdr9qvrdVhTyhOXExpWIxe7eqf98ACEqObIwgLU5Z9iD+vE5HBuA\nmBGfL40l6zKZgnR7SDgM4sIjx0n1qKmmaSO3NVjhrLekzeZ18Lu64q4xZa1BueAT\nvtb78azXEzoJakBv6jIrPJjaQqAuwbaw10REIWsaEVq66ndhMKujs02EWuc5SOZE\n46pk/4aCIUjCzqcJcNvOsvPqBoNBGdw5Xb81YnJZ9IvpHAZnUdHjZSCzDLLzCGRH\nFV5j7knadMs7mKEc+UiEir3/OW1vKr9pSysJ4JA8mTu/AgMBAAE=\n-----END PUBLIC KEY-----\n'
+          RECIPIENT='-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEA26NPqb7YcfS5VcdweB03\nGCTGvUd4NZKomXlUYZgbBIEY50X+2/QFbrqq/ykRJABcGQKyJuGIXFiEyBVIc1ts\niVYzIjOVJryRgNTgO2fvPMyvFThRhpg8BPASaB/ObB2lx3DToaNLKNcQ2p34QBIT\n6bMRSZstwg7mlecqbWXZC40f/NGS+YMlCxSM3Kz3p0LOdTpZWhDEK770LFcZfLip\noaFdrEUwpFt5YYjeKhXjc/DBr/8txkE5fSV3KU1XsgurfOmNpJe/tDtkBYaapQmL\nVMRIvwWbJs3Ec0q852zotcqGCHdKFBtTMgpTh/Ozho/z7YoFItFWevh1E58FNYGe\nC8Mx/VKIV6WJPV1JP3VJ/mcGs6227n1U5Y/w64z2ELz4H42OOYeOzSE8tceZNmQx\nl7GcqfoerWNY+RWN9208+KXqz/bPwOtt4JbAVMtPxBGkj0EdVw2PA3WPjE46koE9\nrEj+jt1UgJD/htTgkMNQfsHyFzhLnWVvtdgpS5WRrTuhAgMBAAE=\n-----END PUBLIC KEY-----\n'
           import base64,hashlib,json,os,sys
           from pathlib import Path
           from cryptography.hazmat.primitives import serialization,hashes
