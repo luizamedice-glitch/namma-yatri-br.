@@ -75,3 +75,14 @@ hook49 sem evidência. Run40990700593 renovou SOMENTE sessão passenger piloto
 recém-expirada preservando credencial até04:16:32UTC dentro janela original.
 Nenhum APK50 publicado/recomendado. Workflow voltou a diagnóstico read-only
 para impedir renovações repetidas. Aceite físico da retomada de busca pendente.
+
+30/10 04:31UTC busca Passageiro Lab54: diagnóstico41003229562 mostrou
+geo/geocode e addresses/history401 com tokenpresente. Read-only41003347022
+confirmou passenger valid0 e expiry04:16:32.285UTC, driver valid1, runtime saudável.
+Run41003413723 renovou uma única sessão passenger recentemente expirada até
+06:32:09.511UTC, mesma credencial, dentro janela piloto existente. Não houve
+APK novo, alteração de mapas, backup/restauração, nem extensão da janela piloto.
+Workflow alce-search-session54 retorna a diagnóstico read-only após execução.
+Aceite físico da retomada de busca ainda pendente; não declarar HTTP200 real
+para o token do telefone sem essa evidência. Sessão temporária continua sujeita
+à expiração; renovação definitiva não foi implementada.
