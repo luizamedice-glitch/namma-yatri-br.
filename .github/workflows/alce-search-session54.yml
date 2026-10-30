@@ -1,4 +1,4 @@
-name: Alce - Restaurar sessão Passenger laboratório
+name: Alce - Diagnóstico Passenger após recuperação
 
 on:
   workflow_dispatch:
@@ -100,7 +100,7 @@ jobs:
           print('REQUEST_COUNTS',json.dumps([{'path':p,'status':s,'credentials':json.loads(c),'count':n} for (p,s,c),n in counts.items()]))
           state=json.loads(subprocess.check_output(['docker','inspect','alce-lab-compat'],text=True))[0]['State']
           print('RUNTIME',json.dumps({'running':state['Running'],'restarts':state.get('Restarting',False),'oom':state['OOMKilled']}))
-          probe="import {connectDatabase} from '/app/src/db.mjs';import {passengerPilotId} from '/app/src/driver-pilot.mjs';const e=process.env;if(e.ALCE_ISOLATED_MODE!=='true'||e.NODE_ENV!=='development'||new URL(e.DATABASE_URL).pathname!=='/alce_lab'||Date.parse(e.YATRI_DRIVER_PILOT_UNTIL)<=Date.now())throw Error('NOT_CURRENT_ISOLATED_PILOT');const db=await connectDatabase(e.DATABASE_URL);try{const r=await db.query(`UPDATE sessions SET expires_at=LEAST(now()+interval '2 hours',$2::timestamptz) WHERE token_hash=(SELECT token_hash FROM sessions WHERE user_id=$1 AND expires_at<=now() AND expires_at>now()-interval '1 day' ORDER BY expires_at DESC LIMIT 1) RETURNING expires_at`,[passengerPilotId,e.YATRI_DRIVER_PILOT_UNTIL]);if(r.rowCount!==1)throw Error('EXPECTED_ONE_RECENTLY_EXPIRED_SESSION');console.log(JSON.stringify({passengerSessionRenewed:true,existingCredentialPreserved:true,expiresAt:r.rows[0].expires_at,pilotWindowExtended:false}));}finally{await db.end();}"
+          probe="import {connectDatabase} from '/app/src/db.mjs';const db=await connectDatabase(process.env.DATABASE_URL);try{const r=await db.query('SELECT u.role,count(*)::int AS total,count(*) FILTER(WHERE s.expires_at>now())::int AS valid,max(s.expires_at) AS latest_expiration FROM sessions s JOIN users u ON u.id=s.user_id GROUP BY u.role');console.log(JSON.stringify({sessionSummary:r.rows}));}finally{await db.end();}"
           r=subprocess.run(['docker','exec','alce-lab-compat','node','--input-type=module','-e',probe],capture_output=True,text=True,check=True)
           print(r.stdout)
           PYREMOTE
