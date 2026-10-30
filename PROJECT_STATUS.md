@@ -750,3 +750,21 @@ testes Node com PostgreSQL descartável e quatro ARM64 aprovados. Não é aceite
 físico da UI Flutter nem corrida/conversa entre dois aparelhos. Entrada Giselo
 emitida cifrada em40763097902 para a reinstalação com assinatura nova autorizada,
 sem mudar perfil/veículo ou revogar sessões. Nenhum código/credencial neste Git.
+
+
+## Acesso Passageiro renovado pelo prazo máximo de sessão — 30/10/2026
+
+Proprietário solicitou aumentar o acesso expirado pelo máximo disponível.
+Run41120878333 SUCCESS: mesma sessão Passenger piloto renovada por24h, até
+2026-10-31T20:08:25.380Z. Antes valid0/último vencimento17:09:08.805UTC; depois
+valid1, total7 preservado. Nenhum token novo ou código de entrada emitido.
+Motorista preservado (total4, valid1, expiry2026-10-31T00:03:56.892Z). Runtime
+Alce running=true, restarting=false, oom=false. Proprietário confirmou acesso
+restabelecido nesta conversa.
+
+Janela REAL observada no contêiner:2026-11-02T00:14:41.305Z, posterior à antiga
+nota de31/10. Esta operação NÃO modificou a janela, conta, APK, GPS ou corrida.
+Prazo renovado usa LEAST(now()+24h,pilotUntil), conforme duração de sessão do
+piloto. Workflow restituído a diagnóstico read-only33449f48, com relatório
+sanitizado de runtime/vencimentos em artefato. Não reativar outras sessões
+expiradas nem repetir a mutação se já houver sessão válida.
