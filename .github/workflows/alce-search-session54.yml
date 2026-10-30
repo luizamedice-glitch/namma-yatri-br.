@@ -1,4 +1,4 @@
-name: Alce - Diagnóstico Passenger após recuperação
+name: Alce - Renovar Passenger até limite vigente
 
 on:
   workflow_dispatch:
@@ -20,9 +20,6 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
       - name: Habilitar seleção de destino e validar ciclo HTTPS
         shell: bash
         env:
@@ -100,7 +97,7 @@ jobs:
           print('REQUEST_COUNTS',json.dumps([{'path':p,'status':s,'credentials':json.loads(c),'count':n} for (p,s,c),n in counts.items()]))
           state=json.loads(subprocess.check_output(['docker','inspect','alce-lab-compat'],text=True))[0]['State']
           print('RUNTIME',json.dumps({'running':state['Running'],'restarts':state.get('Restarting',False),'oom':state['OOMKilled']}))
-          probe="import {connectDatabase} from '/app/src/db.mjs';const db=await connectDatabase(process.env.DATABASE_URL);try{const r=await db.query('SELECT u.role,count(*)::int AS total,count(*) FILTER(WHERE s.expires_at>now())::int AS valid,max(s.expires_at) AS latest_expiration FROM sessions s JOIN users u ON u.id=s.user_id GROUP BY u.role');console.log(JSON.stringify({sessionSummary:r.rows}));}finally{await db.end();}"
+          probe='import {connectDatabase} from \'/app/src/db.mjs\';\nimport {passengerPilotId} from \'/app/src/driver-pilot.mjs\';\nconst e=process.env, pilotUntil=new Date(e.YATRI_DRIVER_PILOT_UNTIL);\nif(e.ALCE_ISOLATED_MODE!==\'true\'||e.NODE_ENV!==\'development\'||new URL(e.DATABASE_URL).pathname!==\'/alce_lab\'||!Number.isFinite(+pilotUntil)||+pilotUntil<=Date.now())throw Error(\'NOT_CURRENT_ISOLATED_PILOT\');\nconst db=await connectDatabase(e.DATABASE_URL);\nconst summary=async()=> (await db.query(\'SELECT u.role,count(*)::int AS total,count(*) FILTER(WHERE s.expires_at>now())::int AS valid,max(s.expires_at) AS latest_expiration FROM sessions s JOIN users u ON u.id=s.user_id GROUP BY u.role ORDER BY u.role\')).rows;\ntry{\n const before=await summary();\n await db.query(\'BEGIN\');\n const owner=await db.query("SELECT id FROM users WHERE id=$1 AND role=\'passenger\'",[passengerPilotId]);\n if(owner.rowCount!==1)throw Error(\'EXPECTED_PILOT_PASSENGER\');\n const r=await db.query(`WITH candidate AS (\n  SELECT token_hash FROM sessions WHERE user_id=$1 AND expires_at<=now() AND expires_at>now()-interval \'1 day\'\n  ORDER BY expires_at DESC LIMIT 1 FOR UPDATE\n ) UPDATE sessions s SET expires_at=LEAST(now()+interval \'24 hours\',$2::timestamptz)\n FROM candidate c WHERE s.token_hash=c.token_hash AND s.user_id=$1\n AND NOT EXISTS (SELECT 1 FROM sessions active WHERE active.user_id=$1 AND active.expires_at>now())\n RETURNING s.expires_at`,[passengerPilotId,pilotUntil.toISOString()]);\n if(r.rowCount!==1)throw Error(\'EXPECTED_ONE_RECENTLY_EXPIRED_SESSION_AND_NO_ACTIVE_SESSION\');\n await db.query(\'COMMIT\');\n const after=await summary();\n console.log(JSON.stringify({passengerSessionRenewed:true,existingCredentialPreserved:true,maximumSessionHours:24,expiresAt:r.rows[0].expires_at,pilotUntil:pilotUntil.toISOString(),pilotWindowExtended:false,before,after}));\n}catch(error){await db.query(\'ROLLBACK\');throw error;}finally{await db.end();}\n'
           r=subprocess.run(['docker','exec','alce-lab-compat','node','--input-type=module','-e',probe],capture_output=True,text=True,check=True)
           print(r.stdout)
           PYREMOTE
