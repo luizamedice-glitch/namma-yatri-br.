@@ -96,8 +96,11 @@ jobs:
               try:d=json.loads(line)
               except Exception:continue
               p=d.get('path','').split('?')[0]
-              if p:counts[(p,d.get('status'))]+=1
-          print('REQUEST_COUNTS',json.dumps([{'path':p,'status':s,'count':n} for (p,s),n in counts.items()]))
+              if p:counts[(p,d.get('status'),json.dumps(d.get('credentialState',{}),sort_keys=True))]+=1
+          print('REQUEST_COUNTS',json.dumps([{'path':p,'status':s,'credentials':json.loads(c),'count':n} for (p,s,c),n in counts.items()]))
           state=json.loads(subprocess.check_output(['docker','inspect','alce-lab-compat'],text=True))[0]['State']
           print('RUNTIME',json.dumps({'running':state['Running'],'restarts':state.get('Restarting',False),'oom':state['OOMKilled']}))
+          probe="import {connectDatabase} from '/app/src/db.mjs';const db=await connectDatabase(process.env.DATABASE_URL);try{const r=await db.query('SELECT u.role,count(*)::int AS total,count(*) FILTER(WHERE s.expires_at>now())::int AS valid,max(s.expires_at) AS latest_expiration FROM sessions s JOIN users u ON u.id=s.user_id GROUP BY u.role');console.log(JSON.stringify({sessionSummary:r.rows}));}finally{await db.end();}"
+          r=subprocess.run(['docker','exec','alce-lab-compat','node','--input-type=module','-e',probe],capture_output=True,text=True,check=True)
+          print(r.stdout)
           PYREMOTE
