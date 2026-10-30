@@ -67,3 +67,11 @@ endereço enviado, seleção salva exata do próprio usuário ou reverse. Corrid
 antigas não backfilled; resultado físico ainda pendente. Código e rollback em
 brasil/backend/ops/alce/address-recovery48/deploy.py. Não reexecutar deploy sem
 revalidar hash; guardas impedem reaplicar sobre outra revisão.
+
+Regressão aparente busca Lab49 em30/10 02:11UTC: logs40990492371 mostram
+geo/autocomplete401 COM x-session-token opaque64; sessões passenger valid0,
+última expiração02:07:40.999UTC; motorista valid1. Não atribuir a busca ao
+hook49 sem evidência. Run40990700593 renovou SOMENTE sessão passenger piloto
+recém-expirada preservando credencial até04:16:32UTC dentro janela original.
+Nenhum APK50 publicado/recomendado. Workflow voltou a diagnóstico read-only
+para impedir renovações repetidas. Aceite físico da retomada de busca pendente.
