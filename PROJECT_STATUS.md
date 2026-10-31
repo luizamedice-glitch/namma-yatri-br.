@@ -801,3 +801,20 @@ ops/alce/panel/deploy.py é o registro do PRIMEIRO deploy, com hash/estado
 esperados; não é atualizador genérico, recusa se alce-panel-api já existe.
 Rollback preserva registros e o ambiente principal. Nenhuma alteração no banco,
 contêineres ou aplicativos Namma de operação original.
+
+
+## Novo acesso do motorista solicitado — 31/10/2026
+
+Proprietário solicitou novo acesso ao app Motorista. Run41162269141 SUCCESS,
+job124422200248, fonte emissão d1227dfa4ba872f3a8ed64a64261a8c6a1f4cc57.
+Reutilizou issuePairing(pool,'driver') do motor original dentro de alce_lab,
+sem APK/restart/deploy nem alteração de piloto. Código de uso único24h;
+expiresAt2026-11-01T02:57:55.900Z (31/10/2026 23:57 Brasília). Janela piloto
+preservada até2026-11-02T00:14:41.305265+00:00.
+
+Verificação não consumiu o código: hash/role/expiry presentes no banco,
+perfil e veículo com fingerprint preservado, todas as sessões existentes
+continuaram presentes. Saída plaintext do issuer capturada só em memória SSH;
+entrega RSA-OAEP/SHA256 para recipiente3072bits da sessão. Código/privada/arquivo
+de entrega fora do Git e dos logs. Não reexecutar só para consultar: emite novo
+código. O proprietário fará a entrada no aparelho; não afirmar login físico.
