@@ -85,6 +85,8 @@ jobs:
             touch "$ssh_dir/known_hosts"
           fi
           unset AWS_SSH_KNOWN_HOSTS
+          ssh-keygen -y -P '' -f "$ssh_dir/key" > "$RUNNER_TEMP/alce-panel-ssh.pub"
+          ssh-keygen -e -m PKCS8 -f "$RUNNER_TEMP/alce-panel-ssh.pub" > /tmp/alce-panel-key-public.pem
           ssh -i "$ssh_dir/key" -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=15 -o "StrictHostKeyChecking=$host_check" -o "UserKnownHostsFile=$ssh_dir/known_hosts" "$AWS_USER@$AWS_HOST" 'sudo -n python3 -' <<'PYREMOTE' | tee /tmp/alce-panel-preflight.jsonl
           import subprocess,json,hashlib
           from pathlib import Path
@@ -101,5 +103,7 @@ jobs:
         if: always()
         with:
           name: alce-panel-preflight
-          path: /tmp/alce-panel-preflight.jsonl
+          path: |
+            /tmp/alce-panel-preflight.jsonl
+            /tmp/alce-panel-key-public.pem
           retention-days: 7
