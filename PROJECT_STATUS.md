@@ -768,3 +768,36 @@ Prazo renovado usa LEAST(now()+24h,pilotUntil), conforme duração de sessão do
 piloto. Workflow restituído a diagnóstico read-only33449f48, com relatório
 sanitizado de runtime/vencimentos em artefato. Não reativar outras sessões
 expiradas nem repetir a mutação se já houver sessão válida.
+
+
+## Painel administrativo Alce independente — 31/10/2026
+
+Proprietário autorizou construir painel próprio e criou repositório privado
+luizamedice-glitch/PainelAlce_Adm. Fonte backend2cb529a, originalmotor SHA256
+443039397360e1ef4f306b1400b17095c7d32392bc83dfca820a097d5eeb8dee conferido.
+Pré-inspeção41160084418/41160367503 e implantação41160676745 SUCCESS. API nova
+alce-panel-api, porta8086loopback, mesmo motor/imagem/bancoalce_lab e mounts
+originais. Porta8085/downloads preservada. Backup cifrado precedeu schema
+administrativo aditivo e conta própria. Contêiner alce-lab-compat manteveID e
+StartedAt; healths8084/8080 aprovados. Caddy só recebeu/api/admin/*, sem abrir
+cadastro/login dos APKs ou renovar janelas/sessões do piloto.
+
+Bootstrap cifrado RSA-OAEP/AES-GCM entregue ao runner pela chaveSSH existente;
+credenciais/ambiente privado fora do Git/logs. Tentativa de gravar novo secret
+GitHub foi negada e NÃO foi usada; transferiu-se apenas ciphertext. Só chave
+pública foi exportada. API exige chave server-to-server+sessão operador8h e
+permite troca de senha revogando outras sessões. Novo cadastro de apps ficou
+DESABILITADO; tarifas/cupons/dinâmica são rascunhos, financeiro sem provider.
+
+Frontend https://alceadmpainel.vercel.app publicado na Vercel com variáveis
+server-side privadas. BrowserChromium confirmou login, dados reais (1driver,
+1passenger,107corridas históricas,2banners), mapa, imagens, menu móvel e logout401.
+Teste real só consultou/login/logout; nenhuma corrida, GPS, cadastro ou campanha
+real foi alterada. Operações mutativas e troca de senha passaram em banco LOCAL
+descartável com motor original:14testesNode+2validaçõesrascunho. O painel tem
+repositório/conta próprios e não depende de chamadas ao parceiro.
+
+ops/alce/panel/deploy.py é o registro do PRIMEIRO deploy, com hash/estado
+esperados; não é atualizador genérico, recusa se alce-panel-api já existe.
+Rollback preserva registros e o ambiente principal. Nenhuma alteração no banco,
+contêineres ou aplicativos Namma de operação original.
