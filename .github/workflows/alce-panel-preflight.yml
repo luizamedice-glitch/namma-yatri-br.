@@ -1,0 +1,105 @@
+name: Alce - Pré-inspeção da API administrativa
+
+on:
+  workflow_dispatch:
+  # Permite a primeira execução sem alterar a branch padrão main.
+  push:
+    branches: [codex/alce-panel-api]
+    paths: ['.github/workflows/alce-panel-preflight.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lightsail-ssh-test
+  cancel-in-progress: false
+
+jobs:
+  connection:
+    if: github.ref == 'refs/heads/codex/alce-panel-api'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Habilitar seleção de destino e validar ciclo HTTPS
+        shell: bash
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          # Identificadores públicos já confirmados pelo proprietário.
+          AWS_HOST: ${{ secrets.AWS_HOST || '52.67.246.31' }}
+          AWS_USER: ${{ secrets.AWS_USER || 'ubuntu' }}
+          # Opcional: linha known_hosts conferida pelo proprietário fora desta conexão.
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          set +x
+          for name in AWS_SSH_KEY AWS_HOST AWS_USER; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Secret obrigatória ausente: $name"
+              exit 1
+            fi
+          done
+          if [[ ! "$AWS_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]] ||
+             [[ ! "$AWS_USER" =~ ^[a-zA-Z_][a-zA-Z0-9_-]*$ ]]; then
+            echo '::error::Formato de AWS_HOST ou AWS_USER inválido.'
+            exit 1
+          fi
+          umask 077
+          ssh_dir=$(mktemp -d "$RUNNER_TEMP/yatri-ssh.XXXXXX")
+          trap 'rm -rf -- "$ssh_dir"' EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+          # Copiar no celular pode adicionar texto do terminal e mudar as quebras.
+          # Normaliza apenas a formatação; não tenta adivinhar caracteres da chave.
+          python3 - "$ssh_dir/key" <<'PY'
+          import base64, os, re, sys
+          from pathlib import Path
+          text = os.environ['AWS_SSH_KEY'].replace('\\r\\n', '\n').replace('\\n', '\n')
+          pattern = r'-----BEGIN ((?:OPENSSH|RSA|EC) PRIVATE KEY)-----([\s\S]*?)-----END \1-----'
+          blocks = list(re.finditer(pattern, text))
+          if len(blocks) != 1:
+              sys.exit('::error::Cole exatamente um bloco de chave privada, incluindo BEGIN e END, no secret AWS_SSH_KEY.')
+          label, body = blocks[0].groups()
+          body = re.sub(r'\s+', '', body)
+          try:
+              decoded = base64.b64decode(body, validate=True)
+          except Exception:
+              sys.exit('::error::O bloco da chave contém caracteres inválidos ou está incompleto. Copie novamente o arquivo original.')
+          if not decoded:
+              sys.exit('::error::O bloco da chave está vazio.')
+          lines = '\n'.join(body[i:i+70] for i in range(0, len(body), 70))
+          Path(sys.argv[1]).write_text(f'-----BEGIN {label}-----\n{lines}\n-----END {label}-----\n')
+          PY
+          unset AWS_SSH_KEY
+          chmod 600 "$ssh_dir/key"
+          # Recusa chaves inválidas ou com senha, sem imprimir conteúdo nem pedir entrada.
+          if ! ssh-keygen -y -P '' -f "$ssh_dir/key" > /dev/null 2>&1; then
+            echo '::error::AWS_SSH_KEY deve conter uma chave privada SSH válida sem senha.'
+            exit 1
+          fi
+          host_check=accept-new
+          if [[ -n "$AWS_SSH_KNOWN_HOSTS" ]]; then
+            printf '%s\n' "$AWS_SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+            host_check=yes
+          else
+            echo '::notice::Primeira conexão: identidade do host aceita por TOFU. Configure AWS_SSH_KNOWN_HOSTS para verificação prévia.'
+            touch "$ssh_dir/known_hosts"
+          fi
+          unset AWS_SSH_KNOWN_HOSTS
+          ssh -i "$ssh_dir/key" -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=15 -o "StrictHostKeyChecking=$host_check" -o "UserKnownHostsFile=$ssh_dir/known_hosts" "$AWS_USER@$AWS_HOST" 'sudo -n python3 -' <<'PYREMOTE' | tee /tmp/alce-panel-preflight.jsonl
+          import subprocess,json,hashlib
+          from pathlib import Path
+          info=json.loads(subprocess.check_output(['docker','inspect','alce-lab-compat'],text=True))[0]
+          print(json.dumps({'container':'alce-lab-compat','running':info['State']['Running'],'image':info['Image'],'cmd':info['Config']['Cmd'],'mounts':[{'source':m.get('Source'),'destination':m['Destination'],'type':m['Type']} for m in info['Mounts']],'networks':list(info['NetworkSettings']['Networks'])}))
+          for p in ['/etc/caddy/Caddyfile','/opt/alce-lab']:
+           x=Path(p)
+           if x.is_file():print(json.dumps({'file':p,'sha256':hashlib.sha256(x.read_bytes()).hexdigest(),'siteLines':[l.strip() for l in x.read_text().splitlines() if 'sslip.io' in l or 'handle' in l or 'reverse_proxy' in l]}))
+           if x.is_dir():print(json.dumps({'dir':p,'children':[v.name for v in x.iterdir()]}))
+          probe="import {connectDatabase} from '/app/src/db.mjs';import {createHash} from 'node:crypto';import{readFileSync}from'node:fs';const e=process.env;if(e.ALCE_ISOLATED_MODE!=='true'||new URL(e.DATABASE_URL).pathname!=='/alce_lab')throw Error('NOT_ISOLATED');const db=await connectDatabase(e.DATABASE_URL);try{const counts=await db.query(\"SELECT (SELECT count(*)::int FROM users) AS users,(SELECT count(*)::int FROM rides) AS rides,(SELECT count(*)::int FROM rides WHERE status IN ('searching','accepted','arrived','in_progress')) AS active,(SELECT count(*)::int FROM sessions) AS app_sessions\");const cols=await db.query(\"SELECT table_name,column_name FROM information_schema.columns WHERE table_schema='public' AND table_name IN ('users','drivers','rides','quotes','alce_campaigns') ORDER BY table_name,ordinal_position\");console.log(JSON.stringify({counts:counts.rows[0],columns:cols.rows,pilotUntil:e.YATRI_DRIVER_PILOT_UNTIL,motorHash:createHash('sha256').update(readFileSync('/app/src/mobility.mjs')).digest('hex')}));}finally{await db.end();}"
+          r=subprocess.run(['docker','exec','alce-lab-compat','node','--input-type=module','-e',probe],capture_output=True,text=True,check=True);print(r.stdout)
+          PYREMOTE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: alce-panel-preflight
+          path: /tmp/alce-panel-preflight.jsonl
+          retention-days: 7
