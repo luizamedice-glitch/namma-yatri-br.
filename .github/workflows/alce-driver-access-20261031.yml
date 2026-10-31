@@ -1,0 +1,114 @@
+name: Alce - Novo acesso motorista solicitado em31out
+
+on:
+  workflow_dispatch:
+  # Permite a primeira execução sem alterar a branch padrão main.
+  push:
+    branches: [codex/alce-panel-api]
+    paths: ['.github/workflows/alce-driver-access-20261031.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lightsail-ssh-test
+  cancel-in-progress: false
+
+jobs:
+  connection:
+    if: github.ref == 'refs/heads/codex/alce-panel-api'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /brasil/backend/ops/alce/issue-driver-access-20261031.mjs
+            /brasil/backend/ops/alce/driver-entry-20261031-recipient.pem
+      - name: Emitir código motorista com saída cifrada
+        shell: bash
+        env:
+          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+          # Identificadores públicos já confirmados pelo proprietário.
+          AWS_HOST: ${{ secrets.AWS_HOST || '52.67.246.31' }}
+          AWS_USER: ${{ secrets.AWS_USER || 'ubuntu' }}
+          # Opcional: linha known_hosts conferida pelo proprietário fora desta conexão.
+          AWS_SSH_KNOWN_HOSTS: ${{ secrets.AWS_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          set +x
+          for name in AWS_SSH_KEY AWS_HOST AWS_USER; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Secret obrigatória ausente: $name"
+              exit 1
+            fi
+          done
+          if [[ ! "$AWS_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]] ||
+             [[ ! "$AWS_USER" =~ ^[a-zA-Z_][a-zA-Z0-9_-]*$ ]]; then
+            echo '::error::Formato de AWS_HOST ou AWS_USER inválido.'
+            exit 1
+          fi
+          umask 077
+          ssh_dir=$(mktemp -d "$RUNNER_TEMP/yatri-ssh.XXXXXX")
+          trap 'rm -rf -- "$ssh_dir"' EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+          # Copiar no celular pode adicionar texto do terminal e mudar as quebras.
+          # Normaliza apenas a formatação; não tenta adivinhar caracteres da chave.
+          python3 - "$ssh_dir/key" <<'PY'
+          import base64, os, re, sys
+          from pathlib import Path
+          text = os.environ['AWS_SSH_KEY'].replace('\\r\\n', '\n').replace('\\n', '\n')
+          pattern = r'-----BEGIN ((?:OPENSSH|RSA|EC) PRIVATE KEY)-----([\s\S]*?)-----END \1-----'
+          blocks = list(re.finditer(pattern, text))
+          if len(blocks) != 1:
+              sys.exit('::error::Cole exatamente um bloco de chave privada, incluindo BEGIN e END, no secret AWS_SSH_KEY.')
+          label, body = blocks[0].groups()
+          body = re.sub(r'\s+', '', body)
+          try:
+              decoded = base64.b64decode(body, validate=True)
+          except Exception:
+              sys.exit('::error::O bloco da chave contém caracteres inválidos ou está incompleto. Copie novamente o arquivo original.')
+          if not decoded:
+              sys.exit('::error::O bloco da chave está vazio.')
+          lines = '\n'.join(body[i:i+70] for i in range(0, len(body), 70))
+          Path(sys.argv[1]).write_text(f'-----BEGIN {label}-----\n{lines}\n-----END {label}-----\n')
+          PY
+          unset AWS_SSH_KEY
+          chmod 600 "$ssh_dir/key"
+          # Recusa chaves inválidas ou com senha, sem imprimir conteúdo nem pedir entrada.
+          if ! ssh-keygen -y -P '' -f "$ssh_dir/key" > /dev/null 2>&1; then
+            echo '::error::AWS_SSH_KEY deve conter uma chave privada SSH válida sem senha.'
+            exit 1
+          fi
+          host_check=accept-new
+          if [[ -n "$AWS_SSH_KNOWN_HOSTS" ]]; then
+            printf '%s\n' "$AWS_SSH_KNOWN_HOSTS" > "$ssh_dir/known_hosts"
+            host_check=yes
+          else
+            echo '::notice::Primeira conexão: identidade do host aceita por TOFU. Configure AWS_SSH_KNOWN_HOSTS para verificação prévia.'
+            touch "$ssh_dir/known_hosts"
+          fi
+          unset AWS_SSH_KNOWN_HOSTS
+          python3 -m pip install --quiet cryptography==46.0.3
+          python3 - "$ssh_dir/key" "$ssh_dir/known_hosts" "$host_check" <<'PYCODE'
+          import os,sys,subprocess,base64,json,re
+          from pathlib import Path
+          from cryptography.hazmat.primitives import serialization,hashes
+          from cryptography.hazmat.primitives.asymmetric import padding
+          keypath,known,check=sys.argv[1:]
+          target=os.environ['AWS_USER']+'@'+os.environ['AWS_HOST']
+          script=Path('brasil/backend/ops/alce/issue-driver-access-20261031.mjs').read_text()
+          args=['ssh','-i',keypath,'-o','IdentitiesOnly=yes','-o','BatchMode=yes','-o','ConnectTimeout=15','-o','StrictHostKeyChecking='+check,'-o','UserKnownHostsFile='+known,target,'sudo -n docker exec -i alce-lab-compat node --input-type=module']
+          result=subprocess.run(args,input=script,capture_output=True,text=True,timeout=60)
+          if result.returncode:raise SystemExit('ACTIVATION_FAILED; no credential output')
+          data=json.loads(result.stdout)
+          assert re.fullmatch('[a-fA-F0-9]{32}',data['code'])
+          assert data.get('role')=='driver' and data.get('verifiedStored') and data.get('existingSessionsPreserved') and data.get('profilePreserved')
+          recipient=serialization.load_pem_public_key(Path('brasil/backend/ops/alce/driver-entry-20261031-recipient.pem').read_bytes())
+          ciphertext=recipient.encrypt(json.dumps(data).encode(),padding.OAEP(mgf=padding.MGF1(hashes.SHA256()),algorithm=hashes.SHA256(),label=None))
+          print('ALCE_ACTIVATION_ENCRYPTED='+base64.b64encode(ciphertext).decode())
+          print(json.dumps({k:v for k,v in data.items()if k!='code'}))
+          PYCODE
